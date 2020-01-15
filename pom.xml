@@ -1,0 +1,110 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>GeneXusSecurityAPI</groupId>
+	<artifactId>parent</artifactId>
+	<version>1.0.0.0</version>
+	<packaging>pom</packaging>
+
+	<name>GeneXusSecurityAPI (Parent)</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>3.8.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	<modules>
+		<module>SecurityAPICommons</module>
+		<module>GeneXusCryptography</module>
+		<module>GeneXusXmlSignature</module>
+		<module>GeneXusJWT</module>
+		<module>GeneXusSftp</module>
+	</modules>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.0</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+					
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.1.1</version>
+				<configuration>
+					<artifactItems>
+						<artifactItem>
+							<groupId>GeneXusSecurityAPI</groupId>
+							<artifactId>SecurityAPICommons</artifactId>
+							<version>${project.version}</version>
+							<destFileName>SecurityAPICommons</destFileName>
+						</artifactItem>
+						<artifactItem>
+							<groupId>GeneXusSecurityAPI</groupId>
+							<artifactId>GeneXusCryptography</artifactId>
+							<version>${project.version}</version>
+							<destFileName>GeneXusCryptography</destFileName>
+						</artifactItem>
+						<artifactItem>
+							<groupId>GeneXusSecurityAPI</groupId>
+							<artifactId>GeneXusXmlSignature</artifactId>
+							<version>${project.version}</version>
+							<destFileName>GeneXusXmlSignature</destFileName>
+						</artifactItem>
+						<artifactItem>
+							<groupId>GeneXusSecurityAPI</groupId>
+							<artifactId>GeneXusJWT</artifactId>
+							<version>${project.version}</version>
+							<destFileName>GeneXusJWT</destFileName>
+						</artifactItem>
+						<artifactItem>
+							<groupId>GeneXusSecurityAPI</groupId>
+							<artifactId>GeneXusSftp</artifactId>
+							<version>${project.version}</version>
+							<destFileName>GeneXusSftp</destFileName>
+						</artifactItem>
+					</artifactItems>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/libs</outputDirectory>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-project-info-reports-plugin</artifactId>
+				<version>2.7</version>
+			</plugin>
+		</plugins>
+	</build>
+
+	<organization>
+		<name>GeneXus SA</name>
+		<url>https://www.genexus.com/</url>
+	</organization>
+</project>

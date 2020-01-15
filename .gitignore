@@ -1,0 +1,12 @@
+.settings/
+GeneXusCryptography/target/
+GeneXusCryptography/.project
+GeneXusCryptography/.classpath
+GeneXusCryptography/src/test/
+target/
+.classpath
+.project
+GeneXusJWT/src/test/
+GeneXusXmlSignature/src/test/
+GeneXusSftp/src/test/
+SecurityAPICommons/src/test/

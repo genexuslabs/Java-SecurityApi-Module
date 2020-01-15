@@ -1,0 +1,70 @@
+
+package com.genexus.securityapicommons.commons;
+
+/**
+ * @author sgrampone
+ *
+ */
+public class Error {
+
+	private boolean exists;
+	private String code;
+	private String description;
+
+	/**
+	 * @return error code string
+	 */
+	public String getCode() {
+		return code;
+	}
+
+	/**
+	 * @return error description string
+	 */
+	public String getDescription() {
+		return description;
+	}
+
+	/**
+	 * Error constructor
+	 */
+	public Error() {
+		this.exists = false;
+		this.code = "";
+		this.description = "";
+	}
+
+	/**
+	 * Set error values
+	 * 
+	 * @param errorCode
+	 *            String error internal code
+	 * @param errorDescription
+	 *            String error internal description
+	 */
+	public void setError(String errorCode, String errorDescription) {
+		this.exists = true;
+		this.code = errorCode;
+		this.description = errorDescription;
+
+	}
+
+	/**
+	 * If an error exists
+	 * 
+	 * @return 1 if an error exists, 0 if not
+	 */
+	public boolean existsError() {
+		return this.exists;
+	}
+
+	/**
+	 * Sets initial parameters
+	 */
+	public void cleanError() {
+		this.exists = false;
+		this.code = "";
+		this.description = "";
+	}
+
+}
