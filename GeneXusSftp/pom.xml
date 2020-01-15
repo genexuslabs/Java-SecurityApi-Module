@@ -5,8 +5,8 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>GeneXusSecurityAPI</groupId>
-		<artifactId>parent</artifactId>
+		<groupId>com.genexus</groupId>
+		<artifactId>SecurityAPIParent</artifactId>
 		<version>1.0.0.0</version>
 	</parent>
 
@@ -65,7 +65,8 @@
 	</build>
 
 	<organization>
-		<name>GeneXus SA</name>
+		<name>GeneXus</name>
 		<url>https://www.genexus.com/</url>
 	</organization>
+	<groupId>com.genexus</groupId>
 </project>
