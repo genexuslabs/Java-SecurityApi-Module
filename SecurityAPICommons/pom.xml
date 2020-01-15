@@ -15,6 +15,7 @@
 	<name>GeneXus SecurityAPI Commons Module</name>
 	<packaging>jar</packaging>
 
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -35,12 +36,19 @@
 		</dependency>
 	</dependencies>
 	<build>
-		<finalName>SecurityAPICommons</finalName>
+		
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.1.1</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
 				<configuration>
 					<archive>
 						<manifest>
@@ -49,10 +57,7 @@
 						<manifestEntries>
 							<Build-Time>${maven.build.timestamp}</Build-Time>
 							<Build-User>GeneXus</Build-User>
-							<Build-Java>${java.version}</Build-Java>
-							<Build-OS>${os.name}</Build-OS>
 							<Build-Label>${project.version}</Build-Label>
-							<Build-Path>${basedir}</Build-Path>
 						</manifestEntries>
 					</archive>
 				</configuration>
@@ -65,5 +70,5 @@
 		<url>https://www.genexus.com/</url>
 	</organization>
 
-	<groupId>com.genexus</groupId>
+
 </project>

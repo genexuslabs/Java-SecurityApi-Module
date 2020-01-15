@@ -21,14 +21,15 @@
 	</properties>
 	<dependencies>
 		<dependency>
-			<groupId>GeneXusSecurityAPI</groupId>
+			<groupId>com.genexus</groupId>
 			<artifactId>SecurityAPICommons</artifactId>
-			<version>0.1.0.9</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>GeneXusSecurityAPI</groupId>
-			<artifactId>SecurityAPICommonsTest</artifactId>
-			<version>0.1.0.9</version>
+			<groupId>com.genexus</groupId>
+			<artifactId>SecurityAPICommons</artifactId>
+			<type>test-jar</type>
+			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -39,24 +40,30 @@
 	</dependencies>
 
 	<build>
-		<finalName>GeneXusCryptography</finalName>
+		
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.1.1</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
 				<configuration>
 					<archive>
 						<manifest>
 							<addClasspath>false</addClasspath>
 						</manifest>
 						<manifestEntries>
+						<manifestEntries>
 							<Build-Time>${maven.build.timestamp}</Build-Time>
 							<Build-User>GeneXus</Build-User>
-							<Build-Java>${java.version}</Build-Java>
-							<Build-OS>${os.name}</Build-OS>
 							<Build-Label>${project.version}</Build-Label>
-							<Build-Path>${basedir}</Build-Path>
+						</manifestEntries>
 						</manifestEntries>
 					</archive>
 				</configuration>
@@ -68,5 +75,5 @@
 		<name>GeneXus</name>
 		<url>https://www.genexus.com/</url>
 	</organization>
-	<groupId>com.genexus</groupId>
+
 </project>

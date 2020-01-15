@@ -9,7 +9,7 @@
 	<packaging>pom</packaging>
 
 	<name>GeneXusSecurityAPI (Parent)</name>
-	<url>http://maven.apache.org</url>
+	<url>https://github.com/genexuslabs/Java-SecurityApi-Module</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -39,7 +39,7 @@
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
-					
+
 				</configuration>
 			</plugin>
 			<plugin>
@@ -49,36 +49,43 @@
 				<configuration>
 					<artifactItems>
 						<artifactItem>
-							<groupId>GeneXusSecurityAPI</groupId>
+							<groupId>com.genexus</groupId>
 							<artifactId>SecurityAPICommons</artifactId>
 							<version>${project.version}</version>
 							<destFileName>SecurityAPICommons</destFileName>
 						</artifactItem>
 						<artifactItem>
-							<groupId>GeneXusSecurityAPI</groupId>
+							<groupId>com.genexus</groupId>
 							<artifactId>GeneXusCryptography</artifactId>
 							<version>${project.version}</version>
 							<destFileName>GeneXusCryptography</destFileName>
 						</artifactItem>
 						<artifactItem>
-							<groupId>GeneXusSecurityAPI</groupId>
+							<groupId>com.genexus</groupId>
 							<artifactId>GeneXusXmlSignature</artifactId>
 							<version>${project.version}</version>
 							<destFileName>GeneXusXmlSignature</destFileName>
 						</artifactItem>
 						<artifactItem>
-							<groupId>GeneXusSecurityAPI</groupId>
+							<groupId>com.genexus</groupId>
 							<artifactId>GeneXusJWT</artifactId>
 							<version>${project.version}</version>
 							<destFileName>GeneXusJWT</destFileName>
 						</artifactItem>
 						<artifactItem>
-							<groupId>GeneXusSecurityAPI</groupId>
+							<groupId>com.genexus</groupId>
 							<artifactId>GeneXusSftp</artifactId>
 							<version>${project.version}</version>
 							<destFileName>GeneXusSftp</destFileName>
 						</artifactItem>
 					</artifactItems>
+					<artifactItem>
+						<groupId>com.genexus</groupId>
+						<artifactId>SecurityAPICommonsTest</artifactId>
+						<version>${project.version}</version>
+						<destFileName>SecurityAPICommonsTest</destFileName>
+						<scope>test</scope>
+					</artifactItem>
 				</configuration>
 				<executions>
 					<execution>
