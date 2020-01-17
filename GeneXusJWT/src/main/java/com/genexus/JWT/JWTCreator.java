@@ -1,6 +1,7 @@
 package com.genexus.JWT;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -22,6 +23,7 @@ import com.genexus.commons.JWTOptions;
 import com.genexus.securityapicommons.config.EncodingUtil;
 import com.genexus.securityapicommons.keys.CertificateX509;
 import com.genexus.securityapicommons.keys.PrivateKeyManager;
+import com.genexus.securityapicommons.utils.SecurityUtils;
 
 
 
@@ -83,7 +85,7 @@ public class JWTCreator extends JWTObject {
 		return signedJwt;
 	}
 
-	public boolean doVerify(String token, JWTOptions options) {
+	public boolean doVerify(String token, PrivateClaims privateClaims, JWTOptions options) {
 		if (options.hasError()) {
 			this.error = options.getError();
 			return false;
@@ -96,7 +98,7 @@ public class JWTCreator extends JWTObject {
 			this.error.setError("JW005", e.getMessage());
 			return false;
 		}
-		if (isRevoqued(decodedJWT, options)) {
+		if (isRevoqued(decodedJWT, options) || !verifyPrivateClaims(decodedJWT, privateClaims)) {
 			return false;
 		}
 		String algorithm = decodedJWT.getAlgorithm();
@@ -141,6 +143,7 @@ public class JWTCreator extends JWTObject {
 			error.setError("JW006", e.getMessage());
 			return false;
 		}
+		
 		return true;
 
 	}
@@ -265,5 +268,32 @@ public class JWTCreator extends JWTObject {
 		// ****END BUILD PAYLOAD****//
 		return tokenBuilder;
 	}
+	
+	private boolean verifyPrivateClaims(DecodedJWT decodedJWT, PrivateClaims privateClaims)
+	{
+		if(privateClaims == null || privateClaims.isEmpty())
+		{
+			return true;
+		}
+		Map<String, com.auth0.jwt.interfaces.Claim> map = decodedJWT.getClaims();
+		
+		List<Claim> claims = privateClaims.getAllClaims();
+		for(int i= 0; i < claims.size(); i++)
+		{
+			Claim c = claims.get(i);
+			if(!map.containsKey(c.getKey()))
+			{
+				return false;
+			}
+			com.auth0.jwt.interfaces.Claim claim = map.get(c.getKey());
+			if(!SecurityUtils.compareStrings(claim.asString().trim(), c.getValue().trim()))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	
+
 
 }

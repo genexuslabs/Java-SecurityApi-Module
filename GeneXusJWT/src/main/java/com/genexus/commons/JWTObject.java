@@ -11,7 +11,7 @@ public abstract class JWTObject extends SecurityAPIObject{
 	}
 	
 	public abstract String doCreate(String algorithm, PrivateClaims privateClaims, JWTOptions options);
-	public abstract boolean doVerify(String token, JWTOptions options);
+	public abstract boolean doVerify(String token, PrivateClaims privateClaims, JWTOptions options);
 	public abstract String getPayload(String token) ;
 	public abstract String getHeader(String token);
 	public abstract String getTokenID(String token);
