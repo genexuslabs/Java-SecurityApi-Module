@@ -11,4 +11,6 @@ GeneXusXmlSignature/src/test/
 GeneXusSftp/src/test/
 GeneXusFtps/src/test/
 SecurityAPICommons/src/test/
-src/
+
+src/test/
+src/main/java/
