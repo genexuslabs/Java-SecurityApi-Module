@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -29,6 +30,7 @@
 		<module>GeneXusXmlSignature</module>
 		<module>GeneXusJWT</module>
 		<module>GeneXusSftp</module>
+		<module>GeneXusFtps</module>
 	</modules>
 	<build>
 		<plugins>
@@ -77,6 +79,12 @@
 							<artifactId>GeneXusSftp</artifactId>
 							<version>${project.version}</version>
 							<destFileName>GeneXusSftp</destFileName>
+						</artifactItem>
+						<artifactItem>
+							<groupId>com.genexus</groupId>
+							<artifactId>GeneXusFtps</artifactId>
+							<version>${project.version}</version>
+							<destFileName>GeneXusFtps</destFileName>
 						</artifactItem>
 					</artifactItems>
 					<artifactItem>

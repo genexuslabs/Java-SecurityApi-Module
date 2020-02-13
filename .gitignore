@@ -9,5 +9,6 @@ target/
 GeneXusJWT/src/test/
 GeneXusXmlSignature/src/test/
 GeneXusSftp/src/test/
+GeneXusFtps/src/test/
 SecurityAPICommons/src/test/
 src/
