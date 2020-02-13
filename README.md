@@ -52,4 +52,7 @@ The dependencies between the projects are specified in each pom.xml within their
     See the License for the specific language governing permissions and
     limitations under the License.
 
-# Java-SecurityApi-Module
+## GeneXus SecurityApi-Module GeneXus Wiki Documentation
+
+https://wiki.genexus.com/commwiki/servlet/wiki?43916,Toc%3AGeneXus+Security+API
+
