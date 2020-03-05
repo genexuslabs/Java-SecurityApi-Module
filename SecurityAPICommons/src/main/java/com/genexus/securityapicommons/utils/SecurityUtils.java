@@ -32,7 +32,7 @@ public class SecurityUtils {
 	 *            path to the file
 	 * @return file extension
 	 */
-	protected static String getFileExtension(String path) {
+	public static String getFileExtension(String path) {
 
 		int lastIndexOf = path.lastIndexOf(".");
 		if (lastIndexOf == -1) {
