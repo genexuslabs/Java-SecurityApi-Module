@@ -1,6 +1,7 @@
 package com.genexus.sftp;
 
 import com.genexus.commons.sftp.SftpClientObject;
+import com.genexus.securityapicommons.utils.ExtensionsWhiteList;
 import com.genexus.securityapicommons.utils.SecurityUtils;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
@@ -12,6 +13,7 @@ public class SftpClient extends SftpClientObject {
 
 	private ChannelSftp channel;
 	private Session session;
+	private ExtensionsWhiteList whiteList;
 
 	public SftpClient() {
 		super();
@@ -54,10 +56,17 @@ public class SftpClient extends SftpClientObject {
 			this.error.setError("SF004", e.getMessage() + e.getStackTrace());
 			return false;
 		}
+		this.whiteList = options.getWhiteList();
 		return true;
 	}
 
 	public boolean put(String localPath, String remoteDir) {
+		if (this.whiteList != null) {
+			if (!this.whiteList.isValid(localPath)) {
+				this.error.setError("WL001", "Invalid file extension");
+				return false;
+			}
+		}
 		if (this.channel == null) {
 			this.error.setError("SF005", "The channel is invalid, reconect");
 			return false;
@@ -72,6 +81,12 @@ public class SftpClient extends SftpClientObject {
 	}
 
 	public boolean get(String remoteFilePath, String localDir) {
+		if (this.whiteList != null) {
+			if (!this.whiteList.isValid(remoteFilePath)) {
+				this.error.setError("WL002", "Invalid file extension");
+				return false;
+			}
+		}
 		if (this.channel == null) {
 			this.error.setError("SF007", "The channel is invalid, reconect");
 			return false;

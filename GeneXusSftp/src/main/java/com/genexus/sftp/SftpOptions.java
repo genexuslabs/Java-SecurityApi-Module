@@ -1,6 +1,7 @@
 package com.genexus.sftp;
 
 import com.genexus.securityapicommons.commons.SecurityAPIObject;
+import com.genexus.securityapicommons.utils.ExtensionsWhiteList;
 import com.genexus.securityapicommons.utils.SecurityUtils;
 
 public class SftpOptions extends SecurityAPIObject {
@@ -13,6 +14,7 @@ public class SftpOptions extends SecurityAPIObject {
 	private String keyPassword;
 	private boolean allowHostKeyChecking;
 	private String knownHostsPath;
+	private ExtensionsWhiteList whiteList;
 
 	public SftpOptions() {
 		this.host = "";
@@ -23,6 +25,7 @@ public class SftpOptions extends SecurityAPIObject {
 		this.keyPassword = "";
 		this.allowHostKeyChecking = true;
 		this.knownHostsPath = "";
+		this.whiteList = null;
 	}
 
 	public void setUser(String value) {
@@ -99,5 +102,13 @@ public class SftpOptions extends SecurityAPIObject {
 		} else {
 			this.knownHostsPath = value.trim();
 		}
+	}
+	
+	public void setWhiteList(ExtensionsWhiteList value) {
+		this.whiteList = value;
+	}
+
+	public ExtensionsWhiteList getWhiteList() {
+		return this.whiteList;
 	}
 }
