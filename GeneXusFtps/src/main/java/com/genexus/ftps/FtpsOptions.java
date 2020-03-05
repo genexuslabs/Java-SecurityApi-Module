@@ -5,6 +5,7 @@ import com.genexus.ftps.utils.FtpEncoding;
 import com.genexus.ftps.utils.FtpEncryptionMode;
 import com.genexus.ftps.utils.FtpsProtocol;
 import com.genexus.securityapicommons.commons.SecurityAPIObject;
+import com.genexus.securityapicommons.utils.ExtensionsWhiteList;
 import com.genexus.securityapicommons.utils.SecurityUtils;
 
 public class FtpsOptions extends SecurityAPIObject {
@@ -18,7 +19,9 @@ public class FtpsOptions extends SecurityAPIObject {
 	private FtpEncoding encoding;
 	private FtpEncryptionMode encryptionMode;
 	private String trustStorePath;
+	private String trustStorePassword;
 	private FtpsProtocol protocol;
+	private ExtensionsWhiteList whiteList;
 
 	public FtpsOptions() {
 		this.host = "";
@@ -30,7 +33,9 @@ public class FtpsOptions extends SecurityAPIObject {
 		this.encoding = FtpEncoding.BINARY;
 		this.encryptionMode = FtpEncryptionMode.EXPLICIT;
 		this.trustStorePath = "";
+		this.trustStorePassword = "";
 		this.protocol = FtpsProtocol.TLS1_2;
+		this.whiteList = null;
 	}
 
 	public String getHost() {
@@ -122,6 +127,14 @@ public class FtpsOptions extends SecurityAPIObject {
 		return this.trustStorePath;
 	}
 
+	public void setTrustStorePassword(String value) {
+		this.trustStorePassword = value;
+	}
+
+	public String getTrustStorePassword() {
+		return this.trustStorePassword;
+	}
+
 	public void setProtocol(String value) {
 		this.protocol = FtpsProtocol.getFtpsProtocol(value, this.error);
 	}
@@ -132,5 +145,13 @@ public class FtpsOptions extends SecurityAPIObject {
 
 	public FtpsProtocol getFtpsProtocol() {
 		return this.protocol;
+	}
+
+	public void setWhiteList(ExtensionsWhiteList value) {
+		this.whiteList = value;
+	}
+
+	public ExtensionsWhiteList getWhiteList() {
+		return this.whiteList;
 	}
 }

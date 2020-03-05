@@ -8,23 +8,31 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
+import org.apache.commons.net.util.TrustManagerUtils;
 
 import com.genexus.commons.ftps.FtpsClientObject;
 import com.genexus.ftps.utils.FtpConnectionMode;
+import com.genexus.securityapicommons.utils.ExtensionsWhiteList;
 import com.genexus.securityapicommons.utils.SecurityUtils;
 
 public class FtpsClient extends FtpsClientObject {
 
 	private FTPSClient client;
 	private String pwd;
+	private ExtensionsWhiteList whiteList;
 
 	public FtpsClient() {
 		super();
 		this.client = null;
+		this.whiteList = null;
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
@@ -38,8 +46,14 @@ public class FtpsClient extends FtpsClientObject {
 			this.error.setError("FS001", "Empty connection data");
 			return false;
 		}
-		
+
 		setProtocol(options);
+
+		if (!SecurityUtils.compareStrings("", options.getTrustStorePath())) {
+			if (!setCertificateValidation(options)) {
+				return false;
+			}
+		}
 		try {
 			this.client.connect(options.getHost(), options.getPort());
 			if (options.getForceEncryption()) {
@@ -51,9 +65,8 @@ public class FtpsClient extends FtpsClientObject {
 				return false;
 			}
 			boolean login = this.client.login(options.getUser(), options.getPassword());
-			if(!login)
-			{
-				this.error.setError("FS0016",  "Login error");
+			if (!login) {
+				this.error.setError("FS0016", "Login error");
 				return false;
 			}
 			setEncoding(options);
@@ -68,11 +81,18 @@ public class FtpsClient extends FtpsClientObject {
 			this.error.setError("FS009", "Connection error");
 			return false;
 		}
-
+		this.whiteList = options.getWhiteList();
 		return true;
 	}
 
 	public boolean put(String localPath, String remoteDir) {
+		if (this.whiteList != null) {
+			if (!this.whiteList.isValid(localPath)) {
+				this.error.setError("WL001", "Invalid file extension");
+				return false;
+			}
+		}
+
 		if (this.client == null || !this.client.isConnected()
 				|| !FTPReply.isPositiveCompletion(this.client.getReplyCode())) {
 			this.error.setError("FS003", "The connection is invalid, reconect");
@@ -118,6 +138,12 @@ public class FtpsClient extends FtpsClientObject {
 	}
 
 	public boolean get(String remoteFilePath, String localDir) {
+		if (this.whiteList != null) {
+			if (!this.whiteList.isValid(remoteFilePath)) {
+				this.error.setError("WL002", "Invalid file extension");
+				return false;
+			}
+		}
 		if (this.client == null || !this.client.isConnected()) {
 			this.error.setError("FS010", "The connection is invalid, reconect");
 			return false;
@@ -184,8 +210,7 @@ public class FtpsClient extends FtpsClientObject {
 			this.error.setError("FS006", "Could not obtain working directory, try reconnect");
 			return "";
 		}
-		if(pwd == null)
-		{
+		if (pwd == null) {
 			return this.pwd;
 		}
 		return pwd;
@@ -247,24 +272,21 @@ public class FtpsClient extends FtpsClientObject {
 		}
 
 	}
-	
-	private void setEncoding(FtpsOptions options) throws IOException
-	{
-		switch(options.getFtpEncoding())
-		{
+
+	private void setEncoding(FtpsOptions options) throws IOException {
+		switch (options.getFtpEncoding()) {
 		case BINARY:
 			this.client.setFileType(FTP.BINARY_FILE_TYPE);
 			break;
 		case ASCII:
 			this.client.sendCommand(FTP.ASCII_FILE_TYPE);
 			break;
-			default:
-				this.client.setFileType(FTP.BINARY_FILE_TYPE);
+		default:
+			this.client.setFileType(FTP.BINARY_FILE_TYPE);
 		}
 	}
-	
-	private void setConnectionMode(FtpsOptions options)
-	{
+
+	private void setConnectionMode(FtpsOptions options) {
 		FtpConnectionMode mode = options.getFtpConnectionMode();
 		switch (mode) {
 		case ACTIVE:
@@ -273,15 +295,13 @@ public class FtpsClient extends FtpsClientObject {
 		case PASSIVE:
 			this.client.enterLocalPassiveMode();
 			break;
-			default:
-				this.client.enterLocalPassiveMode();
+		default:
+			this.client.enterLocalPassiveMode();
 		}
 	}
-	
-	private void setProtocol(FtpsOptions options)
-	{
-		switch(options.getFtpsProtocol())
-		{
+
+	private void setProtocol(FtpsOptions options) {
+		switch (options.getFtpsProtocol()) {
 		case TLS1_0:
 			this.client = new FTPSClient("TLS", isImplicit(options));
 			break;
@@ -301,18 +321,37 @@ public class FtpsClient extends FtpsClientObject {
 			this.client = new FTPSClient("TLS", isImplicit(options));
 		}
 	}
-	
-	private boolean isImplicit(FtpsOptions options)
-	{
-		switch(options.getFtpEncryptionMode())
-		{
+
+	private boolean isImplicit(FtpsOptions options) {
+		switch (options.getFtpEncryptionMode()) {
 		case EXPLICIT:
 			return false;
 		case IMPLICIT:
 			return true;
-			default:
-				return false;
+		default:
+			return false;
 		}
+	}
+
+	private boolean setCertificateValidation(FtpsOptions options) {
+		X509TrustManager trustManager = null;
+		KeyStore keyStore = null;
+		InputStream in = null;
+		try {
+			in = SecurityUtils.inputFileToStream(options.getTrustStorePath());
+			keyStore = KeyStore.getInstance("PKCS12");
+			keyStore.load(in, options.getTrustStorePassword().toCharArray());
+			trustManager = TrustManagerUtils.getDefaultTrustManager(keyStore);
+		} catch (IOException | GeneralSecurityException e) {
+			this.error.setError("FS017", "Could not load trust store");
+			return false;
+		}
+		if (trustManager == null) {
+			this.error.setError("FS018", "Could not load trust store");
+			return false;
+		}
+		client.setTrustManager(trustManager);
+		return true;
 	}
 
 }
