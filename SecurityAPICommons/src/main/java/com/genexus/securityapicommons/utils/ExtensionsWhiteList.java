@@ -23,7 +23,7 @@ public class ExtensionsWhiteList {
 			return false;
 		}
 		String ext = SecurityUtils.getFileExtension(path);
-		for (int i = 0; i <= this.whitelist.size(); i++) {
+		for (int i = 0; i < this.whitelist.size(); i++) {
 			if (SecurityUtils.compareStrings(ext, this.whitelist.get(i))) {
 				return true;
 			}
