@@ -7,7 +7,7 @@ import com.genexus.securityapicommons.commons.Error;
  *
  */
 public enum PasswordDerivationAlgorithm {
-	SCrypt, Bcrypt,;
+	SCrypt, Bcrypt,Argon2;
 
 	/**
 	 * Mapping between String name and PasswordDerivationAlgorithm enum
@@ -26,6 +26,8 @@ public enum PasswordDerivationAlgorithm {
 			return PasswordDerivationAlgorithm.SCrypt;
 		case "Bcrypt":
 			return PasswordDerivationAlgorithm.Bcrypt;
+		case "Argon2":
+			return PasswordDerivationAlgorithm.Argon2;
 		default:
 			error.setError("PD001", "Unrecognized PasswordDerivationAlgorithm");
 			return null;
@@ -45,6 +47,8 @@ public enum PasswordDerivationAlgorithm {
 			return "SCrypt";
 		case Bcrypt:
 			return "Bcrypt";
+		case Argon2:
+			return "Argon2";
 		default:
 			error.setError("PD002", "Unrecognized PasswordDerivationAlgorithm");
 			return "Unrecognized algorithm";

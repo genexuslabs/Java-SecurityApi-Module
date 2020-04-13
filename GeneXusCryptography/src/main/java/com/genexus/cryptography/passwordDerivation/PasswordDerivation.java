@@ -1,9 +1,12 @@
 package com.genexus.cryptography.passwordDerivation;
 
+import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
 import org.bouncycastle.crypto.generators.BCrypt;
 import org.bouncycastle.crypto.generators.SCrypt;
+import org.bouncycastle.crypto.params.Argon2Parameters;
 import org.bouncycastle.util.Strings;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Hex;
 
 import com.genexus.cryptography.commons.PasswordDerivationObject;
 import com.genexus.securityapicommons.config.EncodingUtil;
@@ -101,7 +104,7 @@ public class PasswordDerivation extends PasswordDerivationObject {
 		byte[] encryptedBytes = BCrypt.generate(eu.getBytes(password), Strings.toByteArray(hexa.fromHexa(salt)), cost);
 		String result = Strings.fromByteArray(Base64.encode(encryptedBytes));
 		if (result == null || result.length() == 0) {
-			this.error.setError("PD010", "Brypt generation error");
+			this.error.setError("PD010", "Bcrypt generation error");
 			return "";
 		}
 		this.error.cleanError();
@@ -121,6 +124,49 @@ public class PasswordDerivation extends PasswordDerivationObject {
 	public String doGenerateDefaultBcrypt(String password, String salt) {
 		int cost = 6;
 		return doGenerateBcrypt(password, salt, cost);
+	}
+
+	public String doGenerateArgon2(String argon2Version10, String argon2d, int iterations, int memory,
+			int parallelism, String password, String salt, int hashLength) {
+		if (!areArgon2ValidParameters(iterations, parallelism, hashLength)) {
+			return "";
+		}
+		Argon2Version ver_aux = Argon2Version.getArgon2Version(argon2Version10, this.error);
+		int version = Argon2Version.getVersionParameter(ver_aux, this.error);
+		if (this.hasError()) {
+			return "";
+		}
+		Argon2HashType hash_aux = Argon2HashType.getArgon2HashType(argon2d, this.error);
+		int hashType = Argon2HashType.getArgon2Parameter(hash_aux, this.error);
+		if (this.hasError()) {
+			return "";
+		}
+
+		EncodingUtil eu = new EncodingUtil();
+		HexaEncoder hexa = new HexaEncoder();
+		byte[] bytePass = eu.getBytes(password);
+		if(eu.hasError())
+		{
+			this.error = eu.getError();
+			return "";
+		}
+
+		Argon2Parameters.Builder builder = new Argon2Parameters.Builder(hashType).withVersion(version)
+				.withIterations(iterations).withMemoryPowOfTwo(memory).withParallelism(parallelism)
+				.withSalt(Strings.toByteArray(hexa.fromHexa(salt)));
+
+		Argon2BytesGenerator dig = new Argon2BytesGenerator();
+		dig.init(builder.build());
+		byte[] res = new byte[hashLength];
+		dig.generateBytes(bytePass, res);
+		String result = Strings.fromByteArray(Base64.encode(res));
+		if (result == null || result.length() == 0) {
+			this.error.setError("PD012", "Argon2 generation error");
+			return "";
+		}
+		this.error.cleanError();
+		return result;
+
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
@@ -190,6 +236,22 @@ public class PasswordDerivation extends PasswordDerivationObject {
 		if (parallelization <= 0 || parallelization > Integer.MAX_VALUE / (128 * blockSize * 8)) {
 			this.error.setError("PD003",
 					"Parallelization must be a positive integer less than or equal to Integer.MAX_VALUE / (128 * blockSize * 8)");
+			return false;
+		}
+		return true;
+	}
+
+	private boolean areArgon2ValidParameters(int iterations, int parallelism, int hashLength) {
+		if (parallelism < 1 || parallelism >= 16777216) {
+			this.error.setError("PD012", "Parallelism parameter must be >= 1 and < 16777216");
+			return false;
+		}
+		if (iterations < 1) {
+			this.error.setError("PD013", "Must be 1 iteration at least");
+			return false;
+		}
+		if (hashLength < 4) {
+			this.error.setError("PD014", "The output hash length must be >= 4");
 			return false;
 		}
 		return true;
