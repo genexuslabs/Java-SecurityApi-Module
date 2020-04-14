@@ -126,7 +126,7 @@ public class PasswordDerivation extends PasswordDerivationObject {
 		return doGenerateBcrypt(password, salt, cost);
 	}
 
-	public String doGenerateArgon2(String argon2Version10, String argon2d, int iterations, int memory,
+	public String doGenerateArgon2(String argon2Version10, String argon2HashType, int iterations, int memory,
 			int parallelism, String password, String salt, int hashLength) {
 		if (!areArgon2ValidParameters(iterations, parallelism, hashLength)) {
 			return "";
@@ -136,7 +136,7 @@ public class PasswordDerivation extends PasswordDerivationObject {
 		if (this.hasError()) {
 			return "";
 		}
-		Argon2HashType hash_aux = Argon2HashType.getArgon2HashType(argon2d, this.error);
+		Argon2HashType hash_aux = Argon2HashType.getArgon2HashType(argon2HashType, this.error);
 		int hashType = Argon2HashType.getArgon2Parameter(hash_aux, this.error);
 		if (this.hasError()) {
 			return "";
