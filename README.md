@@ -12,7 +12,7 @@ These are the source of the GeneXus Security API.
 | GeneXusXmlSignature | GeneXus Xml Signature Module, output is GeneXusXmlSignature.jar
 | GeneXusJWT | GeneXus Json Web Token Module, output is GeneXusJWT.jar
 | GeneXusSftp | GeneXus SFTP Module, output is GeneXusSftp.jar
-| GeneXusFtps | GeneXus FTPS Module, output is GeneXusFtps.jar (under development)
+| GeneXusFtps | GeneXus FTPS Module, output is GeneXusFtps.jar (available since GeneXus 16 Upgrade 9)
 
 The dependencies between the projects are specified in each pom.xml within their directory.
 
