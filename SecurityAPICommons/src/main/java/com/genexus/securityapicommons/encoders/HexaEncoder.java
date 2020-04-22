@@ -4,6 +4,7 @@ import org.bouncycastle.util.Strings;
 import org.bouncycastle.util.encoders.Hex;
 
 import com.genexus.securityapicommons.commons.SecurityAPIObject;
+import com.genexus.securityapicommons.config.EncodingUtil;
 
 /**
  * @author sgrampone
@@ -24,8 +25,13 @@ public class HexaEncoder extends SecurityAPIObject {
 	 * @return String Hexa hexadecimal representation of plainText
 	 */
 	public String toHexa(String plainText) {
-
-		byte[] stringBytes = Strings.toByteArray(plainText);
+		EncodingUtil eu = new EncodingUtil();
+		byte[] stringBytes = eu.getBytes(plainText);
+		if(eu.hasError())
+		{
+			this.error = eu.getError();
+			return "";
+		}
 		StringBuilder sb = new StringBuilder();
 		for (byte b : stringBytes) {
 			sb.append(String.format("%02X ", b));
@@ -47,7 +53,13 @@ public class HexaEncoder extends SecurityAPIObject {
 	public String fromHexa(String stringHexa) {
 
 		byte[] resBytes = Hex.decode(stringHexa);
-		String result = Strings.fromByteArray(resBytes);
+		EncodingUtil eu = new EncodingUtil();
+		String result = eu.getString(resBytes);
+		if(eu.hasError())
+		{
+			this.error = eu.getError();
+			return "";
+		}
 		if (result == null || result.length() == 0) {
 			this.error.setError("HE002", "Error decoding hexa");
 			return "";
