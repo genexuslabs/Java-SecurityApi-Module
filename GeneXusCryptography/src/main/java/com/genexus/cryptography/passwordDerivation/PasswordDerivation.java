@@ -10,7 +10,6 @@ import org.bouncycastle.util.encoders.Hex;
 
 import com.genexus.cryptography.commons.PasswordDerivationObject;
 import com.genexus.securityapicommons.config.EncodingUtil;
-import com.genexus.securityapicommons.encoders.HexaEncoder;
 
 /**
  * @author sgrampone
@@ -54,7 +53,7 @@ public class PasswordDerivation extends PasswordDerivationObject {
 			this.error = eu.getError();
 			return "";
 		}
-		byte[] encryptedBytes = SCrypt.generate(eu.getBytes(password), eu.getBytes(salt), CPUCost, blockSize,
+		byte[] encryptedBytes = SCrypt.generate(eu.getBytes(password), Hex.decode(salt), CPUCost, blockSize,
 				parallelization, keyLenght);
 		String result = Strings.fromByteArray(Base64.encode(encryptedBytes));
 		if (result == null || result.length() == 0) {
@@ -100,8 +99,7 @@ public class PasswordDerivation extends PasswordDerivationObject {
 			return "";
 		}
 		EncodingUtil eu = new EncodingUtil();
-		HexaEncoder hexa = new HexaEncoder();
-		byte[] encryptedBytes = BCrypt.generate(eu.getBytes(password), Strings.toByteArray(hexa.fromHexa(salt)), cost);
+		byte[] encryptedBytes = BCrypt.generate(eu.getBytes(password), Hex.decode(salt), cost);
 		String result = Strings.fromByteArray(Base64.encode(encryptedBytes));
 		if (result == null || result.length() == 0) {
 			this.error.setError("PD010", "Bcrypt generation error");
@@ -143,17 +141,15 @@ public class PasswordDerivation extends PasswordDerivationObject {
 		}
 
 		EncodingUtil eu = new EncodingUtil();
-		HexaEncoder hexa = new HexaEncoder();
 		byte[] bytePass = eu.getBytes(password);
-		if(eu.hasError())
-		{
+		if (eu.hasError()) {
 			this.error = eu.getError();
 			return "";
 		}
 
 		Argon2Parameters.Builder builder = new Argon2Parameters.Builder(hashType).withVersion(version)
 				.withIterations(iterations).withMemoryPowOfTwo(memory).withParallelism(parallelism)
-				.withSalt(Strings.toByteArray(hexa.fromHexa(salt)));
+				.withSalt(Hex.decode(salt));
 
 		Argon2BytesGenerator dig = new Argon2BytesGenerator();
 		dig.init(builder.build());
@@ -184,9 +180,8 @@ public class PasswordDerivation extends PasswordDerivationObject {
 	 */
 	private boolean areBCryptValidParameters(String pwd, String salt, int cost) {
 		EncodingUtil eu = new EncodingUtil();
-		HexaEncoder hexa = new HexaEncoder();
 		byte[] pwdBytes = eu.getBytes(pwd);
-		byte[] saltBytes = Strings.toByteArray(hexa.fromHexa(salt));
+		byte[] saltBytes = Hex.decode(salt);
 		if (saltBytes.length * 8 != 128) {
 			this.error.setError("PD008", "The salt lenght must be 128 bits");
 			return false;
