@@ -4,10 +4,10 @@ import org.bouncycastle.crypto.generators.BCrypt;
 import org.bouncycastle.crypto.generators.SCrypt;
 import org.bouncycastle.util.Strings;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Hex;
 
 import com.genexus.cryptography.commons.PasswordDerivationObject;
 import com.genexus.securityapicommons.config.EncodingUtil;
-import com.genexus.securityapicommons.encoders.HexaEncoder;
 
 /**
  * @author sgrampone
@@ -51,7 +51,7 @@ public class PasswordDerivation extends PasswordDerivationObject {
 			this.error = eu.getError();
 			return "";
 		}
-		byte[] encryptedBytes = SCrypt.generate(eu.getBytes(password), eu.getBytes(salt), CPUCost, blockSize,
+		byte[] encryptedBytes = SCrypt.generate(eu.getBytes(password), Hex.decode(salt), CPUCost, blockSize,
 				parallelization, keyLenght);
 		String result = Strings.fromByteArray(Base64.encode(encryptedBytes));
 		if (result == null || result.length() == 0) {
@@ -97,11 +97,10 @@ public class PasswordDerivation extends PasswordDerivationObject {
 			return "";
 		}
 		EncodingUtil eu = new EncodingUtil();
-		HexaEncoder hexa = new HexaEncoder();
-		byte[] encryptedBytes = BCrypt.generate(eu.getBytes(password), Strings.toByteArray(hexa.fromHexa(salt)), cost);
+		byte[] encryptedBytes = BCrypt.generate(eu.getBytes(password), Hex.decode(salt), cost);
 		String result = Strings.fromByteArray(Base64.encode(encryptedBytes));
 		if (result == null || result.length() == 0) {
-			this.error.setError("PD010", "Brypt generation error");
+			this.error.setError("PD010", "Bcrypt generation error");
 			return "";
 		}
 		this.error.cleanError();
@@ -138,9 +137,8 @@ public class PasswordDerivation extends PasswordDerivationObject {
 	 */
 	private boolean areBCryptValidParameters(String pwd, String salt, int cost) {
 		EncodingUtil eu = new EncodingUtil();
-		HexaEncoder hexa = new HexaEncoder();
 		byte[] pwdBytes = eu.getBytes(pwd);
-		byte[] saltBytes = Strings.toByteArray(hexa.fromHexa(salt));
+		byte[] saltBytes = Hex.decode(salt);
 		if (saltBytes.length * 8 != 128) {
 			this.error.setError("PD008", "The salt lenght must be 128 bits");
 			return false;
