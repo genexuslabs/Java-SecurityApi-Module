@@ -85,7 +85,7 @@ public class JWTCreator extends JWTObject {
 		return signedJwt;
 	}
 
-	public boolean doVerify(String token, PrivateClaims privateClaims, JWTOptions options) {
+	public boolean doVerify(String token, String expectedAlgorithm, PrivateClaims privateClaims, JWTOptions options) {
 		if (options.hasError()) {
 			this.error = options.getError();
 			return false;
@@ -106,6 +106,13 @@ public class JWTCreator extends JWTObject {
 		if (this.hasError()) {
 			return false;
 		}
+		JWTAlgorithm expectedJWTAlgorithm = JWTAlgorithm.getJWTAlgorithm(expectedAlgorithm, this.error);
+        if(alg.compareTo(expectedJWTAlgorithm) != 0 || this.hasError())
+        {
+            this.error.setError("JW008", "Expected algorithm does not match token algorithm");
+            return false;
+        }
+        
 		Algorithm algorithmType = null;
 		if (JWTAlgorithm.isPrivate(alg)) {
 			CertificateX509 cert = options.getCertificate();
