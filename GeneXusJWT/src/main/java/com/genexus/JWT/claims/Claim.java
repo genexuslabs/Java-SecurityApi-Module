@@ -3,15 +3,27 @@ package com.genexus.JWT.claims;
 public class Claim {
 
 	private String key;
-	private String value;
+	private Object value;
 
-	public Claim(String valueKey, String valueOfValue) {
+	public Claim(String valueKey, Object valueOfValue) {
 		key = valueKey;
 		value = valueOfValue;
-	}
+	} 
 
 	public String getValue() {
-		return value;
+		if (value instanceof String) {
+			return (String) value;
+		} else {
+			return null;
+		}
+	}
+
+	public PrivateClaims getNestedClaims() {
+		if (value instanceof PrivateClaims) {
+			return (PrivateClaims) value;
+		} else {
+			return null;
+		}
 	}
 
 	public String getKey() {
