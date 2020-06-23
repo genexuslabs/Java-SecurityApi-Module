@@ -3,7 +3,6 @@ package com.genexus.JWT.claims;
 import java.util.HashMap;
 import java.util.List;
 
-import com.genexus.JWT.utils.JWTUtils;
 import com.genexus.securityapicommons.commons.Error;
 import com.genexus.securityapicommons.utils.SecurityUtils;
 
@@ -15,10 +14,15 @@ public final class RegisteredClaims extends Claims {
 	public RegisteredClaims() {
 		super();
 		customTimeValidationClaims = new HashMap<String, String>();
-
+ 
 	}
 
 	@Override
+	public boolean setClaim(String key, Object value, Error error) {
+		error.setError("RC001", "Not alllowed data type");
+		return false;
+	}
+
 	public boolean setClaim(String key, String value, Error error) {
 		if (RegisteredClaim.exists(key)) {
 			return super.setClaim(key, value, error);
