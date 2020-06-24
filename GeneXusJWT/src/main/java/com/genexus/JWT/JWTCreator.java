@@ -16,6 +16,7 @@ import com.auth0.jwt.interfaces.Verification;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.genexus.JWT.claims.Claim;
+import com.genexus.JWT.claims.HeaderParameters;
 import com.genexus.JWT.claims.PrivateClaims;
 import com.genexus.JWT.claims.PublicClaims;
 import com.genexus.JWT.claims.RegisteredClaim;
@@ -52,6 +53,10 @@ public class JWTCreator extends JWTObject {
 			return "";
 		}
 		Builder tokenBuilder = JWT.create();
+		if (!options.getHeaderParameters().isEmpty()) {
+			HeaderParameters parameters = options.getHeaderParameters();
+			tokenBuilder.withHeader(parameters.getMap());
+		}
 		tokenBuilder = doBuildPayload(tokenBuilder, privateClaims, options);
 		if (this.hasError()) {
 			return "";
@@ -103,7 +108,8 @@ public class JWTCreator extends JWTObject {
 			this.error.setError("JW005", e.getMessage());
 			return false;
 		}
-		if (isRevoqued(decodedJWT, options) || !verifyPrivateClaims(decodedJWT, privateClaims, options)) {
+		if (isRevoqued(decodedJWT, options) || !verifyPrivateClaims(decodedJWT, privateClaims, options)
+				|| !verifyHeader(decodedJWT, options)) {
 			return false;
 		}
 		String algorithm = decodedJWT.getAlgorithm();
@@ -384,6 +390,56 @@ public class JWTCreator extends JWTObject {
 			}
 		}
 		return counter;
+	}
+
+	private boolean verifyHeader(DecodedJWT decodedJWT, JWTOptions options) {
+		HeaderParameters parameters = options.getHeaderParameters();
+		if (parameters.isEmpty()) {
+			return true;
+		}
+
+		List<String> allParms = parameters.getAll();
+		if (allParms.size() + 2 != getHeaderClaimsNumber(decodedJWT)) {
+			return false;
+		}
+		Map<String, Object> map = parameters.getMap();
+		for (String s : allParms) {
+
+			if (decodedJWT.getHeaderClaim(s) == null) {
+				return false;
+			}
+			com.auth0.jwt.interfaces.Claim c = decodedJWT.getHeaderClaim(s);
+			String claimValue = null;
+			try {
+				claimValue = c.asString().trim();
+			} catch (NullPointerException e) {
+				return false;
+			}
+			String optionsValue = ((String) map.get(s)).trim();
+			if (!SecurityUtils.compareStrings(claimValue, optionsValue)) {
+				return false;
+			}
+		}
+		return true;
+
+	}
+
+	private int getHeaderClaimsNumber(DecodedJWT decodedJWT) {
+		String base64Part = decodedJWT.getHeader();
+		byte[] base64Bytes = Base64.decodeBase64(base64Part);
+		EncodingUtil eu = new EncodingUtil();
+		String plainTextPart = eu.getString(base64Bytes);
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		ObjectMapper mapper = new ObjectMapper();
+
+		try {
+			map = mapper.readValue(plainTextPart, new TypeReference<Map<String, Object>>() {
+			});
+		} catch (Exception e) {
+			return 0;
+		}
+		return map.size();
+
 	}
 
 }
