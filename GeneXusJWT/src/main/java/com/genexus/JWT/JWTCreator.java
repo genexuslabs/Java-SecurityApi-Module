@@ -304,7 +304,7 @@ public class JWTCreator extends JWTObject {
 		ObjectMapper mapper = new ObjectMapper();
 
 		try {
-			map = mapper.readValue(plainTextPart, new TypeReference<Map<String, Object>>() {
+			map = (HashMap<String, Object>) mapper.readValue(plainTextPart, new TypeReference<Map<String, Object>>() {
 			});
 		} catch (Exception e) {
 			this.error.setError("JW009", "Cannot parse JWT payload");
@@ -433,7 +433,7 @@ public class JWTCreator extends JWTObject {
 		ObjectMapper mapper = new ObjectMapper();
 
 		try {
-			map = mapper.readValue(plainTextPart, new TypeReference<Map<String, Object>>() {
+			map = (HashMap<String, Object>) mapper.readValue(plainTextPart, new TypeReference<Map<String, Object>>() {
 			});
 		} catch (Exception e) {
 			return 0;
