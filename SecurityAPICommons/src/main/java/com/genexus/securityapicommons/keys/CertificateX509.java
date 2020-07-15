@@ -269,7 +269,7 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 			return result;
 		}
 		if (SecurityUtils.extensionIs(path, ".pfx") || SecurityUtils.extensionIs(path, ".p12")
-				|| SecurityUtils.extensionIs(path, ".jks")) {
+				|| SecurityUtils.extensionIs(path, ".jks") || SecurityUtils.extensionIs(path, ".pkcs12")) {
 			result = loadPublicKeyFromPKCS12File(path, alias, password);
 			return result;
 		}
