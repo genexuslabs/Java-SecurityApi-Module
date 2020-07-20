@@ -245,11 +245,11 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 	 */
 	private boolean loadPrivateKeyFromFile(String path, String alias, String password) throws CertificateException,
 			IOException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
-		if (SecurityUtils.extensionIs(path, ".pem")) {
+		if (SecurityUtils.extensionIs(path, ".pem") || SecurityUtils.extensionIs(path, ".key")) {
 			return this.hasPrivateKey = loadPrivateKeyFromPEMFile(path);
 		}
 		if (SecurityUtils.extensionIs(path, ".pfx") || SecurityUtils.extensionIs(path, ".p12")
-				|| SecurityUtils.extensionIs(path, ".jks")) {
+				|| SecurityUtils.extensionIs(path, ".jks") || SecurityUtils.extensionIs(path, ".pkcs12")) {
 			return this.hasPrivateKey = loadPrivateKeyFromPKCS12File(path, alias, password);
 		}
 		this.error.setError("PK014", "Error loading private key");
