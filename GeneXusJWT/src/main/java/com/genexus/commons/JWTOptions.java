@@ -2,6 +2,7 @@ package com.genexus.commons;
 
 import org.bouncycastle.util.encoders.Hex;
 
+import com.genexus.JWT.claims.HeaderParameters;
 import com.genexus.JWT.claims.PublicClaims;
 import com.genexus.JWT.claims.RegisteredClaims;
 import com.genexus.JWT.utils.RevocationList;
@@ -18,11 +19,13 @@ public class JWTOptions extends SecurityAPIObject {
 	private RevocationList revocationList;
 	private CertificateX509 certificate;
 	private PrivateKeyManager privateKey;
+	private HeaderParameters parameters;
 
 	public JWTOptions() {
 		publicClaims = new PublicClaims();
 		registeredClaims = new RegisteredClaims();
 		revocationList = new RevocationList();
+		parameters = new HeaderParameters();
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
@@ -70,6 +73,12 @@ public class JWTOptions extends SecurityAPIObject {
 	public void deteleRevocationList() {
 		this.revocationList = new RevocationList();
 	}
+	
+	public void addHeaderParameter(String name, String value)
+	{
+		this.parameters.setParameter(name, value);
+	}
+
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
@@ -112,5 +121,10 @@ public class JWTOptions extends SecurityAPIObject {
 	
 	public PrivateKeyManager getPrivateKey() {
 		return this.privateKey;
+	}
+	
+	public HeaderParameters getHeaderParameters()
+	{
+		return this.parameters;
 	}
 }

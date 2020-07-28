@@ -14,8 +14,11 @@ import com.genexus.securityapicommons.config.EncodingUtil;
 public class SecurityUtils {
 
 	public static boolean compareStrings(String one, String two) {
-		return one.compareToIgnoreCase(two) == 0;
-		
+		if (one != null && two != null) {
+			return one.compareToIgnoreCase(two) == 0;
+		} else {
+			return false;
+		}
 
 	}
 

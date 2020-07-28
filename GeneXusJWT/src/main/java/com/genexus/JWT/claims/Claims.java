@@ -3,7 +3,6 @@ package com.genexus.JWT.claims;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.genexus.JWT.utils.JWTUtils;
 import com.genexus.securityapicommons.commons.Error;
 import com.genexus.securityapicommons.utils.SecurityUtils;
 
@@ -13,9 +12,9 @@ public class Claims {
 
 	public Claims() {
 		claims = new ArrayList<Claim>();
-	}
+	} 
 
-	public boolean setClaim(String key, String value, Error error) {
+	public boolean setClaim(String key, Object value, Error error) {
 		Claim claim = new Claim(key, value);
 		claims.add(claim);
 		return true;

@@ -1,5 +1,7 @@
 package com.genexus.JWT;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +13,10 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
 import com.auth0.jwt.interfaces.Verification;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.genexus.JWT.claims.Claim;
+import com.genexus.JWT.claims.HeaderParameters;
 import com.genexus.JWT.claims.PrivateClaims;
 import com.genexus.JWT.claims.PublicClaims;
 import com.genexus.JWT.claims.RegisteredClaim;
@@ -25,17 +30,18 @@ import com.genexus.securityapicommons.keys.CertificateX509;
 import com.genexus.securityapicommons.keys.PrivateKeyManager;
 import com.genexus.securityapicommons.utils.SecurityUtils;
 
-
-
 public class JWTCreator extends JWTObject {
+
+	private int counter;
 
 	public JWTCreator() {
 		super();
 		EncodingUtil eu = new EncodingUtil();
 		eu.setEncoding("UTF8");
-	
+		this.counter = 0;
+
 	}
-	
+
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
 	public String doCreate(String algorithm, PrivateClaims privateClaims, JWTOptions options) {
 		if (options.hasError()) {
@@ -47,6 +53,10 @@ public class JWTCreator extends JWTObject {
 			return "";
 		}
 		Builder tokenBuilder = JWT.create();
+		if (!options.getHeaderParameters().isEmpty()) {
+			HeaderParameters parameters = options.getHeaderParameters();
+			tokenBuilder.withHeader(parameters.getMap());
+		}
 		tokenBuilder = doBuildPayload(tokenBuilder, privateClaims, options);
 		if (this.hasError()) {
 			return "";
@@ -98,7 +108,8 @@ public class JWTCreator extends JWTObject {
 			this.error.setError("JW005", e.getMessage());
 			return false;
 		}
-		if (isRevoqued(decodedJWT, options) || !verifyPrivateClaims(decodedJWT, privateClaims)) {
+		if (isRevoqued(decodedJWT, options) || !verifyPrivateClaims(decodedJWT, privateClaims, options)
+				|| !verifyHeader(decodedJWT, options)) {
 			return false;
 		}
 		String algorithm = decodedJWT.getAlgorithm();
@@ -107,12 +118,11 @@ public class JWTCreator extends JWTObject {
 			return false;
 		}
 		JWTAlgorithm expectedJWTAlgorithm = JWTAlgorithm.getJWTAlgorithm(expectedAlgorithm, this.error);
-        if(alg.compareTo(expectedJWTAlgorithm) != 0 || this.hasError())
-        {
-            this.error.setError("JW008", "Expected algorithm does not match token algorithm");
-            return false;
-        }
-        
+		if (alg.compareTo(expectedJWTAlgorithm) != 0 || this.hasError()) {
+			this.error.setError("JW008", "Expected algorithm does not match token algorithm");
+			return false;
+		}
+
 		Algorithm algorithmType = null;
 		if (JWTAlgorithm.isPrivate(alg)) {
 			CertificateX509 cert = options.getCertificate();
@@ -150,7 +160,7 @@ public class JWTCreator extends JWTObject {
 			error.setError("JW006", e.getMessage());
 			return false;
 		}
-		
+
 		return true;
 
 	}
@@ -236,7 +246,11 @@ public class JWTCreator extends JWTObject {
 		List<Claim> privateC = privateClaims.getAllClaims();
 		for (int i = 0; i < privateC.size(); i++) {
 			try {
-				tokenBuilder.withClaim(privateC.get(i).getKey(), privateC.get(i).getValue());
+				if (privateC.get(i).getNestedClaims() != null) {
+					tokenBuilder.withClaim(privateC.get(i).getKey(), privateC.get(i).getNestedClaims().getNestedMap());
+				} else {
+					tokenBuilder.withClaim(privateC.get(i).getKey(), privateC.get(i).getValue());
+				}
 			} catch (Exception e) {
 				this.error.setError("JW004", e.getMessage());
 				return null;
@@ -275,32 +289,157 @@ public class JWTCreator extends JWTObject {
 		// ****END BUILD PAYLOAD****//
 		return tokenBuilder;
 	}
-	
-	private boolean verifyPrivateClaims(DecodedJWT decodedJWT, PrivateClaims privateClaims)
-	{
-		if(privateClaims == null || privateClaims.isEmpty())
-		{
+
+	private boolean verifyPrivateClaims(DecodedJWT decodedJWT, PrivateClaims privateClaims, JWTOptions options) {
+		RegisteredClaims registeredClaims = options.getAllRegisteredClaims();
+		PublicClaims publicClaims = options.getAllPublicClaims();
+		if (privateClaims == null || privateClaims.isEmpty()) {
 			return true;
 		}
-		Map<String, com.auth0.jwt.interfaces.Claim> map = decodedJWT.getClaims();
-		
-		List<Claim> claims = privateClaims.getAllClaims();
-		for(int i= 0; i < claims.size(); i++)
-		{
-			Claim c = claims.get(i);
-			if(!map.containsKey(c.getKey()))
-			{
-				return false;
-			}
-			com.auth0.jwt.interfaces.Claim claim = map.get(c.getKey());
-			if(!SecurityUtils.compareStrings(claim.asString().trim(), c.getValue().trim()))
-			{
-				return false;
+		String base64Part = decodedJWT.getPayload();
+		byte[] base64Bytes = Base64.decodeBase64(base64Part);
+		EncodingUtil eu = new EncodingUtil();
+		String plainTextPart = eu.getString(base64Bytes);
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		ObjectMapper mapper = new ObjectMapper();
+
+		try {
+			map = (HashMap<String, Object>) mapper.readValue(plainTextPart, new TypeReference<Map<String, Object>>() {
+			});
+		} catch (Exception e) {
+			this.error.setError("JW009", "Cannot parse JWT payload");
+			return false;
+		}
+		this.counter = 0;
+		boolean validation = verifyNestedClaims(privateClaims.getNestedMap(), map, registeredClaims, publicClaims);
+		int pClaimsCount = countingPrivateClaims(privateClaims.getNestedMap(), 0);
+		if (validation && !(this.counter == pClaimsCount)) {
+			return false;
+		}
+		return validation;
+	}
+
+	private boolean verifyNestedClaims(Map<String, Object> pclaimMap, Map<String, Object> map,
+			RegisteredClaims registeredClaims, PublicClaims publicClaims) {
+		List<String> mapClaimKeyList = new ArrayList<String>(map.keySet());
+		List<String> pClaimKeyList = new ArrayList<String>(pclaimMap.keySet());
+		if (pClaimKeyList.size() > pClaimKeyList.size()) {
+			return false;
+		}
+		for (String mapKey : mapClaimKeyList) {
+
+			if (!isRegistered(mapKey, registeredClaims) && !isPublic(mapKey, publicClaims)) {
+
+				this.counter++;
+				if (!pclaimMap.containsKey(mapKey)) {
+					return false;
+				}
+
+				Object op = pclaimMap.get(mapKey);
+				Object ot = map.get(mapKey);
+
+				if (op instanceof String && ot instanceof String) {
+
+					if (!SecurityUtils.compareStrings(((String) op).trim(), ((String) ot).trim())) {
+						return false;
+					}
+				} else if (op instanceof HashMap && ot instanceof HashMap) {
+					@SuppressWarnings("unchecked")
+					boolean flag = verifyNestedClaims((HashMap<String, Object>) op, (HashMap<String, Object>) ot,
+							registeredClaims, publicClaims);
+					if (!flag) {
+						return false;
+					}
+				} else {
+					return false;
+				}
 			}
 		}
 		return true;
 	}
-	
 
+	private boolean isRegistered(String claimKey, RegisteredClaims registeredClaims) {
+
+		List<Claim> registeredClaimsList = registeredClaims.getAllClaims();
+		for (Claim s : registeredClaimsList) {
+			if (SecurityUtils.compareStrings(s.getKey().trim(), claimKey.trim())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isPublic(String claimKey, PublicClaims publicClaims) {
+		List<Claim> publicClaimsList = publicClaims.getAllClaims();
+		for (Claim s : publicClaimsList) {
+			if (SecurityUtils.compareStrings(s.getKey().trim(), claimKey.trim())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@SuppressWarnings("unchecked")
+	private int countingPrivateClaims(Map<String, Object> map, int counter) {
+		List<String> list = new ArrayList<String>(map.keySet());
+		for (String s : list) {
+			counter++;
+			Object obj = map.get(s);
+			if (obj instanceof HashMap) {
+				counter = countingPrivateClaims((HashMap<String, Object>) obj, counter);
+			}
+		}
+		return counter;
+	}
+
+	private boolean verifyHeader(DecodedJWT decodedJWT, JWTOptions options) {
+		HeaderParameters parameters = options.getHeaderParameters();
+		if (parameters.isEmpty()) {
+			return true;
+		}
+
+		List<String> allParms = parameters.getAll();
+		if (allParms.size() + 2 != getHeaderClaimsNumber(decodedJWT)) {
+			return false;
+		}
+		Map<String, Object> map = parameters.getMap();
+		for (String s : allParms) {
+
+			if (decodedJWT.getHeaderClaim(s) == null) {
+				return false;
+			}
+			com.auth0.jwt.interfaces.Claim c = decodedJWT.getHeaderClaim(s);
+			String claimValue = null;
+			try {
+				claimValue = c.asString().trim();
+			} catch (NullPointerException e) {
+				return false;
+			}
+			String optionsValue = ((String) map.get(s)).trim();
+			if (!SecurityUtils.compareStrings(claimValue, optionsValue)) {
+				return false;
+			}
+		}
+		return true;
+
+	}
+
+	private int getHeaderClaimsNumber(DecodedJWT decodedJWT) {
+		String base64Part = decodedJWT.getHeader();
+		byte[] base64Bytes = Base64.decodeBase64(base64Part);
+		EncodingUtil eu = new EncodingUtil();
+		String plainTextPart = eu.getString(base64Bytes);
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		ObjectMapper mapper = new ObjectMapper();
+
+		try {
+			map = (HashMap<String, Object>) mapper.readValue(plainTextPart, new TypeReference<Map<String, Object>>() {
+			});
+		} catch (Exception e) {
+			return 0;
+		}
+		return map.size();
+
+	}
 
 }
