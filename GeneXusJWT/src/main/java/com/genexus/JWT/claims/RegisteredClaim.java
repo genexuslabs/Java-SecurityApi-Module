@@ -1,7 +1,9 @@
 package com.genexus.JWT.claims;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 import com.auth0.jwt.JWTCreator.Builder;
 import com.auth0.jwt.interfaces.Verification;
@@ -94,6 +96,7 @@ public enum RegisteredClaim {
 
 	public static Verification getVerificationWithClaim(RegisteredClaim registeredClaimKey, String registeredClaimValue,
 			long registeredClaimCustomTime, Verification verification, Error error) {
+		
 		switch (registeredClaimKey) {
 		case iss:
 			verification.withIssuer(registeredClaimValue);
@@ -141,7 +144,10 @@ public enum RegisteredClaim {
 
 	public static Builder getBuilderWithClaim(RegisteredClaim registeredClaimKey, String registeredClaimValue,
 			Builder tokenBuilder, Error error) {
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 		switch (registeredClaimKey) {
+		
 		case iss:
 			try {
 				tokenBuilder.withIssuer(registeredClaimValue);
@@ -153,13 +159,17 @@ public enum RegisteredClaim {
 
 		case exp:
 			Date date = null;
+			
 			try {
-				date = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(registeredClaimValue);
+				
+				date = dateFormat.parse(registeredClaimValue);
+				
 			} catch (Exception e) {
 				error.setError("RC004", "Date format error; expected yyyy/MM/dd HH:mm:ss");
 				return null;
 			}
 			try {
+				
 				tokenBuilder.withExpiresAt(date);
 			} catch (Exception e) {
 				error.setError("RC005", e.getMessage());
@@ -186,7 +196,7 @@ public enum RegisteredClaim {
 		case nbf:
 			Date dateNbf = null;
 			try {
-				dateNbf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(registeredClaimValue);
+				dateNbf = dateFormat.parse(registeredClaimValue);
 			} catch (Exception e) {
 				error.setError("RC008", "Date format error; expected yyyy/MM/dd HH:mm:ss");
 				return null;
@@ -201,7 +211,7 @@ public enum RegisteredClaim {
 		case iat:
 			Date dateIat = null;
 			try {
-				dateIat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(registeredClaimValue);
+				dateIat = dateFormat.parse(registeredClaimValue);
 			} catch (Exception e) {
 				error.setError("RC010", "Date format error; expected yyyy/MM/dd HH:mm:ss");
 				return null;
