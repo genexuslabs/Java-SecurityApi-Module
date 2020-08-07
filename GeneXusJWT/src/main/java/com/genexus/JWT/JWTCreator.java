@@ -394,12 +394,16 @@ public class JWTCreator extends JWTObject {
 
 	private boolean verifyHeader(DecodedJWT decodedJWT, JWTOptions options) {
 		HeaderParameters parameters = options.getHeaderParameters();
-		if (parameters.isEmpty()) {
+		int claimsNumber = getHeaderClaimsNumber(decodedJWT);
+		if (parameters.isEmpty() && claimsNumber == 2) {
 			return true;
 		}
-
+		if(parameters.isEmpty() && claimsNumber > 2)
+		{
+			return false;
+		}
 		List<String> allParms = parameters.getAll();
-		if (allParms.size() + 2 != getHeaderClaimsNumber(decodedJWT)) {
+		if (allParms.size() + 2 != claimsNumber) {
 			return false;
 		}
 		Map<String, Object> map = parameters.getMap();
