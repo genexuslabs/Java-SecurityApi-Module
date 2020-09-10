@@ -142,7 +142,7 @@ public class AsymmetricCipher extends AsymmetricCipherObject {
 			return doEncrypt(algorithm, hash, padding, asymKey, plainText);
 		} catch (InvalidCipherTextException e) {
 			this.error.setError("AE036", "Algoritmo inválido" + algorithm);
-			e.printStackTrace();
+			//e.printStackTrace();
 			return "";
 		}
 	}
@@ -213,7 +213,7 @@ public class AsymmetricCipher extends AsymmetricCipherObject {
 			return doDecyrpt(algorithm, hash, padding, asymKey, encryptedInput);
 		} catch (InvalidCipherTextException | UnsupportedEncodingException e) {
 			this.error.setError("AE039", "Algoritmo inválido" + algorithm);
-			e.printStackTrace();
+			//e.printStackTrace();
 			return "";
 		}
 	}

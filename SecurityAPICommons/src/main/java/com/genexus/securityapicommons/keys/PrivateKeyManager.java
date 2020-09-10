@@ -17,6 +17,8 @@ import java.security.spec.PKCS8EncodedKeySpec;
 
 import javax.crypto.EncryptedPrivateKeyInfo;
 
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -26,8 +28,8 @@ import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
+import org.bouncycastle.util.encoders.Base64;
 
-import com.genexus.securityapicommons.config.EncodingUtil;
 import com.genexus.securityapicommons.utils.SecurityUtils;
 
 /**
@@ -67,8 +69,56 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 		}
 		return true;
 	}
+	
+	@Override
+	public boolean fromBase64(String base64)
+	{
+		boolean res;
+		try {
+			res = readBase64(base64);
+		} catch (IOException e) {
+			this.error.setError("PK0015", e.getMessage());
+			return false;
+		}
+		this.hasPrivateKey = res;
+		return res;
+	}
+	
+	@Override
+	public String toBase64()
+	{
+		if(this.hasPrivateKey) {
+			String encoded = "";
+			try {
+				encoded =  Base64.toBase64String(this.privateKeyInfo.getEncoded());
+			} catch (IOException e) {
+				this.error.setError("PK0017", e.getMessage());
+				return "";
+			}
+			return encoded;
+		}
+		this.error.setError("PK0016", "No private key loaded");
+		return "";
+	}
 
-	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
+	/******** EXTERNAL OBJECT PUBLIC METHODS - END 
+	 * @throws IOException ********/
+	
+	private boolean readBase64(String base64) throws IOException 
+	{
+		byte[] keybytes = Base64.decode(base64);
+		ASN1InputStream istream = new ASN1InputStream(keybytes);
+		ASN1Sequence seq = (ASN1Sequence) istream.readObject();
+	    this.privateKeyInfo = PrivateKeyInfo.getInstance(seq);
+	    istream.close();
+	    if (this.privateKeyInfo == null)
+	    {
+	    	this.error.setError("PK015", "Could not read private key from base64 string");
+	    	return false;
+	    }
+	    this.privateKeyAlgorithm = this.privateKeyInfo.getPrivateKeyAlgorithm().getAlgorithm().getId(); // 1.2.840.113549.1.1.1
+	    return true;
+	}
 	
 	/**
 	 * @return PrivateKey type for the key type
