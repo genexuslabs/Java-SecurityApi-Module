@@ -44,6 +44,7 @@ public class JWTCreator extends JWTObject {
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
 	public String doCreate(String algorithm, PrivateClaims privateClaims, JWTOptions options) {
+		this.error.cleanError();
 		if (options.hasError()) {
 			this.error = options.getError();
 			return "";
@@ -96,6 +97,35 @@ public class JWTCreator extends JWTObject {
 	}
 
 	public boolean doVerify(String token, String expectedAlgorithm, PrivateClaims privateClaims, JWTOptions options) {
+		return doVerify(token, expectedAlgorithm, privateClaims, options, true, true);
+	}
+
+	public boolean doVerifyJustSignature(String token, String expectedAlgorithm, JWTOptions options) {
+		return doVerify(token, expectedAlgorithm, null, options, false, false);
+	}
+
+	public boolean doVerifySignature(String token, String expectedAlgorithm, JWTOptions options) {
+		return doVerify(token, expectedAlgorithm, null, options, false, true);
+	}
+
+	public String getPayload(String token) {
+		return getTokenPart(token, "payload");
+
+	}
+
+	public String getHeader(String token) {
+		return getTokenPart(token, "header");
+	}
+
+	public String getTokenID(String token) {
+		return getTokenPart(token, "id");
+	}
+
+	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
+
+	private boolean doVerify(String token, String expectedAlgorithm, PrivateClaims privateClaims, JWTOptions options,
+			boolean verifyClaims, boolean verifyRegClaims) {
+		this.error.cleanError();
 		if (options.hasError()) {
 			this.error = options.getError();
 			return false;
@@ -108,9 +138,13 @@ public class JWTCreator extends JWTObject {
 			this.error.setError("JW005", e.getMessage());
 			return false;
 		}
-		if (isRevoqued(decodedJWT, options) || !verifyPrivateClaims(decodedJWT, privateClaims, options)
-				|| !verifyHeader(decodedJWT, options)) {
+		if (isRevoqued(decodedJWT, options)) {
 			return false;
+		}
+		if (verifyClaims) {
+			if (!verifyPrivateClaims(decodedJWT, privateClaims, options) || !verifyHeader(decodedJWT, options)) {
+				return false;
+			}
 		}
 		String algorithm = decodedJWT.getAlgorithm();
 		JWTAlgorithm alg = JWTAlgorithm.getJWTAlgorithm(algorithm, this.error);
@@ -146,7 +180,7 @@ public class JWTCreator extends JWTObject {
 			}
 		}
 		Verification verification = JWT.require(algorithmType);
-		verification = buildVerification(verification, options);
+		verification = buildVerification(verification, options, verifyRegClaims);
 		if (this.hasError()) {
 			return false;
 		}
@@ -164,21 +198,6 @@ public class JWTCreator extends JWTObject {
 		return true;
 
 	}
-
-	public String getPayload(String token) {
-		return getTokenPart(token, "payload");
-
-	}
-
-	public String getHeader(String token) {
-		return getTokenPart(token, "header");
-	}
-
-	public String getTokenID(String token) {
-		return getTokenPart(token, "id");
-	}
-
-	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
 	private String getTokenPart(String token, String part) {
 		DecodedJWT decodedToken = JWT.decode(token);
@@ -211,8 +230,11 @@ public class JWTCreator extends JWTObject {
 		return rList.isInRevocationList(decodedJWT.getId());
 	}
 
-	private Verification buildVerification(Verification verification, JWTOptions options) {
+	private Verification buildVerification(Verification verification, JWTOptions options, boolean verifyClaims) {
 		// Adding registered claims
+		if (!verifyClaims) {
+			return verification;
+		}
 		if (options.hasRegisteredClaims()) {
 			RegisteredClaims registeredClaims = options.getAllRegisteredClaims();
 			List<Claim> registeredC = registeredClaims.getAllClaims();
@@ -398,8 +420,7 @@ public class JWTCreator extends JWTObject {
 		if (parameters.isEmpty() && claimsNumber == 2) {
 			return true;
 		}
-		if(parameters.isEmpty() && claimsNumber > 2)
-		{
+		if (parameters.isEmpty() && claimsNumber > 2) {
 			return false;
 		}
 		List<String> allParms = parameters.getAll();
