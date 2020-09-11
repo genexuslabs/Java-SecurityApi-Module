@@ -109,16 +109,38 @@ public class JWTCreator extends JWTObject {
 	}
 
 	public String getPayload(String token) {
-		return getTokenPart(token, "payload");
+		String res = "";
+		try {
+			res = getTokenPart(token, "payload");
+		} catch (Exception e) {
+			this.error.setError("JW009", e.getMessage());
+			return "";
+		}
+		return res;
 
 	}
 
 	public String getHeader(String token) {
-		return getTokenPart(token, "header");
+		String res = "";
+		try {
+			res = getTokenPart(token, "header");
+		} catch (Exception e) {
+			this.error.setError("JW010", e.getMessage());
+			return "";
+		}
+		return res;
 	}
 
 	public String getTokenID(String token) {
-		return getTokenPart(token, "id");
+		String res = "";
+		try {
+
+			res = getTokenPart(token, "id");
+		} catch (Exception e) {
+			this.error.setError("JW011", e.getMessage());
+			return "";
+		}
+		return res;
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
@@ -199,7 +221,7 @@ public class JWTCreator extends JWTObject {
 
 	}
 
-	private String getTokenPart(String token, String part) {
+	private String getTokenPart(String token, String part) throws Exception {
 		DecodedJWT decodedToken = JWT.decode(token);
 		String base64Part = "";
 		switch (part) {
