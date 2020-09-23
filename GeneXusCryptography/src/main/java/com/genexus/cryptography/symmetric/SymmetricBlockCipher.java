@@ -50,13 +50,11 @@ import org.bouncycastle.crypto.params.AEADParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.util.encoders.Base64;
-import org.bouncycastle.util.encoders.Hex;
 
 import com.genexus.cryptography.commons.SymmetricBlockCipherObject;
 import com.genexus.cryptography.symmetric.utils.SymmetricBlockAlgorithm;
 import com.genexus.cryptography.symmetric.utils.SymmetricBlockMode;
 import com.genexus.cryptography.symmetric.utils.SymmetricBlockPadding;
-import com.genexus.securityapicommons.config.AvailableEncoding;
 import com.genexus.securityapicommons.config.EncodingUtil;
 import com.genexus.securityapicommons.utils.SecurityUtils;
 
@@ -76,19 +74,16 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
 
 	/**
-	 * @param symmetricBlockAlgorithm
-	 *            String SymmetricBlockAlgorithm enum, symmetric block algorithm
-	 *            name
-	 * @param symmetricBlockMode
-	 *            String SymmetricBlockModes enum, symmetric block mode name
-	 * @param key
-	 *            String Hexa key for the algorithm excecution
-	 * @param macSize
-	 *            int macSize in bits for MAC length for AEAD Encryption algorithm
-	 * @param nonce
-	 *            String Hexa nonce for MAC length for AEAD Encryption algorithm
-	 * @param plainText
-	 *            String UTF-8 plain text to encrypt
+	 * @param symmetricBlockAlgorithm String SymmetricBlockAlgorithm enum, symmetric
+	 *                                block algorithm name
+	 * @param symmetricBlockMode      String SymmetricBlockModes enum, symmetric
+	 *                                block mode name
+	 * @param key                     String Hexa key for the algorithm excecution
+	 * @param macSize                 int macSize in bits for MAC length for AEAD
+	 *                                Encryption algorithm
+	 * @param nonce                   String Hexa nonce for MAC length for AEAD
+	 *                                Encryption algorithm
+	 * @param plainText               String UTF-8 plain text to encrypt
 	 * @return String Base64 encrypted text with the given algorithm and parameters
 	 */
 	public String doAEADEncrypt(String symmetricBlockAlgorithm, String symmetricBlockMode, String key, int macSize,
@@ -105,10 +100,21 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 		if (this.error.existsError() && !(this.error.getCode().compareToIgnoreCase("SB016") == 0)) {
 			return "";
 		}
-		KeyParameter keyParam = new KeyParameter(Hex.decode(key));
-		byte[] nonceBytes = Hex.decode(nonce);
+
+		byte[] nonceBytes = SecurityUtils.getHexa(nonce, "SB024", this.error);
+		byte[] keyBytes = SecurityUtils.getHexa(key, "SB024", this.error);
+		if (this.hasError()) {
+			return "";
+		}
+
+		KeyParameter keyParam = new KeyParameter(keyBytes);
 		AEADParameters AEADparams = new AEADParameters(keyParam, macSize, nonceBytes);
-		bbc.init(true, AEADparams);
+		try {
+			bbc.init(true, AEADparams);
+		} catch (Exception e) {
+			this.error.setError("SB029", e.getMessage());
+			return "";
+		}
 		EncodingUtil eu = new EncodingUtil();
 		byte[] inputBytes = eu.getBytes(plainText);
 		if (eu.getError().existsError()) {
@@ -133,19 +139,16 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	}
 
 	/**
-	 * @param symmetricBlockAlgorithm
-	 *            String SymmetricBlockAlgorithm enum, symmetric block algorithm
-	 *            name
-	 * @param symmetricBlockMode
-	 *            String SymmetricBlockModes enum, symmetric block mode name
-	 * @param key
-	 *            String Hexa key for the algorithm excecution
-	 * @param macSize
-	 *            int macSize in bits for MAC length for AEAD Encryption algorithm
-	 * @param nonce
-	 *            String Hexa nonce for MAC length for AEAD Encryption algorithm
-	 * @param encryptedInput
-	 *            String Base64 text to decrypt
+	 * @param symmetricBlockAlgorithm String SymmetricBlockAlgorithm enum, symmetric
+	 *                                block algorithm name
+	 * @param symmetricBlockMode      String SymmetricBlockModes enum, symmetric
+	 *                                block mode name
+	 * @param key                     String Hexa key for the algorithm excecution
+	 * @param macSize                 int macSize in bits for MAC length for AEAD
+	 *                                Encryption algorithm
+	 * @param nonce                   String Hexa nonce for MAC length for AEAD
+	 *                                Encryption algorithm
+	 * @param encryptedInput          String Base64 text to decrypt
 	 * @return String plain text UTF-8 with the given algorithm and parameters
 	 */
 	public String doAEADDecrypt(String symmetricBlockAlgorithm, String symmetricBlockMode, String key, int macSize,
@@ -162,10 +165,20 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 		if (this.error.existsError() && !(this.error.getCode().compareToIgnoreCase("SB016") == 0)) {
 			return "";
 		}
-		KeyParameter keyParam = new KeyParameter(Hex.decode(key));
-		byte[] nonceBytes = Hex.decode(nonce);
+		byte[] nonceBytes = SecurityUtils.getHexa(nonce, "SB025", this.error);
+		byte[] keyBytes = SecurityUtils.getHexa(key, "SB025", this.error);
+		if (this.hasError()) {
+			return "";
+		}
+
+		KeyParameter keyParam = new KeyParameter(keyBytes);
 		AEADParameters AEADparams = new AEADParameters(keyParam, macSize, nonceBytes);
-		bbc.init(false, AEADparams);
+		try {
+			bbc.init(false, AEADparams);
+		} catch (Exception e) {
+			this.error.setError("SB030", e.getMessage());
+			return "";
+		}
 		byte[] out2 = Base64.decode(encryptedInput);
 		byte[] comparisonBytes = new byte[bbc.getOutputSize(out2.length)];
 		int length = bbc.processBytes(out2, 0, out2.length, comparisonBytes, 0);
@@ -187,20 +200,16 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	}
 
 	/**
-	 * @param symmetricBlockAlgorithm
-	 *            String SymmetricBlockAlgorithm enum, symmetric block algorithm
-	 *            name
-	 * @param symmetricBlockMode
-	 *            String SymmetricBlockModes enum, symmetric block mode name
-	 * @param symmetricBlockPadding
-	 *            String SymmetricBlockPadding enum, symmetric block padding name
-	 * @param key
-	 *            String Hexa key for the algorithm excecution
-	 * @param IV
-	 *            String IV for the algorithm execution, must be the same length as
-	 *            the blockSize
-	 * @param plainText
-	 *            String UTF-8 plain text to encrypt
+	 * @param symmetricBlockAlgorithm String SymmetricBlockAlgorithm enum, symmetric
+	 *                                block algorithm name
+	 * @param symmetricBlockMode      String SymmetricBlockModes enum, symmetric
+	 *                                block mode name
+	 * @param symmetricBlockPadding   String SymmetricBlockPadding enum, symmetric
+	 *                                block padding name
+	 * @param key                     String Hexa key for the algorithm excecution
+	 * @param IV                      String IV for the algorithm execution, must be
+	 *                                the same length as the blockSize
+	 * @param plainText               String UTF-8 plain text to encrypt
 	 * @return String Base64 encrypted text with the given algorithm and parameters
 	 */
 	public String doEncrypt(String symmetricBlockAlgorithm, String symmetricBlockMode, String symmetricBlockPadding,
@@ -219,15 +228,29 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 		if (this.error.existsError() && !(this.error.getCode().compareToIgnoreCase("SB016") == 0)) {
 			return "";
 		}
-		byte[] byteIV = Hex.decode(IV);
-		byte[] byteKey = Hex.decode(key);
+		byte[] byteIV = SecurityUtils.getHexa(IV, "SB022", this.error);
+		byte[] byteKey = SecurityUtils.getHexa(key, "SB022", this.error);
+		if (this.hasError()) {
+			return "";
+		}
+
 		KeyParameter keyParam = new KeyParameter(byteKey);
 
 		if (SymmetricBlockMode.ECB != mode && SymmetricBlockMode.OPENPGPCFB != mode) {
 			ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, byteIV);
-			bbc.init(true, keyParamWithIV);
+			try {
+				bbc.init(true, keyParamWithIV);
+			} catch (Exception e) {
+				this.error.setError("SB025", e.getMessage());
+				return "";
+			}
 		} else {
-			bbc.init(true, keyParam);
+			try {
+				bbc.init(true, keyParam);
+			} catch (Exception e) {
+				this.error.setError("SB026", e.getMessage());
+				return "";
+			}
 		}
 		EncodingUtil eu = new EncodingUtil();
 		byte[] inputBytes = eu.getBytes(plainText);// plainText.getBytes();
@@ -253,20 +276,16 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	}
 
 	/**
-	 * @param symmetricBlockAlgorithm
-	 *            String SymmetricBlockAlgorithm enum, symmetric block algorithm
-	 *            name
-	 * @param symmetricBlockMode
-	 *            String SymmetricBlockModes enum, symmetric block mode name
-	 * @param symmetricBlockPadding
-	 *            String SymmetricBlockPadding enum, symmetric block padding name
-	 * @param key
-	 *            String Hexa key for the algorithm excecution
-	 * @param IV
-	 *            String IV for the algorithm execution, must be the same length as
-	 *            the blockSize
-	 * @param encryptedInput
-	 *            String Base64 text to decrypt
+	 * @param symmetricBlockAlgorithm String SymmetricBlockAlgorithm enum, symmetric
+	 *                                block algorithm name
+	 * @param symmetricBlockMode      String SymmetricBlockModes enum, symmetric
+	 *                                block mode name
+	 * @param symmetricBlockPadding   String SymmetricBlockPadding enum, symmetric
+	 *                                block padding name
+	 * @param key                     String Hexa key for the algorithm excecution
+	 * @param IV                      String IV for the algorithm execution, must be
+	 *                                the same length as the blockSize
+	 * @param encryptedInput          String Base64 text to decrypt
 	 * @return String plain text UTF-8 with the given algorithm and parameters
 	 */
 	public String doDecrypt(String symmetricBlockAlgorithm, String symmetricBlockMode, String symmetricBlockPadding,
@@ -284,14 +303,27 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 		if (this.error.existsError() && !(this.error.getCode().compareToIgnoreCase("SB016") == 0)) {
 			return "";
 		}
-		byte[] bytesKey = Hex.decode(key);
-		byte[] bytesIV = Hex.decode(IV);
+		byte[] bytesKey = SecurityUtils.getHexa(key, "SB023", this.error);
+		byte[] bytesIV = SecurityUtils.getHexa(IV, "SB023", this.error);
+		if (this.hasError()) {
+			return "";
+		}
 		KeyParameter keyParam = new KeyParameter(bytesKey);
 		if (SymmetricBlockMode.ECB != mode && SymmetricBlockMode.OPENPGPCFB != mode) {
 			ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, bytesIV);
-			bbc.init(false, keyParamWithIV);
+			try {
+				bbc.init(false, keyParamWithIV);
+			} catch (Exception e) {
+				this.error.setError("SB027", e.getMessage());
+				return "";
+			}
 		} else {
-			bbc.init(false, keyParam);
+			try {
+				bbc.init(false, keyParam);
+			} catch (Exception e) {
+				this.error.setError("SB028", e.getMessage());
+				return "";
+			}
 		}
 
 		byte[] out2 = Base64.decode(encryptedInput);
@@ -319,12 +351,9 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	 * Gets the BufferedBlockCipher loaded with Padding, Mode and Engine to Encrypt
 	 * with a Symmetric Block Algorithm
 	 * 
-	 * @param algorithm
-	 *            SymmetricBlockAlgorithm enum, algorithm name
-	 * @param mode
-	 *            SymmetricBlockModes enum, mode name
-	 * @param padding
-	 *            SymmetricBlockPadding enum, padding name
+	 * @param algorithm SymmetricBlockAlgorithm enum, algorithm name
+	 * @param mode      SymmetricBlockModes enum, mode name
+	 * @param padding   SymmetricBlockPadding enum, padding name
 	 * @return BufferedBlockCipher loaded with Padding, Mode and Engine to Encrypt
 	 *         with a Symmetric Block Algorithm
 	 */
@@ -351,10 +380,8 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	}
 
 	/**
-	 * @param mode
-	 *            SymmetricBlockModes enum, mode name
-	 * @param padding
-	 *            SymmetricBlockPadding enum, padding name
+	 * @param mode    SymmetricBlockModes enum, mode name
+	 * @param padding SymmetricBlockPadding enum, padding name
 	 * @return boolean true if it uses CTS
 	 */
 	private boolean usesCTS(SymmetricBlockMode mode, SymmetricBlockPadding padding) {
@@ -362,8 +389,7 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	}
 
 	/**
-	 * @param algorithm
-	 *            SymmetricBlockAlgorithm enum, algorithm name
+	 * @param algorithm SymmetricBlockAlgorithm enum, algorithm name
 	 * @return BlockCipher with the algorithm Engine
 	 */
 	public BlockCipher getCipherEngine(SymmetricBlockAlgorithm algorithm) {
@@ -484,8 +510,7 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	}
 
 	/**
-	 * @param padding
-	 *            SymmetricBlockPadding enum, padding name
+	 * @param padding SymmetricBlockPadding enum, padding name
 	 * @return BlockCipherPadding with loaded padding type, if padding is WITHCTS
 	 *         returns null
 	 */
@@ -521,10 +546,8 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	}
 
 	/**
-	 * @param blockCipher
-	 *            BlockCipher engine
-	 * @param mode
-	 *            SymmetricBlockModes enum, symmetric block mode name
+	 * @param blockCipher BlockCipher engine
+	 * @param mode        SymmetricBlockModes enum, symmetric block mode name
 	 * @return AEADBlockCipher loaded with a given BlockCipher
 	 */
 	private AEADBlockCipher getAEADCipherMode(BlockCipher blockCipher, SymmetricBlockMode mode) {
@@ -553,10 +576,8 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	}
 
 	/**
-	 * @param blockCipher
-	 *            BlockCipher loaded with the algorithm Engine
-	 * @param mode
-	 *            SymmetricBlockModes enum, mode name
+	 * @param blockCipher BlockCipher loaded with the algorithm Engine
+	 * @param mode        SymmetricBlockModes enum, mode name
 	 * @return BlockCipher with mode loaded
 	 */
 	private BlockCipher getCipherMode(BlockCipher blockCipher, SymmetricBlockMode mode) {
@@ -604,5 +625,5 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 		}
 		return bc;
 	}
-	
+
 }

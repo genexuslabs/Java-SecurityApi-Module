@@ -39,11 +39,11 @@ public class JWTOptions extends SecurityAPIObject {
 	}
 	
 	public void setSecret(String value) {
-
+		
 		try {
 			secret = Hex.decode(value);
 		} catch (Exception e) {
-			this.error.setError("OP001", "Hexadecimal value expected");
+			this.error.setError("OP001", e.getMessage());
 			secret = null;
 		}
 

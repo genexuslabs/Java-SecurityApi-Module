@@ -12,11 +12,11 @@ import org.bouncycastle.crypto.engines.XSalsa20Engine;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.util.encoders.Base64;
-import org.bouncycastle.util.encoders.Hex;
 
 import com.genexus.cryptography.commons.SymmectricStreamCipherObject;
 import com.genexus.cryptography.symmetric.utils.SymmetricStreamAlgorithm;
 import com.genexus.securityapicommons.config.EncodingUtil;
+import com.genexus.securityapicommons.utils.SecurityUtils;
 
 /**
  * @author sgrampone
@@ -34,17 +34,13 @@ public class SymmetricStreamCipher extends SymmectricStreamCipherObject {
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
 
 	/**
-	 * @param symmetricStreamAlgorithm
-	 *            String SymmetrcStreamAlgorithm enum, algorithm name
-	 * @param symmetricBlockMode
-	 *            String SymmetricBlockMode enum, mode name
-	 * @param key
-	 *            String Hexa key for the algorithm excecution
-	 * @param IV
-	 *            String Hexa IV (nonce) for those algorithms that uses, ignored if
-	 *            not
-	 * @param plainText
-	 *            String UTF-8 plain text to encrypt
+	 * @param symmetricStreamAlgorithm String SymmetrcStreamAlgorithm enum,
+	 *                                 algorithm name
+	 * @param symmetricBlockMode       String SymmetricBlockMode enum, mode name
+	 * @param key                      String Hexa key for the algorithm excecution
+	 * @param IV                       String Hexa IV (nonce) for those algorithms
+	 *                                 that uses, ignored if not
+	 * @param plainText                String UTF-8 plain text to encrypt
 	 * @return String Base64 encrypted text with the given algorithm and parameters
 	 */
 	public String doEncrypt(String symmetricStreamAlgorithm, String key, String IV, String plainText) {
@@ -61,15 +57,29 @@ public class SymmetricStreamCipher extends SymmectricStreamCipherObject {
 			return "";
 		}
 
-		KeyParameter keyParam = new KeyParameter(Hex.decode(key));
+		byte[] keyBytes = SecurityUtils.getHexa(key, "SS007", this.error);
+		byte[] ivBytes = SecurityUtils.getHexa(IV, "SS007", this.error);
+		if (this.hasError()) {
+			return "";
+		}
+		KeyParameter keyParam = new KeyParameter(keyBytes);
 		if (SymmetricStreamAlgorithm.usesIV(algorithm, this.error)) {
 			if (!this.error.existsError()) {
-				ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, Hex.decode(IV));
-				engine.init(true, keyParamWithIV);
+				ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, ivBytes);
+				try {
+					engine.init(true, keyParamWithIV);
+				} catch (Exception e) {
+					this.error.setError("SS008", e.getMessage());
+					return "";
+				}
 			}
 		} else {
-
-			engine.init(true, keyParam);
+			try {
+				engine.init(true, keyParam);
+			} catch (Exception e) {
+				this.error.setError("SS009", e.getLocalizedMessage());
+				return "";
+			}
 		}
 		EncodingUtil eu = new EncodingUtil();
 		byte[] input = eu.getBytes(plainText);
@@ -90,18 +100,14 @@ public class SymmetricStreamCipher extends SymmectricStreamCipherObject {
 	}
 
 	/**
-	 * @param symmetricStreamAlgorithm
-	 *            String SymmetrcStreamAlgorithm enum, algorithm name
-	 * @param symmetricBlockMode
-	 *            String SymmetricBlockMode enum, mode name
-	 * @param key
-	 *            String Hexa key for the algorithm excecution
-	 * @param IV
-	 *            String Hexa IV (nonce) for those algorithms that uses, ignored if
-	 *            not
-	 * @param encryptedInput
-	 *            String Base64 encrypted text with the given algorithm and
-	 *            parameters
+	 * @param symmetricStreamAlgorithm String SymmetrcStreamAlgorithm enum,
+	 *                                 algorithm name
+	 * @param symmetricBlockMode       String SymmetricBlockMode enum, mode name
+	 * @param key                      String Hexa key for the algorithm excecution
+	 * @param IV                       String Hexa IV (nonce) for those algorithms
+	 *                                 that uses, ignored if not
+	 * @param encryptedInput           String Base64 encrypted text with the given
+	 *                                 algorithm and parameters
 	 * @return String plain text UTF-8 with the given algorithm and parameters
 	 */
 	public String doDecrypt(String symmetricStreamAlgorithm, String key, String IV, String encryptedInput) {
@@ -117,15 +123,30 @@ public class SymmetricStreamCipher extends SymmectricStreamCipherObject {
 		if (this.error.existsError()) {
 			return "";
 		}
+		byte[] keyBytes = SecurityUtils.getHexa(key, "SS010", this.error);
+		byte[] ivBytes = SecurityUtils.getHexa(IV, "SS010", this.error);
+		if (this.hasError()) {
+			return "";
+		}
 
-		KeyParameter keyParam = new KeyParameter(Hex.decode(key));
+		KeyParameter keyParam = new KeyParameter(keyBytes);
 		if (SymmetricStreamAlgorithm.usesIV(algorithm, this.error)) {
 			if (!this.error.existsError()) {
-				ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, Hex.decode(IV));
-				engine.init(false, keyParamWithIV);
+				ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, ivBytes);
+				try {
+					engine.init(false, keyParamWithIV);
+				} catch (Exception e) {
+					this.error.setError("SS011", e.getMessage());
+					return "";
+				}
 			}
 		} else {
-			engine.init(false, keyParam);
+			try {
+				engine.init(false, keyParam);
+			} catch (Exception e) {
+				this.error.setError("SS012", e.getMessage());
+				return "";
+			}
 		}
 
 		byte[] input = Base64.decode(encryptedInput);
@@ -148,8 +169,7 @@ public class SymmetricStreamCipher extends SymmectricStreamCipherObject {
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
 	/**
-	 * @param algorithm
-	 *            SymmetrcStreamAlgorithm enum, algorithm name
+	 * @param algorithm SymmetrcStreamAlgorithm enum, algorithm name
 	 * @return StreamCipher with the algorithm Stream Engine
 	 */
 	private StreamCipher getCipherEngine(SymmetricStreamAlgorithm algorithm) {
