@@ -8,7 +8,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import com.genexus.securityapicommons.commons.Error;
 
+import org.bouncycastle.util.encoders.Hex;
+
+import com.genexus.securityapicommons.commons.SecurityAPIObject;
 import com.genexus.securityapicommons.config.EncodingUtil;
 
 public class SecurityUtils {
@@ -74,5 +78,19 @@ public class SecurityUtils {
 		final File initialFile = new File(path);
 		final InputStream targetStream = new DataInputStream(new FileInputStream(initialFile));
 		return targetStream;
+	}
+	
+	public static byte[] getHexa(String hex, String code, Error error)
+	{
+		byte[] output;
+		try 
+		{
+			output = Hex.decode(hex);
+		}catch(Exception e)
+		{
+			error.setError(code, e.getMessage());
+			return null;
+		}
+		return output;
 	}
 }

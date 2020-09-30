@@ -29,7 +29,6 @@ import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.util.encoders.Base64;
 
-import com.genexus.securityapicommons.config.EncodingUtil;
 import com.genexus.securityapicommons.utils.SecurityUtils;
 
 public class CertificateX509 extends com.genexus.securityapicommons.commons.Certificate {
@@ -75,8 +74,8 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 		boolean result = false;
 		try {
 			result = loadPublicKeyFromFile(path, alias, password);
-		} catch (CertificateException | KeyStoreException | NoSuchAlgorithmException | IOException e) {
-			this.error.setError("CE001", "Invalid certificate");
+		} catch (Exception e) {
+			this.error.setError("CE001", e.getMessage());
 			return false;
 		}
 		if (result) {
@@ -137,18 +136,18 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 		}
 		return aux[0].toUpperCase();
 	}
-	
+
 	public AsymmetricKeyParameter getPublicKeyParameterForEncryption() {
-		
-		if(SecurityUtils.compareStrings(this.getPublicKeyAlgorithm(), "RSA")){
+
+		if (SecurityUtils.compareStrings(this.getPublicKeyAlgorithm(), "RSA")) {
 			return getRSAKeyParameter();
-		}else {
-	
+		} else {
+
 			this.error.setError("AE009", "Unrecognized encryption algorithm");
 			return null;
 		}
 	}
-	
+
 	/**
 	 * @return AsymmetricKeyParameter with loaded public key for RSA or ECDSA
 	 *         signature verification
@@ -173,17 +172,17 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 			return null;
 		}
 	}
-	
+
 	private AsymmetricKeyParameter getRSAKeyParameter() {
 
 		RSAKeyParameters parms;
-			try {
-				parms = (RSAKeyParameters) PublicKeyFactory.createKey(this.subjectPublicKeyInfo);
-			} catch (IOException e) {
-				this.error.setError("AE014", "Not RSA key");
-				e.printStackTrace();
-				return null;
-			}
+		try {
+			parms = (RSAKeyParameters) PublicKeyFactory.createKey(this.subjectPublicKeyInfo);
+		} catch (IOException e) {
+			this.error.setError("AE014", "Not RSA key");
+			e.printStackTrace();
+			return null;
+		}
 		return parms;
 	}
 
@@ -245,12 +244,9 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 	 * stores SubjectPublicKeyInfo Data Type of public key from certificate,
 	 * algorithm and digest
 	 * 
-	 * @param path
-	 *            String of the certificate file
-	 * @param alias
-	 *            Srting certificate's alias, required if PKCS12
-	 * @param password
-	 *            String certificate's password, required if PKCS12
+	 * @param path     String of the certificate file
+	 * @param alias    Srting certificate's alias, required if PKCS12
+	 * @param password String certificate's password, required if PKCS12
 	 * @return boolean true if loaded correctly
 	 * @throws CertificateException
 	 * @throws IOException
@@ -286,10 +282,8 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 	 * @param path
 	 * 
 	 * 
-	 * @param alias
-	 *            Strting certificate's alias
-	 * @param password
-	 *            String certificate's password
+	 * @param alias    Strting certificate's alias
+	 * @param password String certificate's password
 	 * @return boolean true if loaded correctly
 	 * @throws IOException
 	 * @throws KeyStoreException
@@ -322,8 +316,7 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 	 * stores SubjectPublicKeyInfo Data Type from certificate's public key,
 	 * asymmetric algorithm and digest
 	 * 
-	 * @param path
-	 *            String .pem certificate path
+	 * @param path String .pem certificate path
 	 * @return boolean true if loaded correctly
 	 * @throws IOException
 	 * @throws CertificateException
@@ -364,8 +357,7 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 	 * stores PublicKeyInfo Data Type from the certificate's public key, asymmetric
 	 * algorithm and digest
 	 * 
-	 * @param path
-	 *            String .crt .cer file certificate
+	 * @param path String .crt .cer file certificate
 	 * @return boolean true if loaded correctly
 	 * @throws IOException
 	 * @throws CertificateException
@@ -395,8 +387,7 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 	/**
 	 * Extract public key information and certificate's signing algorithm
 	 * 
-	 * @param cert
-	 *            java Certificate
+	 * @param cert java Certificate
 	 */
 	private void extractPublicInfo() {
 		Certificate cert1 = (Certificate) this.cert;
@@ -441,6 +432,5 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 		String[] aux = this.publicKeyAlgorithm.split("with");
 		return aux[1].toUpperCase();
 	}
-
 
 }

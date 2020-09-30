@@ -3,7 +3,6 @@ package com.genexus.cryptography.mac;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.crypto.params.KeyParameter;
-import org.bouncycastle.util.encoders.Hex;
 
 import com.genexus.cryptography.commons.HmacObject;
 import com.genexus.cryptography.hash.Hashing;
@@ -17,10 +16,13 @@ public class Hmac extends HmacObject {
 		super();
 	}
 
-	/********EXTERNAL OBJECT PUBLIC METHODS  - BEGIN ********/
+	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
 	@Override
 	public String calculate(String plainText, String password, String algorithm) {
-		byte[] pass = Hex.decode(password);
+		byte[] pass = SecurityUtils.getHexa(password, "HS002", this.error);
+		if (this.hasError()) {
+			return "";
+		}
 		EncodingUtil eu = new EncodingUtil();
 		byte[] inputBytes = eu.getBytes(plainText);
 		if (this.hasError()) {
@@ -33,7 +35,12 @@ public class Hmac extends HmacObject {
 		}
 		Digest digest = hash.createHash(alg);
 		HMac engine = new HMac(digest);
-		engine.init(new KeyParameter(pass));
+		try {
+			engine.init(new KeyParameter(pass));
+		} catch (Exception e) {
+			this.error.setError("HS003", e.getMessage());
+			return "";
+		}
 		byte[] resBytes = new byte[engine.getMacSize()];
 		engine.update(inputBytes, 0, inputBytes.length);
 		engine.doFinal(resBytes, 0);
@@ -51,12 +58,11 @@ public class Hmac extends HmacObject {
 		String res = calculate(plainText, password, algorithm);
 		return SecurityUtils.compareStrings(res, mac);
 	}
-	
-	/********EXTERNAL OBJECT PUBLIC METHODS  - END ********/
+
+	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
 	/**
-	 * @param digest
-	 *            byte array
+	 * @param digest byte array
 	 * @return String Hexa respresentation of the byte array digest
 	 */
 	private String toHexaString(byte[] digest) {

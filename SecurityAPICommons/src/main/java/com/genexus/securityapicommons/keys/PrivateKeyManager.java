@@ -59,9 +59,8 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 	public boolean loadPKCS12(String privateKeyPath, String alias, String password) {
 		try {
 			loadKeyFromFile(privateKeyPath, alias, password);
-		} catch (UnrecoverableKeyException | CertificateException | NoSuchAlgorithmException | KeyStoreException
-				| IOException e) {
-
+		} catch (Exception e) {
+			this.error.setError("PK018", e.getMessage());
 			return false;
 		}
 		if (this.hasError()) {
