@@ -13,6 +13,7 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
@@ -431,6 +432,33 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 		}
 		String[] aux = this.publicKeyAlgorithm.split("with");
 		return aux[1].toUpperCase();
+	}
+	
+	/**
+	 * @return ECPublicKey type for the key type
+	 */
+	public ECPublicKey getECPublicKeyJWT() {
+		KeyFactory kf = null;
+		X509EncodedKeySpec encodedKeySpec = null;
+		try {
+			kf = SecurityUtils.getKeyFactory(this.getPublicKeyAlgorithm());
+			encodedKeySpec = new X509EncodedKeySpec(this.subjectPublicKeyInfo.getEncoded());
+
+		} catch (NoSuchAlgorithmException | IOException e) {
+			this.error.setError("CE017", "Error reading algorithm");
+		}
+		ECPublicKey pk = null;
+		if ((kf != null) && (encodedKeySpec != null)) {
+			try {
+
+				pk = (ECPublicKey) kf.generatePublic(encodedKeySpec);
+			} catch (InvalidKeySpecException e) {
+				// e.printStackTrace();
+				this.error.setError("CE018", "Error casting public key data for JWT signing");
+			}
+		}
+		return pk;
+
 	}
 
 }

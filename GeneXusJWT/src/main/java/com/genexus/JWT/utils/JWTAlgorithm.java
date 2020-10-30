@@ -6,7 +6,7 @@ import com.genexus.securityapicommons.keys.CertificateX509;
 import com.genexus.securityapicommons.keys.PrivateKeyManager;
 
 public enum JWTAlgorithm {
-	HS256, HS512, RS256, RS512,;
+	HS256, HS512, RS256, RS512, ES256, ES384, ES512 ;
 
 	public static String valueOf(JWTAlgorithm jWTAlgorithm, Error error) {
 		switch (jWTAlgorithm) {
@@ -18,6 +18,12 @@ public enum JWTAlgorithm {
 			return "RS256";
 		case RS512:
 			return "RS512";
+		case ES256:
+			return "ES256";
+		case ES384:
+			return "ES384";
+		case ES512:
+			return "ES512";
 		default:
 			error.setError("JA001", "Unrecognized algorithm");
 			return "Unrecognized algorithm";
@@ -34,6 +40,12 @@ public enum JWTAlgorithm {
 			return JWTAlgorithm.RS256;
 		case "RS512":
 			return JWTAlgorithm.RS512;
+		case "ES256":
+			return JWTAlgorithm.ES256;
+		case "ES384":
+			return JWTAlgorithm.ES384;
+		case "ES512":
+			return JWTAlgorithm.ES512;
 		default:
 			error.setError("JA002", "Unrecognized algorithm");
 			return null;
@@ -44,6 +56,9 @@ public enum JWTAlgorithm {
 		switch (jWTAlgorithm) {
 		case RS256:
 		case RS512:
+		case ES256:
+		case ES384:
+		case ES512:
 			return true;
 		default:
 			return false;
@@ -84,6 +99,27 @@ public enum JWTAlgorithm {
 			case RS512:
 				try {
 					return Algorithm.RSA512(cert.getRSAPublicKey(), key.getRSAPrivateKeyJWT());
+				} catch (Exception e) {
+					error.setError("JA008", e.getMessage());
+					return null;
+				}
+			case ES256:
+				try {
+					return Algorithm.ECDSA256(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT());
+				} catch (Exception e) {
+					error.setError("JA008", e.getMessage());
+					return null;
+				}
+			case ES384:
+				try {
+					return Algorithm.ECDSA384(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT());
+				} catch (Exception e) {
+					error.setError("JA008", e.getMessage());
+					return null;
+				}
+			case ES512:
+				try {
+					return Algorithm.ECDSA512(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT());
 				} catch (Exception e) {
 					error.setError("JA008", e.getMessage());
 					return null;
