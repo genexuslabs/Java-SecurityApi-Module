@@ -11,6 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -396,6 +397,32 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 			}
 		}
 		return flag;
+	}
+	
+	/**
+	 * @return PublicKey type for the key type
+	 */
+	public ECPrivateKey getECPrivateKeyJWT() {
+
+		KeyFactory kf = null;
+		PKCS8EncodedKeySpec keySpec = null;
+		try {
+			kf = SecurityUtils.getKeyFactory(this.getPrivateKeyAlgorithm());
+			keySpec = new PKCS8EncodedKeySpec(this.privateKeyInfo.getEncoded());
+
+		} catch (NoSuchAlgorithmException | IOException e) {
+			this.error.setError("PK019", "Error reading algorithm");
+		}
+		ECPrivateKey pk = null;
+		if ((kf != null) && (keySpec != null)) {
+			try {
+				pk = (ECPrivateKey) kf.generatePrivate(keySpec);
+			} catch (InvalidKeySpecException e) {
+				this.error.setError("PK020", "Error reading key");
+			}
+		}
+		return pk;
+
 	}
 
 }
