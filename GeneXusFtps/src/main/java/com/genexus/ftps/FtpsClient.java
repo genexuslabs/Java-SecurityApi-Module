@@ -57,6 +57,7 @@ public class FtpsClient extends FtpsClientObject {
 		try {
 			this.client.connect(options.getHost(), options.getPort());
 			if (options.getForceEncryption()) {
+				client.execPBSZ(0);
 				client.execPROT("P");
 			}
 			if (!FTPReply.isPositiveCompletion(this.client.getReplyCode())) {
@@ -279,7 +280,7 @@ public class FtpsClient extends FtpsClientObject {
 			this.client.setFileType(FTP.BINARY_FILE_TYPE);
 			break;
 		case ASCII:
-			this.client.sendCommand(FTP.ASCII_FILE_TYPE);
+			this.client.setFileType(FTP.ASCII_FILE_TYPE);
 			break;
 		default:
 			this.client.setFileType(FTP.BINARY_FILE_TYPE);
