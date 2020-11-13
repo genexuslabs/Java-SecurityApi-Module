@@ -19,7 +19,7 @@ public enum SymmetricStreamAlgorithm {
 	 * @return SymmetricStreamAlgorithm enum representation
 	 */
 	public static SymmetricStreamAlgorithm getSymmetricStreamAlgorithm(String symmetricStreamAlgorithm, Error error) {
-		switch (symmetricStreamAlgorithm) {
+		switch (symmetricStreamAlgorithm.toUpperCase().trim()) {
 		case "RC4":
 			return SymmetricStreamAlgorithm.RC4;
 		case "HC128":

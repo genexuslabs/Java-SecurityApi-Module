@@ -18,7 +18,7 @@ public enum TransformsWrapper {
 	 * @return TransformsWrapper enum representation
 	 */
 	public static TransformsWrapper getTransformsWrapper(String transformsWrapper, Error error) {
-		switch (transformsWrapper) {
+		switch (transformsWrapper.toUpperCase().trim()) {
 		case "ENVELOPED":
 			return TransformsWrapper.ENVELOPED;
 		case "ENVELOPING":

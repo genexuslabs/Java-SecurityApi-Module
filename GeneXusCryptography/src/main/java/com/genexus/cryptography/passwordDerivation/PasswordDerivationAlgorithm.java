@@ -21,7 +21,7 @@ public enum PasswordDerivationAlgorithm {
 	 */
 	public static PasswordDerivationAlgorithm getPasswordDerivationAlgorithm(String passwordDerivationAlgorithm,
 			Error error) {
-		switch (passwordDerivationAlgorithm) {
+		switch (passwordDerivationAlgorithm.trim()) {
 		case "SCrypt":
 			return PasswordDerivationAlgorithm.SCrypt;
 		case "Bcrypt":

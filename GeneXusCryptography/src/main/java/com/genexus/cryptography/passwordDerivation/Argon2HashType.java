@@ -8,7 +8,7 @@ public enum Argon2HashType {
 	ARGON2_d, ARGON2_i, ARGON2_id;
 
 	public static Argon2HashType getArgon2HashType(String argon2HashType, Error error) {
-		switch (argon2HashType) {
+		switch (argon2HashType.trim()) {
 		case "ARGON2_d":
 			return Argon2HashType.ARGON2_d;
 		case "ARGON2_i":

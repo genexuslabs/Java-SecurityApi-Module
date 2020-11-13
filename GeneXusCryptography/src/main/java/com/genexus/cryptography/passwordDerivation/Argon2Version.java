@@ -9,7 +9,7 @@ public enum Argon2Version {
 	ARGON2_VERSION_10, ARGON2_VERSION_13;
 
 	public static Argon2Version getArgon2Version(String argon2Version, Error error) {
-		switch (argon2Version) {
+		switch (argon2Version.toUpperCase().trim()) {
 		case "ARGON2_VERSION_10":
 			return Argon2Version.ARGON2_VERSION_10;
 		case "ARGON2_VERSION_13":

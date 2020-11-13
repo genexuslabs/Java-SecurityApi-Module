@@ -8,7 +8,7 @@ public enum AvailableEncoding {
 	public static AvailableEncoding getAvailableEncoding(String encoding, Error error) {
 		encoding = encoding.replace("-", "_");
 		encoding = encoding.toUpperCase();
-		switch (encoding) {
+		switch (encoding.trim()) {
 		case "UTF_8":
 			return UTF_8;
 		case "UTF_16":

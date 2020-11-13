@@ -7,7 +7,7 @@ public enum FtpsProtocol {
 	TLS1_0, TLS1_1, TLS1_2, SSLv2, SSLv3,;
 
 	public static FtpsProtocol getFtpsProtocol(String ftpsProtocol, Error error) {
-		switch (ftpsProtocol.toUpperCase().trim()) {
+		switch (ftpsProtocol.trim()) {
 		case "TLS1_0":
 			return TLS1_0;
 		case "TLS1_1":

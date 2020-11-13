@@ -21,7 +21,7 @@ public enum SymmetricBlockMode {
 	 * @return SymmetricBlockMode enum representation
 	 */
 	public static SymmetricBlockMode getSymmetricBlockMode(String symmetricBlockMode, Error error) {
-		switch (symmetricBlockMode) {
+		switch (symmetricBlockMode.toUpperCase().trim()) {
 		case "ECB":
 			return SymmetricBlockMode.ECB;
 		case "CBC":

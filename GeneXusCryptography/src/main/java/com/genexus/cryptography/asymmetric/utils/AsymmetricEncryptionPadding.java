@@ -21,7 +21,7 @@ public enum AsymmetricEncryptionPadding {
 	 */
 	public static AsymmetricEncryptionPadding getAsymmetricEncryptionPadding(String asymmetricEncryptionPadding,
 			Error error) {
-		switch (asymmetricEncryptionPadding) {
+		switch (asymmetricEncryptionPadding.toUpperCase().trim()) {
 		case "NOPADDING":
 			return AsymmetricEncryptionPadding.NOPADDING;
 		case "OAEPPADDING":
