@@ -1,6 +1,5 @@
 package com.genexus.securityapicommons.keys;
 
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 import com.genexus.securityapicommons.commons.SecurityAPIObject;
@@ -20,10 +19,8 @@ public class SymmetricKeyGenerator extends SecurityAPIObject {
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
 
 	/**
-	 * @param symmetricKeyType
-	 *            String
-	 * @param length
-	 *            result key length
+	 * @param symmetricKeyType String
+	 * @param length           result key length
 	 * @return String Hexa fixed length secure random generated key
 	 */
 	public String doGenerateKey(String symmetricKeyType, int length) {
@@ -36,10 +33,8 @@ public class SymmetricKeyGenerator extends SecurityAPIObject {
 	}
 
 	/**
-	 * @param symmetricKeyType
-	 *            String
-	 * @param length
-	 *            result IV length
+	 * @param symmetricKeyType String
+	 * @param length           result IV length
 	 * 
 	 * @return String Hexa fixed length secure random generated IV
 	 */
@@ -49,10 +44,8 @@ public class SymmetricKeyGenerator extends SecurityAPIObject {
 	}
 
 	/**
-	 * @param symmetricKeyType
-	 *            String
-	 * @param length
-	 *            result nonce length
+	 * @param symmetricKeyType String
+	 * @param length           result nonce length
 	 * @return String Hexa fixed length secure random generated nonce
 	 */
 	public String doGenerateNonce(String symmetricKeyType, int length) {
@@ -62,16 +55,15 @@ public class SymmetricKeyGenerator extends SecurityAPIObject {
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
 	/**
-	 * @param length
-	 *            int bits result key length on bits
+	 * @param length int bits result key length on bits
 	 * @return String Hexa fixed length secure random generated key
 	 */
 	private String genericKeyGenerator(int length) {
 
 		SecureRandom random = null;
 		try {
-			random = SecureRandom.getInstanceStrong();
-		} catch (NoSuchAlgorithmException e) {
+			random = new SecureRandom();
+		} catch (Exception e) {
 			this.error.setError("SK004", "Key generation error");
 			e.printStackTrace();
 		}
