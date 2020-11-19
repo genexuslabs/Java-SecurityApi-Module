@@ -20,7 +20,7 @@ public enum SymmetricBlockAlgorithm {
 	 * @return SymmetricBlockAlgorithm enum representaton
 	 */
 	public static SymmetricBlockAlgorithm getSymmetricBlockAlgorithm(String symmetricBlockAlgorithm, Error error) {
-		switch (symmetricBlockAlgorithm) {
+		switch (symmetricBlockAlgorithm.toUpperCase().trim()) {
 		case "AES":
 			return SymmetricBlockAlgorithm.AES;
 		case "BLOWFISH":

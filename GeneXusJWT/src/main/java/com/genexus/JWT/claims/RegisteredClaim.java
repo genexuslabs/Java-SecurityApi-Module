@@ -36,7 +36,7 @@ public enum RegisteredClaim {
 	}
 
 	public static RegisteredClaim getRegisteredClaim(String registeredClaim, Error error) {
-		switch (registeredClaim) {
+		switch (registeredClaim.trim()) {
 		case "iss":
 			return RegisteredClaim.iss;
 		case "exp":
@@ -58,7 +58,7 @@ public enum RegisteredClaim {
 	}
 
 	public static boolean exists(String value) {
-		switch (value) {
+		switch (value.trim()) {
 		case "iss":
 		case "exp":
 		case "sub":
@@ -73,7 +73,7 @@ public enum RegisteredClaim {
 	}
 
 	public static boolean isTimeValidatingClaim(String claimKey) {
-		switch (claimKey) {
+		switch (claimKey.trim()) {
 		case "iat":
 		case "exp":
 		case "nbf":

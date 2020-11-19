@@ -22,7 +22,7 @@ public enum AsymmetricSigningAlgorithm {
 	 */
 	public static AsymmetricSigningAlgorithm getAsymmetricSigningAlgorithm(String asymmetricSigningAlgorithm,
 			Error error) {
-		switch (asymmetricSigningAlgorithm) {
+		switch (asymmetricSigningAlgorithm.toUpperCase().trim()) {
 		case "RSA":
 			return AsymmetricSigningAlgorithm.RSA;
 		case "ECDSA":

@@ -31,7 +31,7 @@ public enum JWTAlgorithm {
 	}
 
 	public static JWTAlgorithm getJWTAlgorithm(String jWTAlgorithm, Error error) {
-		switch (jWTAlgorithm) {
+		switch (jWTAlgorithm.toUpperCase().trim()) {
 		case "HS256":
 			return JWTAlgorithm.HS256;
 		case "HS512":

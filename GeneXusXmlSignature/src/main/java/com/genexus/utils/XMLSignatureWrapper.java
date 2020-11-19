@@ -18,7 +18,7 @@ public enum XMLSignatureWrapper {
 	 * @return XMLSignatureWrapper enum representation
 	 */
 	public static XMLSignatureWrapper getXMLSignatureWrapper(String xMLSignatureWrapper, Error error) {
-		switch (xMLSignatureWrapper) {
+		switch (xMLSignatureWrapper.toUpperCase().trim()) {
 		case "RSA_SHA1":
 			return RSA_SHA1;
 		case "RSA_SHA256":

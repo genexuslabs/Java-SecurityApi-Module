@@ -20,7 +20,7 @@ public enum MessageDigestAlgorithmWrapper {
 	 */
 	public static MessageDigestAlgorithmWrapper getMessageDigestAlgorithmWrapper(String messageDigestAlgorithmWrapper,
 			Error error) {
-		switch (messageDigestAlgorithmWrapper) {
+		switch (messageDigestAlgorithmWrapper.toUpperCase().trim()) {
 		case "SHA1":
 			return MessageDigestAlgorithmWrapper.SHA1;
 		case "SHA256":

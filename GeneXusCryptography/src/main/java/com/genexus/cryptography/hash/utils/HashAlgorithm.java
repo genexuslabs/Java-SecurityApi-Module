@@ -20,7 +20,7 @@ public enum HashAlgorithm {
 	 * @return HashAlgorithm enum representation
 	 */
 	public static HashAlgorithm getHashAlgorithm(String hashAlgorithm, Error error) {
-		switch (hashAlgorithm) {
+		switch (hashAlgorithm.toUpperCase().trim()) {
 		case "MD5":
 			return HashAlgorithm.MD5;
 		case "SHA1":

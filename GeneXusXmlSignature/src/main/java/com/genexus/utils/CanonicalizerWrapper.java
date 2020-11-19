@@ -22,7 +22,7 @@ public enum CanonicalizerWrapper {
 	 * @return CanonicalizerWrapper enum representation
 	 */
 	public static CanonicalizerWrapper getCanonicalizerWrapper(String canonicalizerWrapper, Error error) {
-		switch (canonicalizerWrapper) {
+		switch (canonicalizerWrapper.trim()) {
 		case "C14n_WITH_COMMENTS":
 			return CanonicalizerWrapper.ALGO_ID_C14N_WITH_COMMENTS;
 		case "C14n_OMIT_COMMENTS":

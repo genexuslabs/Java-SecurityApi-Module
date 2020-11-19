@@ -20,7 +20,7 @@ public enum SymmetricKeyType {
 	 * @return SymmetricKeyType enum representation
 	 */
 	public static SymmetricKeyType getSymmetricKeyType(String symmetricKeyType, Error error) {
-		switch (symmetricKeyType) {
+		switch (symmetricKeyType.toUpperCase().trim()) {
 		case "GENERICRANDOM":
 			return SymmetricKeyType.GENERICRANDOM;
 		default:

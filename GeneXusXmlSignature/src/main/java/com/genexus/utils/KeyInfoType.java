@@ -7,7 +7,7 @@ public enum KeyInfoType {
 	NONE, KeyValue, X509Certificate,;
 
 	public static KeyInfoType getKeyInfoType(String keyInfoType, Error error) {
-		switch (keyInfoType) {
+		switch (keyInfoType.trim()) {
 		case "NONE":
 			return NONE;
 		case "KeyValue":

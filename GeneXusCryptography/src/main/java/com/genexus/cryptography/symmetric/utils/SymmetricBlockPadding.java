@@ -20,7 +20,7 @@ public enum SymmetricBlockPadding {
 	 * @return SymmetricBlockPadding enum representation
 	 */
 	public static SymmetricBlockPadding getSymmetricBlockPadding(String symmetricBlockPadding, Error error) {
-		switch (symmetricBlockPadding) {
+		switch (symmetricBlockPadding.toUpperCase().trim()) {
 		case "NOPADDING":
 			return SymmetricBlockPadding.NOPADDING;
 		case "PKCS7PADDING":

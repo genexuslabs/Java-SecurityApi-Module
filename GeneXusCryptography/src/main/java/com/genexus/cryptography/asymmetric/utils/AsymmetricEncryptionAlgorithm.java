@@ -22,7 +22,7 @@ public enum AsymmetricEncryptionAlgorithm {
 	 */
 	public static AsymmetricEncryptionAlgorithm getAsymmetricEncryptionAlgorithm(String asymmetricEncryptionAlgorithm,
 			Error error) {
-		switch (asymmetricEncryptionAlgorithm) {
+		switch (asymmetricEncryptionAlgorithm.toUpperCase().trim()) {
 		case "RSA":
 			return AsymmetricEncryptionAlgorithm.RSA;
 		default:
