@@ -6,7 +6,7 @@ import com.genexus.securityapicommons.keys.CertificateX509;
 import com.genexus.securityapicommons.keys.PrivateKeyManager;
 
 public enum JWTAlgorithm {
-	HS256, HS512, RS256, RS512, ES256, ES384, ES512 ;
+	HS256, HS512, RS256, RS512, ES256, ES384, ES512;
 
 	public static String valueOf(JWTAlgorithm jWTAlgorithm, Error error) {
 		switch (jWTAlgorithm) {
@@ -83,7 +83,8 @@ public enum JWTAlgorithm {
 
 	}
 
-	public static Algorithm getAsymmetricAlgorithm(JWTAlgorithm algorithm, PrivateKeyManager key, CertificateX509 cert, Error error) {
+	public static Algorithm getAsymmetricAlgorithm(JWTAlgorithm algorithm, PrivateKeyManager key, CertificateX509 cert,
+			Error error) {
 		if (!isPrivate(algorithm)) {
 			error.setError("JA005", "It is not an asymmetric algorithm name");
 			return null;
@@ -91,35 +92,35 @@ public enum JWTAlgorithm {
 			switch (algorithm) {
 			case RS256:
 				try {
-					return Algorithm.RSA256(cert.getRSAPublicKey(), key.getRSAPrivateKeyJWT());
+						return (key != null) ? Algorithm.RSA256(cert.getRSAPublicKey(), key.getRSAPrivateKeyJWT()): Algorithm.RSA256(cert.getRSAPublicKey(), null);
 				} catch (Exception e) {
 					error.setError("JA007", e.getMessage());
 					return null;
 				}
 			case RS512:
 				try {
-					return Algorithm.RSA512(cert.getRSAPublicKey(), key.getRSAPrivateKeyJWT());
+					return (key != null) ? Algorithm.RSA512(cert.getRSAPublicKey(), key.getRSAPrivateKeyJWT()): Algorithm.RSA512(cert.getRSAPublicKey(), null);
 				} catch (Exception e) {
 					error.setError("JA008", e.getMessage());
 					return null;
 				}
 			case ES256:
 				try {
-					return Algorithm.ECDSA256(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT());
+					return (key != null) ? Algorithm.ECDSA256(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT()): Algorithm.ECDSA256(cert.getECPublicKeyJWT(), null);
 				} catch (Exception e) {
 					error.setError("JA008", e.getMessage());
 					return null;
 				}
 			case ES384:
 				try {
-					return Algorithm.ECDSA384(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT());
+					return (key != null) ?  Algorithm.ECDSA384(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT()): Algorithm.ECDSA384(cert.getECPublicKeyJWT(), null);
 				} catch (Exception e) {
 					error.setError("JA008", e.getMessage());
 					return null;
 				}
 			case ES512:
 				try {
-					return Algorithm.ECDSA512(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT());
+					return (key != null) ?  Algorithm.ECDSA512(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT()): Algorithm.ECDSA512(cert.getECPublicKeyJWT(), null);
 				} catch (Exception e) {
 					error.setError("JA008", e.getMessage());
 					return null;

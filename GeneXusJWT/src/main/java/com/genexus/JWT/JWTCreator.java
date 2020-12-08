@@ -182,16 +182,11 @@ public class JWTCreator extends JWTObject {
 		Algorithm algorithmType = null;
 		if (JWTAlgorithm.isPrivate(alg)) {
 			CertificateX509 cert = options.getCertificate();
-			PrivateKeyManager key = options.getPrivateKey();
 			if (cert.hasError()) {
 				this.error = cert.getError();
 				return false;
 			}
-			if (key.hasError()) {
-				this.error = key.getError();
-				return false;
-			}
-			algorithmType = JWTAlgorithm.getAsymmetricAlgorithm(alg, key, cert, this.error);
+			algorithmType = JWTAlgorithm.getAsymmetricAlgorithm(alg, null, cert, this.error);
 			if (this.hasError()) {
 				return false;
 			}
