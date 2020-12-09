@@ -92,22 +92,27 @@ public class Hashing extends HashObject {
 	 * @return byte array of the txtToHash with the algorithm indicated
 	 */
 	public byte[] calculateHash(HashAlgorithm hashAlgorithm, String txtToHash) {
-
-		if (this.error.existsError()) {
-			return null;
-		}
-		Digest alg = createHash(hashAlgorithm);
 		EncodingUtil eu = new EncodingUtil();
 		byte[] inputAsBytes = eu.getBytes(txtToHash);
 		if (eu.getError().existsError()) {
 			this.error = eu.getError();
 			return null;
 		}
+		return calculateHash( hashAlgorithm, inputAsBytes);
+	}
+	
+	public byte[] calculateHash(HashAlgorithm hashAlgorithm, byte[] inputAsBytes) {
+
+		if (this.error.existsError()) {
+			return null;
+		}
+		Digest alg = createHash(hashAlgorithm);
 		byte[] retValue = new byte[alg.getDigestSize()];
 		alg.update(inputAsBytes, 0, inputAsBytes.length);
 		alg.doFinal(retValue, 0);
 		return retValue;
 	}
+	
 
 	/**
 	 * @param hashAlgorithm
