@@ -16,7 +16,7 @@ public final class PrivateClaims extends Claims {
 	
 	}
  
-	public boolean setClaim(String key, String value) {
+	public boolean setClaim(String key, Object value) {
 		return super.setClaim(key, value, new Error());
 	}
 	

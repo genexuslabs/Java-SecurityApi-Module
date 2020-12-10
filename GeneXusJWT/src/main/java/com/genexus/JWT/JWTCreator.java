@@ -259,10 +259,10 @@ public class JWTCreator extends JWTObject {
 				if (RegisteredClaim.exists(registeredC.get(z).getKey())) {
 					if (!RegisteredClaim.isTimeValidatingClaim(registeredC.get(z).getKey())) {
 						verification = RegisteredClaim.getVerificationWithClaim(registeredC.get(z).getKey(),
-								registeredC.get(z).getValue(), 0, verification, error);
+								(String) registeredC.get(z).getValue(), 0, verification, error);
 					} else {
 						verification = RegisteredClaim.getVerificationWithClaim(registeredC.get(z).getKey(),
-								registeredC.get(z).getValue(),
+								(String) registeredC.get(z).getValue(),
 								registeredClaims.getClaimCustomValidationTime(registeredC.get(z).getKey()),
 								verification, error);
 					}
@@ -288,7 +288,21 @@ public class JWTCreator extends JWTObject {
 				if (privateC.get(i).getNestedClaims() != null) {
 					tokenBuilder.withClaim(privateC.get(i).getKey(), privateC.get(i).getNestedClaims().getNestedMap());
 				} else {
-					tokenBuilder.withClaim(privateC.get(i).getKey(), privateC.get(i).getValue());
+					Object obj = privateC.get(i).getValue();
+					if (obj instanceof String) {
+						tokenBuilder.withClaim(privateC.get(i).getKey(), (String) privateC.get(i).getValue());
+					} else if (obj instanceof Integer) {
+						tokenBuilder.withClaim(privateC.get(i).getKey(), (int) privateC.get(i).getValue());
+					} else if (obj instanceof Long) {
+						tokenBuilder.withClaim(privateC.get(i).getKey(), (long) privateC.get(i).getValue());
+					} else if (obj instanceof Double) {
+						tokenBuilder.withClaim(privateC.get(i).getKey(), (double) privateC.get(i).getValue());
+					} else if (obj instanceof Boolean) {
+						tokenBuilder.withClaim(privateC.get(i).getKey(), (boolean) privateC.get(i).getValue());
+					} else {
+						this.error.setError("JW012", "Unrecognized data type");
+					}
+					// tokenBuilder.withClaim(privateC.get(i).getKey(), privateC.get(i).getValue());
 				}
 			} catch (Exception e) {
 				this.error.setError("JW004", e.getMessage());
@@ -301,7 +315,7 @@ public class JWTCreator extends JWTObject {
 			List<Claim> publicC = publicClaims.getAllClaims();
 			for (int j = 0; j < publicC.size(); j++) {
 				try {
-					tokenBuilder.withClaim(publicC.get(j).getKey(), publicC.get(j).getValue());
+					tokenBuilder.withClaim(publicC.get(j).getKey(), (String) publicC.get(j).getValue());
 				} catch (Exception e) {
 					this.error.setError("JW003", e.getMessage());
 					return null;
@@ -315,7 +329,7 @@ public class JWTCreator extends JWTObject {
 			for (int z = 0; z < registeredC.size(); z++) {
 				if (RegisteredClaim.exists(registeredC.get(z).getKey())) {
 					tokenBuilder = RegisteredClaim.getBuilderWithClaim(registeredC.get(z).getKey(),
-							registeredC.get(z).getValue(), tokenBuilder, this.error);
+							(String) registeredC.get(z).getValue(), tokenBuilder, this.error);
 					if (this.hasError()) {
 						return null;
 					}
@@ -382,7 +396,28 @@ public class JWTCreator extends JWTObject {
 					if (!SecurityUtils.compareStrings(((String) op).trim(), ((String) ot).trim())) {
 						return false;
 					}
-				} else if (op instanceof HashMap && ot instanceof HashMap) {
+					
+				} else if((op instanceof Integer && ot instanceof Integer)) {
+					if((int)op != (int)ot)
+					{
+						return false;
+					}
+				}else if((op instanceof Long && ot instanceof Long)) {
+					if((long)op != (long)ot)
+					{
+						return false;
+					}
+				}else if((op instanceof Double && ot instanceof Double)) {
+					if((double)op != (double)ot)
+					{
+						return false;
+					}
+				}else if((op instanceof Boolean && ot instanceof Boolean)) {
+					if(Boolean.compare((boolean)op, (boolean)ot) != 0)
+					{
+						return false;
+					}
+				}else if (op instanceof HashMap && ot instanceof HashMap) {
 					@SuppressWarnings("unchecked")
 					boolean flag = verifyNestedClaims((HashMap<String, Object>) op, (HashMap<String, Object>) ot,
 							registeredClaims, publicClaims);

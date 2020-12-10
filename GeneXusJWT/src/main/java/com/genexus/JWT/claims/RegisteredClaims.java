@@ -63,7 +63,7 @@ public final class RegisteredClaims extends Claims {
 	}
 
 	@Override
-	public String getClaimValue(String key, Error error) {
+	public Object getClaimValue(String key, Error error) {
 		if (RegisteredClaim.exists(key)) {
 			for (int i = 0; i < claims.size(); i++) {
 				if (SecurityUtils.compareStrings(key, claims.get(i).getKey())) {
