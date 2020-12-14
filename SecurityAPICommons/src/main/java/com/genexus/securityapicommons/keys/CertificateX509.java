@@ -131,11 +131,11 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 	 * @return String certificate-s hash algorithm for sign verification
 	 */
 	public String getPublicKeyHash() {
-		String[] aux = this.publicKeyAlgorithm.split("with");
+		String[] aux = this.publicKeyAlgorithm.toUpperCase().split("WITH");
 		if (SecurityUtils.compareStrings(aux[0], "1.2.840.10045.2.1")) {
 			return "ECDSA";
 		}
-		return aux[0].toUpperCase();
+		return aux[0];
 	}
 
 	public AsymmetricKeyParameter getPublicKeyParameterForEncryption() {
@@ -430,8 +430,8 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 		if (SecurityUtils.compareStrings(this.publicKeyAlgorithm, "1.2.840.10045.2.1")) {
 			return "ECDSA";
 		}
-		String[] aux = this.publicKeyAlgorithm.split("with");
-		return aux[1].toUpperCase();
+		String[] aux = this.publicKeyAlgorithm.toUpperCase().split("WITH");
+		return aux[1];
 	}
 	
 	/**
@@ -460,5 +460,7 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 		return pk;
 
 	}
+
+
 
 }
