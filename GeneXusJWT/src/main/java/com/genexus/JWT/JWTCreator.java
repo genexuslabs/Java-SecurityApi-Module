@@ -397,13 +397,8 @@ public class JWTCreator extends JWTObject {
 						return false;
 					}
 					
-				} else if((op instanceof Integer && ot instanceof Integer)) {
-					if((int)op != (int)ot)
-					{
-						return false;
-					}
-				}else if((op instanceof Long && ot instanceof Long)) {
-					if((long)op != (long)ot)
+				} else if((op instanceof Integer || op instanceof Long) && (ot instanceof Integer || ot instanceof Long)) {
+					if((convertToLong(op)).compareTo(convertToLong(ot)) != 0)
 					{
 						return false;
 					}
@@ -518,5 +513,12 @@ public class JWTCreator extends JWTObject {
 		return map.size();
 
 	}
+	
+	 private Long convertToLong(Object o){
+	        String stringToConvert = String.valueOf(o);
+	        Long convertedLong = Long.parseLong(stringToConvert);
+	        return convertedLong;
+
+	    }
 
 }
