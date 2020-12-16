@@ -37,7 +37,8 @@ public class ChecksumCreator extends ChecksumObject {
 		{
 			return false;
 		}
-		return SecurityUtils.compareStrings(result, digest);
+		String resCompare = digest.toUpperCase().contains("0X") ? "0X"+result : result;
+		return SecurityUtils.compareStrings(resCompare, digest);
 	}
 	
 	/********EXTERNAL OBJECT PUBLIC METHODS  - END ********/
