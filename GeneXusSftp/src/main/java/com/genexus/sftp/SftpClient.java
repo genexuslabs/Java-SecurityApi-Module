@@ -1,5 +1,8 @@
 package com.genexus.sftp;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import com.genexus.commons.sftp.SftpClientObject;
 import com.genexus.securityapicommons.utils.ExtensionsWhiteList;
 import com.genexus.securityapicommons.utils.SecurityUtils;
@@ -42,9 +45,6 @@ public class SftpClient extends SftpClientObject {
 		}else {
 			useKey=true;
 		}
-
-		
-		
 		if (SecurityUtils.compareStrings("", options.getHost())) {
 			this.error.setError("SF003", "Empty host");
 			return false;
@@ -61,6 +61,7 @@ public class SftpClient extends SftpClientObject {
 	}
 
 	public boolean put(String localPath, String remoteDir) {
+		String rDir = remoteDir;
 		if (this.whiteList != null) {
 			if (!this.whiteList.isValid(localPath)) {
 				this.error.setError("WL001", "Invalid file extension");
@@ -71,12 +72,32 @@ public class SftpClient extends SftpClientObject {
 			this.error.setError("SF005", "The channel is invalid, reconect");
 			return false;
 		}
+		if (SecurityUtils.compareStrings(remoteDir, "/") || SecurityUtils.compareStrings(remoteDir, "\\")) {
+			String dirRemote = this.getWorkingDirectory();
+			if (dirRemote.contains("\\")) {
+				remoteDir = SecurityUtils.compareStrings(dirRemote, "\\") ? dirRemote : dirRemote + "\\";
+			} else {
+				remoteDir = SecurityUtils.compareStrings(dirRemote, "/") ? dirRemote : dirRemote + "/";
+			}
+		}
+		remoteDir += getFileName(localPath);
 		try {
 			this.channel.put(localPath, remoteDir);
 		} catch (SftpException e) {
-			this.error.setError("SF006", e.getMessage());
-			return false;
+			if (SecurityUtils.compareStrings(rDir, "/") || SecurityUtils.compareStrings(rDir, "\\")) {
+				try {
+					 this.channel.put(localPath, getFileName(localPath));
+				} catch (SftpException s) {
+					this.error.setError("SF006", s.getMessage());
+					return false;
+				}
+			} else {
+				this.error.setError("SF006", e.getMessage());
+				return false;
+			}
+
 		}
+
 		return true;
 	}
 
@@ -151,5 +172,11 @@ public class SftpClient extends SftpClientObject {
 		}
 		this.session.connect();
 		return (ChannelSftp) this.session.openChannel("sftp");
+	}
+	
+	private String getFileName(String path)
+	{
+		Path p = Paths.get(path);
+		return p.getFileName().toString();
 	}
 }
