@@ -24,7 +24,7 @@ public class Claims {
 		return claims;
 	}
 
-	public String getClaimValue(String key, Error error) {
+	public Object getClaimValue(String key, Error error) {
 		for (int i = 0; i < claims.size(); i++) {
 			if (SecurityUtils.compareStrings(key, claims.get(i).getKey())) {
 				return claims.get(i).getValue();
