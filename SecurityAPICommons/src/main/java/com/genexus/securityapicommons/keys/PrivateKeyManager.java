@@ -9,6 +9,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.interfaces.ECPrivateKey;
@@ -26,9 +27,13 @@ import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
+import org.bouncycastle.pkcs.PKCSException;
+import org.bouncycastle.pkcs.jcajce.JcePKCSPBEInputDecryptorProviderBuilder;
 import org.bouncycastle.util.encoders.Base64;
 
 import com.genexus.securityapicommons.utils.SecurityUtils;
@@ -42,6 +47,7 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 	private PrivateKeyInfo privateKeyInfo;
 	private boolean hasPrivateKey;
 	private String privateKeyAlgorithm;
+	private String encryptionPassword;
 
 	/**
 	 * KeyManager class constructor
@@ -49,6 +55,8 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 	public PrivateKeyManager() {
 		super();
 		this.hasPrivateKey = false;
+		this.encryptionPassword = null;
+		// Security.addProvider(new BouncyCastleProvider());
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
@@ -56,6 +64,14 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 	public boolean load(String privateKeyPath) {
 		return loadPKCS12(privateKeyPath, "", "");
 	}
+
+	@Override
+	public boolean loadEncrypted(String privateKeyPath, String encryptionPassword) {
+		this.encryptionPassword = encryptionPassword;
+		return loadPKCS12(privateKeyPath, "", "");
+
+	}
+
 	@Override
 	public boolean loadPKCS12(String privateKeyPath, String alias, String password) {
 		try {
@@ -69,10 +85,9 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 		}
 		return true;
 	}
-	
+
 	@Override
-	public boolean fromBase64(String base64)
-	{
+	public boolean fromBase64(String base64) {
 		boolean res;
 		try {
 			res = readBase64(base64);
@@ -83,14 +98,13 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 		this.hasPrivateKey = res;
 		return res;
 	}
-	
+
 	@Override
-	public String toBase64()
-	{
-		if(this.hasPrivateKey) {
+	public String toBase64() {
+		if (this.hasPrivateKey) {
 			String encoded = "";
 			try {
-				encoded =  Base64.toBase64String(this.privateKeyInfo.getEncoded());
+				encoded = Base64.toBase64String(this.privateKeyInfo.getEncoded());
 			} catch (IOException e) {
 				this.error.setError("PK0017", e.getMessage());
 				return "";
@@ -101,25 +115,26 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 		return "";
 	}
 
-	/******** EXTERNAL OBJECT PUBLIC METHODS - END 
-	 * @throws IOException ********/
-	
-	private boolean readBase64(String base64) throws IOException 
-	{
+	/********
+	 * EXTERNAL OBJECT PUBLIC METHODS - END
+	 * 
+	 * @throws IOException
+	 ********/
+
+	private boolean readBase64(String base64) throws IOException {
 		byte[] keybytes = Base64.decode(base64);
 		ASN1InputStream istream = new ASN1InputStream(keybytes);
 		ASN1Sequence seq = (ASN1Sequence) istream.readObject();
-	    this.privateKeyInfo = PrivateKeyInfo.getInstance(seq);
-	    istream.close();
-	    if (this.privateKeyInfo == null)
-	    {
-	    	this.error.setError("PK015", "Could not read private key from base64 string");
-	    	return false;
-	    }
-	    this.privateKeyAlgorithm = this.privateKeyInfo.getPrivateKeyAlgorithm().getAlgorithm().getId(); // 1.2.840.113549.1.1.1
-	    return true;
+		this.privateKeyInfo = PrivateKeyInfo.getInstance(seq);
+		istream.close();
+		if (this.privateKeyInfo == null) {
+			this.error.setError("PK015", "Could not read private key from base64 string");
+			return false;
+		}
+		this.privateKeyAlgorithm = this.privateKeyInfo.getPrivateKeyAlgorithm().getAlgorithm().getId(); // 1.2.840.113549.1.1.1
+		return true;
 	}
-	
+
 	/**
 	 * @return PrivateKey type for the key type
 	 */
@@ -145,7 +160,6 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 		return pk;
 
 	}
-	
 
 	/**
 	 * @return PrivateKey type for the key type
@@ -172,25 +186,25 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 		return pk;
 
 	}
-	
+
 	/**
 	 * Return AsymmetricKeyParameter with private key for the indicated algorithm
 	 * 
-	 * @param asymmetricEncryptionAlgorithm
-	 *            AsymmetricEncryptionAlgorithm enum, algorithm name
+	 * @param asymmetricEncryptionAlgorithm AsymmetricEncryptionAlgorithm enum,
+	 *                                      algorithm name
 	 * @return AsymmetricKeyParameter type for encryption, algorithm dependant
 	 */
 	public AsymmetricKeyParameter getPrivateKeyParameterForEncryption() {
-		
-		if(SecurityUtils.compareStrings(this.getPrivateKeyAlgorithm(), "RSA")){
+
+		if (SecurityUtils.compareStrings(this.getPrivateKeyAlgorithm(), "RSA")) {
 			return getRSAKeyParameter();
-		}else {
-	
+		} else {
+
 			this.error.setError("AE009", "Unrecognized encryption algorithm");
 			return null;
 		}
 	}
-	
+
 	/**
 	 * @return AsymmetricKeyParameter with private key loaded for RSA or ECDSA for
 	 *         signing
@@ -214,19 +228,19 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 			return null;
 		}
 	}
-	
+
 	/**
 	 * @return AsymmetricKeyParameter for RSA with loaded key
 	 */
 	private AsymmetricKeyParameter getRSAKeyParameter() {
 		RSAKeyParameters parms;
-			try {
-				parms = (RSAKeyParameters) PrivateKeyFactory.createKey(this.privateKeyInfo);
-			} catch (IOException e) {
-				this.error.setError("AE013", "Not RSA key");
-				e.printStackTrace();
-				return null;
-			}
+		try {
+			parms = (RSAKeyParameters) PrivateKeyFactory.createKey(this.privateKeyInfo);
+		} catch (IOException e) {
+			this.error.setError("AE013", "Not RSA key");
+			e.printStackTrace();
+			return null;
+		}
 		return parms;
 	}
 
@@ -258,21 +272,19 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 	/**
 	 * Stores structure of public or private key from any type of certificate
 	 * 
-	 * @param path
-	 *            String of the certificate file
-	 * @param alias
-	 *            Srting certificate's alias, required if PKCS12
-	 * @param password
-	 *            String certificate's password, required if PKCS12
+	 * @param path     String of the certificate file
+	 * @param alias    Srting certificate's alias, required if PKCS12
+	 * @param password String certificate's password, required if PKCS12
 	 * @return boolean true if loaded correctly
 	 * @throws CertificateException
 	 * @throws IOException
 	 * @throws UnrecoverableKeyException
 	 * @throws NoSuchAlgorithmException
 	 * @throws KeyStoreException
+	 * @throws PKCSException 
 	 */
 	private boolean loadKeyFromFile(String path, String alias, String password) throws CertificateException,
-			IOException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
+			IOException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, PKCSException {
 		return loadPrivateKeyFromFile(path, alias, password);
 	}
 
@@ -280,21 +292,19 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 	 * Stores PrivateKeyInfo Data Type from certificate's private key, algorithm and
 	 * digest
 	 * 
-	 * @param path
-	 *            String of the certificate file
-	 * @param alias
-	 *            Srting certificate's alias, required if PKCS12
-	 * @param password
-	 *            String certificate's password, required if PKCS12
+	 * @param path     String of the certificate file
+	 * @param alias    Srting certificate's alias, required if PKCS12
+	 * @param password String certificate's password, required if PKCS12
 	 * @return boolean true if loaded correctly
 	 * @throws CertificateException
 	 * @throws IOException
 	 * @throws UnrecoverableKeyException
 	 * @throws NoSuchAlgorithmException
 	 * @throws KeyStoreException
+	 * @throws PKCSException 
 	 */
 	private boolean loadPrivateKeyFromFile(String path, String alias, String password) throws CertificateException,
-			IOException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
+			IOException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, PKCSException {
 		if (SecurityUtils.extensionIs(path, ".pem") || SecurityUtils.extensionIs(path, ".key")) {
 			return this.hasPrivateKey = loadPrivateKeyFromPEMFile(path);
 		}
@@ -311,12 +321,9 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 	 * Stores PrivateKeyInfo Data Type from the certificate's private key, algorithm
 	 * and digest
 	 * 
-	 * @param path
-	 *            String .ps12, pfx or .jks (PKCS12 fromat) certificate path
-	 * @param alias
-	 *            String certificate's alias
-	 * @param password
-	 *            String certificate's password
+	 * @param path     String .ps12, pfx or .jks (PKCS12 fromat) certificate path
+	 * @param alias    String certificate's alias
+	 * @param password String certificate's password
 	 * @return boolean true if loaded correctly
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException
@@ -348,13 +355,13 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 	/**
 	 * stores PrivateKeyInfo Data Type from certificate's private key
 	 * 
-	 * @param path
-	 *            String .pem certificate path
+	 * @param path String .pem certificate path
 	 * @return boolean true if loaded correctly
 	 * @throws IOException
 	 * @throws CertificateException
+	 * @throws PKCSException 
 	 */
-	private boolean loadPrivateKeyFromPEMFile(String path) throws IOException, CertificateException {
+	private boolean loadPrivateKeyFromPEMFile(String path) throws IOException, CertificateException, PKCSException {
 		boolean flag = false;
 		FileReader privateKeyReader;
 
@@ -362,9 +369,13 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 		PEMParser parser = new PEMParser(privateKeyReader);
 		Object obj;
 		obj = parser.readObject();
-		if (obj instanceof EncryptedPrivateKeyInfo) {
-			this.error.setError("PK007", "Encrypted key, remove the key password");
-			flag = false;
+		if (obj instanceof EncryptedPrivateKeyInfo || obj instanceof PKCS8EncryptedPrivateKeyInfo) {
+			Security.addProvider(new BouncyCastleProvider());
+	        PKCS8EncryptedPrivateKeyInfo encPrivKeyInfo = (PKCS8EncryptedPrivateKeyInfo)obj;
+	        InputDecryptorProvider pkcs8Prov = new JcePKCSPBEInputDecryptorProviderBuilder().setProvider("BC").build(this.encryptionPassword.toCharArray());
+	        this.privateKeyInfo = encPrivKeyInfo.decryptPrivateKeyInfo(pkcs8Prov);
+			this.privateKeyAlgorithm = this.privateKeyInfo.getPrivateKeyAlgorithm().getAlgorithm().getId(); // 1.2.840.113549.1.1.1
+			flag = true;
 		}
 		if (obj instanceof PrivateKeyInfo) {
 			this.privateKeyInfo = (PrivateKeyInfo) obj;
@@ -385,10 +396,6 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 			this.error.setError("PK009", "The file contains a public key");
 			flag = false;
 		}
-		if (obj instanceof PKCS8EncryptedPrivateKeyInfo) {
-			this.error.setError("PK010", "Encrypted key, remove the key password");
-			flag = false;
-		}
 		privateKeyReader.close();
 		parser.close();
 		if (!flag) {
@@ -398,7 +405,7 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 		}
 		return flag;
 	}
-	
+
 	/**
 	 * @return PublicKey type for the key type
 	 */
