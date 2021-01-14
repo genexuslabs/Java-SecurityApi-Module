@@ -20,6 +20,22 @@ public final class PrivateClaims extends Claims {
 		return super.setClaim(key, value, new Error());
 	}
 	
+	public boolean setBooleanClaim(String key, boolean value) {
+		return super.setClaim(key, value, new Error());
+	}
+	
+	public boolean setNumericClaim(String key, int value) {
+		return super.setClaim(key, value, new Error());
+	}
+	
+	public boolean setDateClaim(String key, long value) {
+		return super.setClaim(key, value, new Error());
+	}
+	
+	public boolean setDoubleClaim(String key, double value) {
+		return super.setClaim(key, value, new Error());
+	}
+	
 	public boolean setClaim(String key, PrivateClaims value)
 	{
 		
