@@ -6,7 +6,7 @@
 
 	<groupId>com.genexus</groupId>
 	<artifactId>SecurityAPIParent</artifactId>
-	<version>17.1.0</version>
+	<version>17.2.0</version>
 	<packaging>pom</packaging>
 
 	<name>GeneXusSecurityAPI (Parent)</name>
