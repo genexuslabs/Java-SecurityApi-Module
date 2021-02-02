@@ -177,18 +177,43 @@ public class SignatureUtils {
 		Node root = getRootElement(doc);
 
 		NodeList list = root.getChildNodes();
-		for (int i = 0; i < list.getLength(); i++) {
-			Node node = list.item(i);
-			if (node.getNodeType() == Node.ELEMENT_NODE) {
-				Element eElement = (Element) node;
-				if (SecurityUtils.compareStrings(eElement.getAttribute(id), idToFind)) {
+		Node n = recursivegetNodeFromID(list, id, idToFind);
+		if (n == null) {
+			error.setError("SU009", "Could not find element with id " + idToFind);
+		}
+		return n;
+
+	}
+
+	private static Node findAttribute(Node node, String id, String idToFind) {
+		if (node.getNodeType() == Node.ELEMENT_NODE) {
+			Element eElement = (Element) node;
+			if (SecurityUtils.compareStrings(eElement.getAttribute(id), idToFind)) {
+				return node;
+			}
+		}
+		return null;
+	}
+
+	private static Node recursivegetNodeFromID(NodeList list, String id, String idToFind) {
+		if (list.getLength() == 0) {
+			return null;
+		} else {
+			for (int i = 0; i < list.getLength(); i++) {
+				Node node = findAttribute(list.item(i), id, idToFind);
+				if (node == null) {
+					Node n1  =  recursivegetNodeFromID(list.item(i).getChildNodes(), id, idToFind);
+					if(n1 != null)
+					{
+						return n1;
+					}
+				}else
+				{
 					return node;
 				}
 			}
+			return null;
 		}
-		error.setError("SU009", "Could not find element with id " + idToFind);
-		return null;
-
 	}
 
 	public static boolean validateExtensionXML(String path) {
