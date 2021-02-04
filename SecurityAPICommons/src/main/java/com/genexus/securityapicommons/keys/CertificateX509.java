@@ -427,7 +427,7 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 	 * @return String certificate-s asymmetric algorithm for sign verification
 	 */
 	public String getPublicKeyAlgorithm() {
-		if (SecurityUtils.compareStrings(this.publicKeyAlgorithm, "1.2.840.10045.2.1")) {
+		if (SecurityUtils.compareStrings(this.publicKeyAlgorithm, "1.2.840.10045.2.1") || SecurityUtils.compareStrings(this.publicKeyAlgorithm,  "ECDSA")) {
 			return "ECDSA";
 		}
 		String[] aux = this.publicKeyAlgorithm.toUpperCase().split("WITH");
