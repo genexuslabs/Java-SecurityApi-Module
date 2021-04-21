@@ -72,15 +72,13 @@ public class SftpClient extends SftpClientObject {
 			this.error.setError("SF005", "The channel is invalid, reconect");
 			return false;
 		}
-		if (SecurityUtils.compareStrings(remoteDir, "/") || SecurityUtils.compareStrings(remoteDir, "\\")) {
-			String dirRemote = this.getWorkingDirectory();
-			if (dirRemote.contains("\\")) {
-				remoteDir = SecurityUtils.compareStrings(dirRemote, "\\") ? dirRemote : dirRemote + "\\";
-			} else {
-				remoteDir = SecurityUtils.compareStrings(dirRemote, "/") ? dirRemote : dirRemote + "/";
+		
+		if(remoteDir.length() > 1) {
+			if(remoteDir.startsWith("\\") || remoteDir.startsWith("/"))
+			{
+				remoteDir = remoteDir.substring(1, remoteDir.length());
 			}
-		}
-		remoteDir += getFileName(localPath);
+		}	
 		try {
 			this.channel.put(localPath, remoteDir);
 		} catch (SftpException e) {
