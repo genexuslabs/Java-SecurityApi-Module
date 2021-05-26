@@ -64,20 +64,18 @@ public class JWTCreator extends JWTObject {
 		}
 		Algorithm algorithmType = null;
 		if (JWTAlgorithm.isPrivate(alg)) {
-			CertificateX509 cert = options.getCertificate();
+			
 			PrivateKeyManager key = options.getPrivateKey();
-			if (cert.hasError()) {
-				this.error = cert.getError();
-				return "";
-			}
 			if (key.hasError()) {
 				this.error = key.getError();
 				return "";
 			}
-			algorithmType = JWTAlgorithm.getAsymmetricAlgorithm(alg, key, cert, this.error);
+
+			algorithmType = JWTAlgorithm.getAsymmetricAlgorithm(alg, key, null, error);
 			if (this.hasError()) {
 				return "";
 			}
+			
 		} else {
 
 			algorithmType = JWTAlgorithm.getSymmetricAlgorithm(alg, options.getSecret(), this.error);

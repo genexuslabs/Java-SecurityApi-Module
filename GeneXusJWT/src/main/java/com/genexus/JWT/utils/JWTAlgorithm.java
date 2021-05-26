@@ -92,35 +92,65 @@ public enum JWTAlgorithm {
 			switch (algorithm) {
 			case RS256:
 				try {
-						return (key != null) ? Algorithm.RSA256(cert.getRSAPublicKey(), key.getRSAPrivateKeyJWT()): Algorithm.RSA256(cert.getRSAPublicKey(), null);
+					if (cert == null) {
+						if (key != null)
+							return Algorithm.RSA256(null, key.getRSAPrivateKeyJWT());
+					} else {
+						return (key != null) ? Algorithm.RSA256(cert.getRSAPublicKey(), key.getRSAPrivateKeyJWT())
+								: Algorithm.RSA256(cert.getRSAPublicKey(), null);
+					}
 				} catch (Exception e) {
 					error.setError("JA007", e.getMessage());
 					return null;
 				}
 			case RS512:
 				try {
-					return (key != null) ? Algorithm.RSA512(cert.getRSAPublicKey(), key.getRSAPrivateKeyJWT()): Algorithm.RSA512(cert.getRSAPublicKey(), null);
+					if (cert == null) {
+						if (key != null)
+							return Algorithm.RSA512(null, key.getRSAPrivateKeyJWT());
+					} else {
+						return (key != null) ? Algorithm.RSA512(cert.getRSAPublicKey(), key.getRSAPrivateKeyJWT())
+								: Algorithm.RSA512(cert.getRSAPublicKey(), null);
+					}
 				} catch (Exception e) {
 					error.setError("JA008", e.getMessage());
 					return null;
 				}
 			case ES256:
 				try {
-					return (key != null) ? Algorithm.ECDSA256(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT()): Algorithm.ECDSA256(cert.getECPublicKeyJWT(), null);
+					if (cert == null) {
+						if (key != null)
+							return Algorithm.ECDSA256(null, key.getECPrivateKeyJWT());
+					} else {
+						return (key != null) ? Algorithm.ECDSA256(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT())
+								: Algorithm.ECDSA256(cert.getECPublicKeyJWT(), null);
+					}
 				} catch (Exception e) {
 					error.setError("JA008", e.getMessage());
 					return null;
 				}
 			case ES384:
 				try {
-					return (key != null) ?  Algorithm.ECDSA384(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT()): Algorithm.ECDSA384(cert.getECPublicKeyJWT(), null);
+					if (cert == null) {
+						if (key != null)
+							return Algorithm.ECDSA384(null, key.getECPrivateKeyJWT());
+					} else {
+						return (key != null) ? Algorithm.ECDSA384(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT())
+								: Algorithm.ECDSA384(cert.getECPublicKeyJWT(), null);
+					}
 				} catch (Exception e) {
 					error.setError("JA008", e.getMessage());
 					return null;
 				}
 			case ES512:
 				try {
-					return (key != null) ?  Algorithm.ECDSA512(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT()): Algorithm.ECDSA512(cert.getECPublicKeyJWT(), null);
+					if (cert == null) {
+						if (key != null)
+							return Algorithm.ECDSA512(null, key.getECPrivateKeyJWT());
+					} else {
+						return (key != null) ? Algorithm.ECDSA512(cert.getECPublicKeyJWT(), key.getECPrivateKeyJWT())
+								: Algorithm.ECDSA512(cert.getECPublicKeyJWT(), null);
+					}
 				} catch (Exception e) {
 					error.setError("JA008", e.getMessage());
 					return null;
