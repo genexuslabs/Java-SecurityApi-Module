@@ -19,9 +19,6 @@ public class ExtensionsWhiteList {
 	}
 
 	public boolean isValid(String path) {
-		if (!isValidName(path)) {
-			return false;
-		}
 		String ext = SecurityUtils.getFileExtension(path);
 		for (int i = 0; i < this.whitelist.size(); i++) {
 			if (SecurityUtils.compareStrings(ext, this.whitelist.get(i))) {
@@ -36,20 +33,5 @@ public class ExtensionsWhiteList {
 			return true;
 		}
 		return false;
-	}
-
-	private boolean isValidName(String path) {
-		int counter = 0;
-		int i = 0;
-		while (i < path.length() && counter <= 2) {
-			if (path.charAt(i) == '.') {
-				counter++;
-			}
-			i++;
-		}
-		if (counter >= 2) {
-			return false;
-		}
-		return true;
 	}
 }
