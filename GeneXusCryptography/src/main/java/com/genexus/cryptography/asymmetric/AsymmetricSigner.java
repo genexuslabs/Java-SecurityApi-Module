@@ -20,8 +20,6 @@ import com.genexus.securityapicommons.keys.CertificateX509;
 import com.genexus.securityapicommons.keys.PrivateKeyManager;
 import com.genexus.securityapicommons.utils.SecurityUtils;
 
-
-
 public class AsymmetricSigner extends AsymmetricSignerObject {
 
 	/**
@@ -33,42 +31,68 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
 
-
 	/**
 	 * Implements signature calculationwith RSA or ECDSA keys.
 	 * 
-	 * @param path
-	 *            String path of the key/certificate file
-	 * @param hashAlgorithm
-	 *            String HashAlgorithm enum, algorithm name
-	 * @param plainText
-	 *            String UTF-8 text to sign
-	 * @param options
-	 *            Options data type to sel alias and pasword for pkcs12 certificate
+	 * @param path          String path of the key/certificate file
+	 * @param hashAlgorithm String HashAlgorithm enum, algorithm name
+	 * @param plainText     String UTF-8 text to sign
+	 * @param options       Options data type to sel alias and pasword for pkcs12
+	 *                      certificate
 	 * @return String Base64 signature of plainText text
 	 */
 	@Override
 	public String doSign(PrivateKeyManager key, String hashAlgorithm, String plainText) {
-		return doSignPKCS12(key, hashAlgorithm, plainText);
+		EncodingUtil eu = new EncodingUtil();
+		byte[] inputText = eu.getBytes(plainText);
+		if(eu.hasError()) {
+			this.error=eu.getError();
+			return "";
+		}
+		return doSignPKCS12(key, hashAlgorithm, inputText);
+	}
+	
+	@Override
+	public String doSignFile(PrivateKeyManager key, String hashAlgorithm, String path) {
+		byte[] input = SecurityUtils.getFileBytes(path, this.error);
+		if(this.hasError())
+		{
+			return "";
+		}
+		return doSignPKCS12(key, hashAlgorithm, input);
 	}
 
 	/**
 	 * Implements signature verification with RSA or ECDSA keys
 	 * 
-	 * @param path
-	 *            String path of the key/certificate file
-	 * @param plainText
-	 *            String UTF-8 signed text
-	 * @param signature
-	 *            String Base64 signature of plainText
-	 * @param options
-	 *            Options data type to sel alias and pasword for pkcs12 certificate
+	 * @param path      String path of the key/certificate file
+	 * @param plainText String UTF-8 signed text
+	 * @param signature String Base64 signature of plainText
+	 * @param options   Options data type to sel alias and pasword for pkcs12
+	 *                  certificate
 	 * @return boolean true if signature is valid for the specified parameters,
 	 *         false if it is invalid
 	 */
 	@Override
 	public boolean doVerify(CertificateX509 cert, String plainText, String signature) {
-		return doVerifyPKCS12(cert, plainText, signature);
+		EncodingUtil eu = new EncodingUtil();
+		byte[] inputText = eu.getBytes(plainText);
+		if(eu.hasError()) {
+			this.error=eu.getError();
+			return false;
+		}
+		return doVerifyPKCS12(cert, inputText, signature);
+	}
+	
+	@Override
+	public boolean doVerifyFile(CertificateX509 cert, String path, String signature)
+	{
+		byte[] input = SecurityUtils.getFileBytes(path, this.error);
+		if(this.hasError())
+		{
+			return false;
+		}
+		return doVerifyPKCS12(cert, input, signature);
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
@@ -76,60 +100,52 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	/**
 	 * Implements signature calculationwith RSA or ECDSA keys.
 	 * 
-	 * @param path
-	 *            String path of the key/certificate file
-	 * @param hashAlgorithm
-	 *            String HashAlgorithm enum, algorithm name
-	 * @param alias
-	 *            String alias of the certificate/keystore in pkcs12 format
-	 * @param password
-	 *            String password of the certificate/keystore in pkcs12 format
-	 * @param plainText
-	 *            String UTF-8 text to sign
+	 * @param path          String path of the key/certificate file
+	 * @param hashAlgorithm String HashAlgorithm enum, algorithm name
+	 * @param alias         String alias of the certificate/keystore in pkcs12
+	 *                      format
+	 * @param password      String password of the certificate/keystore in pkcs12
+	 *                      format
+	 * @param plainText     String UTF-8 text to sign
 	 * @return String Base64 signature of plainText text
 	 */
-	private String doSignPKCS12(PrivateKey key, String hashAlgorithm, String plainText) {
+	private String doSignPKCS12(PrivateKey key, String hashAlgorithm, byte[] input) {
 		this.error.cleanError();
 		HashAlgorithm hash = HashAlgorithm.getHashAlgorithm(hashAlgorithm, this.error);
 		if (this.error.existsError()) {
 			return "";
 		}
-		PrivateKeyManager keyMan = (PrivateKeyManager)key;
+		PrivateKeyManager keyMan = (PrivateKeyManager) key;
 		String algorithm = keyMan.getPrivateKeyAlgorithm();
 		if (keyMan.getError().existsError()) {
 			this.error = keyMan.getError();
 			return "";
 		}
-		
+
 		if (SecurityUtils.compareStrings(algorithm, "RSA")) {
-			return signRSA(hash, plainText, keyMan);
+			return signRSA(hash, input, keyMan);
 		}
 		if (SecurityUtils.compareStrings(algorithm, "ECDSA")) {
-			return signECDSA(hash, plainText, keyMan);
+			return signECDSA(hash, input, keyMan);
 		}
 		this.error.setError("AE047", "Unrecognized signing algorithm " + algorithm);
 		return "";
 	}
-	
+
 	/**
 	 * Implements signature verification with RSA or ECDSA keys
 	 * 
-	 * @param path
-	 *            String path of the key/certificate file
-	 * @param alias
-	 *            String alias of the certificate/keystore in pkcs12 format
-	 * @param password
-	 *            String password of the certificate/keystore in pkcs12 format
-	 * @param plainText
-	 *            String UTF-8 signed text
-	 * @param signature
-	 *            String Base64 signature of plainText
+	 * @param path      String path of the key/certificate file
+	 * @param alias     String alias of the certificate/keystore in pkcs12 format
+	 * @param password  String password of the certificate/keystore in pkcs12 format
+	 * @param plainText String UTF-8 signed text
+	 * @param signature String Base64 signature of plainText
 	 * @return boolean true if signature is valid for the specified parameters,
 	 *         false if it is invalid
 	 */
-	private boolean doVerifyPKCS12(Certificate certificate, String plainText, String signature) {
+	private boolean doVerifyPKCS12(Certificate certificate, byte[] input, String signature) {
 		this.error.cleanError();
-		CertificateX509 cert = (CertificateX509)certificate;
+		CertificateX509 cert = (CertificateX509) certificate;
 		if (!cert.Inicialized() || cert.hasError()) {
 			this.error = cert.getError();
 			return false;
@@ -141,38 +157,29 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 		}
 		switch (asymmetricSigningAlgorithm) {
 		case RSA:
-			return verifyRSA(plainText, signature, cert);
+			return verifyRSA(input, signature, cert);
 		case ECDSA:
-			return verifyECDSA(plainText, signature, cert);
+			return verifyECDSA(input, signature, cert);
 		default:
 			this.error.setError("AE048", "Cannot verify signature");
 			return false;
 		}
 
 	}
-	
+
 	/**
 	 * Implements signature verification with RSA keys, hash value NONE is not
 	 * valid. Uses hash specified on certificate by default
 	 * 
-	 * @param plainText
-	 *            String UTF-8 signed text
-	 * @param signature
-	 *            String Base64 signature of plainText
-	 * @param km
-	 *            KeyManager Data Type loaded with keys and key information
+	 * @param plainText String UTF-8 signed text
+	 * @param signature String Base64 signature of plainText
+	 * @param km        KeyManager Data Type loaded with keys and key information
 	 * @return boolean true if signature is valid for the specified parameters,
 	 *         false if it is invalid
 	 */
-	private boolean verifyRSA(String plainText, String signature, CertificateX509 cert) {
+	private boolean verifyRSA(byte[] input, String signature, CertificateX509 cert) {
 		HashAlgorithm hashAlgorithm = HashAlgorithm.valueOf(cert.getPublicKeyHash());
 		if (HashAlgorithm.NONE != hashAlgorithm) {
-			EncodingUtil eu = new EncodingUtil();
-			byte[] inputText = eu.getBytes(plainText);
-			if(eu.hasError()) {
-				this.error = eu.getError();
-				return false;
-			}
 			Hashing digest = new Hashing();
 			Digest hash = digest.createHash(hashAlgorithm);
 			if (digest.getError().existsError()) {
@@ -185,7 +192,7 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 				return false;
 			}
 			signerRSA.init(false, asymmetricKeyParameter);
-			signerRSA.update(inputText, 0, inputText.length);
+			signerRSA.update(input, 0, input.length);
 			byte[] signatureBytes = Base64.decode(signature);
 			if (signatureBytes == null || signatureBytes.length == 0) {
 				this.error.setError("AE049", "Error on signature verification");
@@ -202,18 +209,15 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	 * Implements signature verification with ECDSA keys, if no hash is defined uses
 	 * default SHA1
 	 * 
-	 * @param plainText
-	 *            String UTF-8 signed text
-	 * @param signature
-	 *            String Base64 signature of plainText
-	 * @param km
-	 *            KeyManager Data Type loaded with keys and key information
+	 * @param plainText String UTF-8 signed text
+	 * @param signature String Base64 signature of plainText
+	 * @param km        KeyManager Data Type loaded with keys and key information
 	 * @return boolean true if signature is valid for the specified parameters,
 	 *         false if it is invalid
 	 */
-	private boolean verifyECDSA(String plainText, String signature, CertificateX509 cert) {
+	private boolean verifyECDSA(byte[] input, String signature, CertificateX509 cert) {
 		HashAlgorithm hashAlgorithm = null;
-		
+
 		if (SecurityUtils.compareStrings(cert.getPublicKeyHash(), "ECDSA")) {
 			hashAlgorithm = HashAlgorithm.SHA1;
 		} else {
@@ -232,12 +236,6 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 			return false;
 		}
 		digestSigner.init(false, asymmetricKeyParameter);
-		EncodingUtil eu = new EncodingUtil();
-		byte[] input = eu.getBytes(plainText);
-		if(eu.hasError()) {
-			this.error = eu.getError();
-			return false;
-		}
 		digestSigner.update(input, 0, input.length);
 		byte[] signatureBytes = Base64.decode(signature);
 		if (signatureBytes == null || signatureBytes.length == 0) {
@@ -252,15 +250,13 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	/**
 	 * Implements ECDSA signature. Uses specified hash value or SHA1 for default
 	 * 
-	 * @param hashAlgorithm
-	 *            HashAlgorithm enum, algorithm name
-	 * @param plainText
-	 *            String UTF-8 to sign
-	 * @param km
-	 *            KeyManager Data Type loaded with keys and key information
+	 * @param hashAlgorithm HashAlgorithm enum, algorithm name
+	 * @param plainText     String UTF-8 to sign
+	 * @param km            KeyManager Data Type loaded with keys and key
+	 *                      information
 	 * @return String Base64 ECDSA signature of plainText
 	 */
-	private String signECDSA(HashAlgorithm hashAlgorithm, String plainText, PrivateKeyManager km) {
+	private String signECDSA(HashAlgorithm hashAlgorithm, byte[] input, PrivateKeyManager km) {
 		Hashing hash = new Hashing();
 		Digest digest = hash.createHash(hashAlgorithm);
 		if (hash.getError().existsError()) {
@@ -274,12 +270,6 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 			return "";
 		}
 		digestSigner.init(true, asymmetricKeyParameter);
-		EncodingUtil eu = new EncodingUtil();
-		byte[] input = eu.getBytes(plainText);
-		if(eu.hasError()) {
-			this.error=eu.getError();
-			return "";
-		}
 		digestSigner.update(input, 0, input.length);
 		byte[] output = digestSigner.generateSignature();
 		if (output == null || output.length == 0) {
@@ -293,22 +283,14 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	/**
 	 * Implements RSSA signature. Hash NONE is not a valid value
 	 * 
-	 * @param hashAlgorithm
-	 *            HashAlgorithm enum, algorithm name
-	 * @param plainText
-	 *            String UTF-8 to sign
-	 * @param km
-	 *            KeyManager Data Type loaded with keys and key information
+	 * @param hashAlgorithm HashAlgorithm enum, algorithm name
+	 * @param plainText     String UTF-8 to sign
+	 * @param km            KeyManager Data Type loaded with keys and key
+	 *                      information
 	 * @return String Base64 RSA signature of plainText
 	 */
-	private String signRSA(HashAlgorithm hashAlgorithm, String plainText, PrivateKeyManager km) {
-		if (HashAlgorithm.NONE != hashAlgorithm) {
-			EncodingUtil eu = new EncodingUtil();
-			byte[] inputText = eu.getBytes(plainText);
-			if(eu.hasError()) {
-				this.error=eu.getError();
-				return "";
-			}
+	private String signRSA(HashAlgorithm hashAlgorithm, byte[] input, PrivateKeyManager km) {
+		if (hashAlgorithm != HashAlgorithm.NONE) {
 			Hashing digest = new Hashing();
 			Digest hash = digest.createHash(hashAlgorithm);
 			if (digest.getError().existsError()) {
@@ -322,7 +304,7 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 				return "";
 			}
 			signerRSA.init(true, asymmetricKeyParameter);
-			signerRSA.update(inputText, 0, inputText.length);
+			signerRSA.update(input, 0, input.length);
 			byte[] outputBytes;
 			try {
 				outputBytes = signerRSA.generateSignature();
@@ -339,4 +321,3 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	}
 
 }
-
