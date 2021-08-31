@@ -1,5 +1,9 @@
 package com.genexus.cryptography.asymmetric;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.Digest;
@@ -45,18 +49,18 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	public String doSign(PrivateKeyManager key, String hashAlgorithm, String plainText) {
 		EncodingUtil eu = new EncodingUtil();
 		byte[] inputText = eu.getBytes(plainText);
-		if(eu.hasError()) {
-			this.error=eu.getError();
+		if (eu.hasError()) {
+			this.error = eu.getError();
 			return "";
 		}
-		return doSignPKCS12(key, hashAlgorithm, inputText);
+		InputStream is = new ByteArrayInputStream(inputText);
+		return doSignPKCS12(key, hashAlgorithm, is);
 	}
-	
+
 	@Override
 	public String doSignFile(PrivateKeyManager key, String hashAlgorithm, String path) {
-		byte[] input = SecurityUtils.getFileBytes(path, this.error);
-		if(this.hasError())
-		{
+		InputStream input = SecurityUtils.getFileStream(path, this.error);
+		if (this.hasError()) {
 			return "";
 		}
 		return doSignPKCS12(key, hashAlgorithm, input);
@@ -77,19 +81,18 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	public boolean doVerify(CertificateX509 cert, String plainText, String signature) {
 		EncodingUtil eu = new EncodingUtil();
 		byte[] inputText = eu.getBytes(plainText);
-		if(eu.hasError()) {
-			this.error=eu.getError();
+		if (eu.hasError()) {
+			this.error = eu.getError();
 			return false;
 		}
-		return doVerifyPKCS12(cert, inputText, signature);
+		InputStream is = new ByteArrayInputStream(inputText);
+		return doVerifyPKCS12(cert, is, signature);
 	}
-	
+
 	@Override
-	public boolean doVerifyFile(CertificateX509 cert, String path, String signature)
-	{
-		byte[] input = SecurityUtils.getFileBytes(path, this.error);
-		if(this.hasError())
-		{
+	public boolean doVerifyFile(CertificateX509 cert, String path, String signature) {
+		InputStream input = SecurityUtils.getFileStream(path, this.error);
+		if (this.hasError()) {
 			return false;
 		}
 		return doVerifyPKCS12(cert, input, signature);
@@ -109,7 +112,7 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	 * @param plainText     String UTF-8 text to sign
 	 * @return String Base64 signature of plainText text
 	 */
-	private String doSignPKCS12(PrivateKey key, String hashAlgorithm, byte[] input) {
+	private String doSignPKCS12(PrivateKey key, String hashAlgorithm, InputStream input) {
 		this.error.cleanError();
 		HashAlgorithm hash = HashAlgorithm.getHashAlgorithm(hashAlgorithm, this.error);
 		if (this.error.existsError()) {
@@ -143,7 +146,7 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	 * @return boolean true if signature is valid for the specified parameters,
 	 *         false if it is invalid
 	 */
-	private boolean doVerifyPKCS12(Certificate certificate, byte[] input, String signature) {
+	private boolean doVerifyPKCS12(Certificate certificate, InputStream input, String signature) {
 		this.error.cleanError();
 		CertificateX509 cert = (CertificateX509) certificate;
 		if (!cert.Inicialized() || cert.hasError()) {
@@ -177,7 +180,7 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	 * @return boolean true if signature is valid for the specified parameters,
 	 *         false if it is invalid
 	 */
-	private boolean verifyRSA(byte[] input, String signature, CertificateX509 cert) {
+	private boolean verifyRSA(InputStream input, String signature, CertificateX509 cert) {
 		HashAlgorithm hashAlgorithm = HashAlgorithm.valueOf(cert.getPublicKeyHash());
 		if (HashAlgorithm.NONE != hashAlgorithm) {
 			Hashing digest = new Hashing();
@@ -192,8 +195,18 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 				return false;
 			}
 			signerRSA.init(false, asymmetricKeyParameter);
-			signerRSA.update(input, 0, input.length);
-			byte[] signatureBytes = Base64.decode(signature);
+			byte[] buffer = new byte[8192];
+			int n;
+			byte[] signatureBytes = null;
+			try {
+				while ((n = input.read(buffer)) > 0) {
+					signerRSA.update(buffer, 0, n);
+				}
+			} catch (Exception e) {
+				error.setError("AE057", e.getMessage());
+				return false;
+			}
+			signatureBytes = Base64.decode(signature);
 			if (signatureBytes == null || signatureBytes.length == 0) {
 				this.error.setError("AE049", "Error on signature verification");
 				return false;
@@ -215,7 +228,7 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	 * @return boolean true if signature is valid for the specified parameters,
 	 *         false if it is invalid
 	 */
-	private boolean verifyECDSA(byte[] input, String signature, CertificateX509 cert) {
+	private boolean verifyECDSA(InputStream input, String signature, CertificateX509 cert) {
 		HashAlgorithm hashAlgorithm = null;
 
 		if (SecurityUtils.compareStrings(cert.getPublicKeyHash(), "ECDSA")) {
@@ -236,8 +249,19 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 			return false;
 		}
 		digestSigner.init(false, asymmetricKeyParameter);
-		digestSigner.update(input, 0, input.length);
-		byte[] signatureBytes = Base64.decode(signature);
+		byte[] buffer = new byte[8192];
+		int n;
+		byte[] signatureBytes = null;
+		try {
+			while ((n = input.read(buffer)) > 0) {
+				digestSigner.update(buffer, 0, n);
+			}
+
+			signatureBytes = Base64.decode(signature);
+		} catch (Exception e) {
+			error.setError("AE056", e.getMessage());
+			return false;
+		}
 		if (signatureBytes == null || signatureBytes.length == 0) {
 			this.error.setError("AE051", "Error on signature verification");
 			return false;
@@ -256,7 +280,7 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	 *                      information
 	 * @return String Base64 ECDSA signature of plainText
 	 */
-	private String signECDSA(HashAlgorithm hashAlgorithm, byte[] input, PrivateKeyManager km) {
+	private String signECDSA(HashAlgorithm hashAlgorithm, InputStream input, PrivateKeyManager km) {
 		Hashing hash = new Hashing();
 		Digest digest = hash.createHash(hashAlgorithm);
 		if (hash.getError().existsError()) {
@@ -270,8 +294,20 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 			return "";
 		}
 		digestSigner.init(true, asymmetricKeyParameter);
-		digestSigner.update(input, 0, input.length);
-		byte[] output = digestSigner.generateSignature();
+		byte[] buffer = new byte[8192];
+		int n;
+		byte[] output = null;
+		try {
+			while ((n = input.read(buffer)) > 0) {
+				digestSigner.update(buffer, 0, n);
+			}
+
+			// digestSigner.update(input, 0, input.length);
+			output = digestSigner.generateSignature();
+		} catch (Exception e) {
+			error.setError("AE055", e.getMessage());
+			return "";
+		}
 		if (output == null || output.length == 0) {
 			this.error.setError("AE052", "Error on signing");
 		}
@@ -289,7 +325,7 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	 *                      information
 	 * @return String Base64 RSA signature of plainText
 	 */
-	private String signRSA(HashAlgorithm hashAlgorithm, byte[] input, PrivateKeyManager km) {
+	private String signRSA(HashAlgorithm hashAlgorithm, InputStream input, PrivateKeyManager km) {
 		if (hashAlgorithm != HashAlgorithm.NONE) {
 			Hashing digest = new Hashing();
 			Digest hash = digest.createHash(hashAlgorithm);
@@ -304,13 +340,16 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 				return "";
 			}
 			signerRSA.init(true, asymmetricKeyParameter);
-			signerRSA.update(input, 0, input.length);
+			byte[] buffer = new byte[8192];
+			int n;
 			byte[] outputBytes;
 			try {
+				while ((n = input.read(buffer)) > 0) {
+					signerRSA.update(buffer, 0, n);
+				}
 				outputBytes = signerRSA.generateSignature();
-			} catch (DataLengthException | CryptoException e) {
+			} catch (DataLengthException | CryptoException | IOException e) {
 				this.error.setError("AE053", "RSA signing error");
-				e.printStackTrace();
 				return "";
 			}
 			this.error.cleanError();
