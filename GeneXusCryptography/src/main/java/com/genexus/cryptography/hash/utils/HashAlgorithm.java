@@ -86,9 +86,11 @@ public enum HashAlgorithm {
 		case "SHA3-512":
 			return HashAlgorithm.SHA3_512;
 		case "SHAKE_128":
-			return HashAlgorithm.SHAKE_128;
+			error.setError("HA003", "Not implemented algorithm SHAKE_128");
+			return null;
 		case "SHAKE_256":
-			return HashAlgorithm.SHAKE_256;
+			error.setError("HA004", "Not implemented algorithm SHAKE_256");
+			return null;
 		case "SM3":
 			return HashAlgorithm.SM3;
 		case "TIGER":
@@ -174,10 +176,6 @@ public enum HashAlgorithm {
 			return "SHA3_384";
 		case SHA3_512:
 			return "SHA3_512";
-		case SHAKE_128:
-			return "SHAKE_128";
-		case SHAKE_256:
-			return "SHAKE_256";
 		case SM3:
 			return "SM3";
 		case TIGER:

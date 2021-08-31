@@ -185,10 +185,6 @@ public class Hashing extends HashObject {
 			return new SHA3Digest(384);
 		case SHA3_512:
 			return new SHA3Digest(512);
-		case SHAKE_128:
-			return new SHAKEDigest(128);
-		case SHAKE_256:
-			return new SHAKEDigest(256);
 		case SM3:
 			return new SM3Digest();
 		case TIGER:

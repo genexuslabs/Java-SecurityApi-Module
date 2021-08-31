@@ -26,13 +26,13 @@
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcpkix-jdk15on</artifactId>
-			<version>1.64</version>
+			<version>1.69</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk15on</artifactId>
-			<version>1.64</version>
+			<version>1.69</version>
 		</dependency>
 		<dependency>
 			<groupId>com.genexus</groupId>
