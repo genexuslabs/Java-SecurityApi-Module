@@ -1,16 +1,11 @@
 package com.genexus.cryptography.asymmetric;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
-import org.bouncycastle.crypto.CryptoException;
-import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.Digest;
+import org.bouncycastle.crypto.Signer;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
-import org.bouncycastle.crypto.signers.DSADigestSigner;
-import org.bouncycastle.crypto.signers.ECDSASigner;
-import org.bouncycastle.crypto.signers.RSADigestSigner;
 import org.bouncycastle.util.encoders.Base64;
 
 import com.genexus.cryptography.asymmetric.utils.AsymmetricSigningAlgorithm;
@@ -34,329 +29,259 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
-
-	/**
-	 * Implements signature calculationwith RSA or ECDSA keys.
-	 * 
-	 * @param path          String path of the key/certificate file
-	 * @param hashAlgorithm String HashAlgorithm enum, algorithm name
-	 * @param plainText     String UTF-8 text to sign
-	 * @param options       Options data type to sel alias and pasword for pkcs12
-	 *                      certificate
-	 * @return String Base64 signature of plainText text
-	 */
+	
 	@Override
 	public String doSign(PrivateKeyManager key, String hashAlgorithm, String plainText) {
+		/******** INPUT VERIFICATION - BEGIN ********/
+		if(key == null)
+		{
+			error.setError("AE001", "Private key cannot be null");
+			return "";
+		}
+		if(hashAlgorithm == null || hashAlgorithm.length() == 0 || SecurityUtils.compareStrings("", hashAlgorithm))
+		{
+			error.setError("AE002", "HashAlgorithm cannot be empty value; use HashAlgorithm domain");
+			return "";
+		}
+		if(plainText == null || plainText.length() == 0 || SecurityUtils.compareStrings("", plainText))
+		{
+			error.setError("AE003", "The plainText value to sign cannot be empty");
+			return "";
+		}
+		/******** INPUT VERIFICATION - END ********/
+		
+		
 		EncodingUtil eu = new EncodingUtil();
 		byte[] inputText = eu.getBytes(plainText);
 		if (eu.hasError()) {
 			this.error = eu.getError();
 			return "";
 		}
-		InputStream is = new ByteArrayInputStream(inputText);
-		return doSignPKCS12(key, hashAlgorithm, is);
+		String result = "";
+		try(InputStream inputStream = new ByteArrayInputStream(inputText))
+		{
+			result = sign(key, hashAlgorithm, inputStream);
+		}catch(Exception e)
+		{
+			error.setError("AE004", e.getMessage());
+		}
+		return result;
 	}
 
 	@Override
 	public String doSignFile(PrivateKeyManager key, String hashAlgorithm, String path) {
-		InputStream input = SecurityUtils.getFileStream(path, this.error);
-		if (this.hasError()) {
+		/******** INPUT VERIFICATION - BEGIN ********/
+		if(key == null)
+		{
+			error.setError("AE005", "Private key cannot be null");
 			return "";
 		}
-		return doSignPKCS12(key, hashAlgorithm, input);
+		if(hashAlgorithm == null || hashAlgorithm.length() == 0 || SecurityUtils.compareStrings("", hashAlgorithm))
+		{
+			error.setError("AE006", "HashAlgorithm cannot be empty value; use HashAlgorithm domain");
+			return "";
+		}
+		if(path == null || path.length() == 0 || SecurityUtils.compareStrings("", path))
+		{
+			error.setError("AE007", "The path value of the file to sign cannot be empty");
+			return "";
+		}
+		/******** INPUT VERIFICATION - END ********/
+		
+		String result = "";
+		try(InputStream input = SecurityUtils.getFileStream(path, this.error))
+		{
+			if (this.hasError()) {
+				return "";
+			}
+			
+			result = sign(key, hashAlgorithm, input);
+		}catch(Exception e)
+		{
+			error.setError("AE008", e.getMessage());
+		}
+		return result;
 	}
 
-	/**
-	 * Implements signature verification with RSA or ECDSA keys
-	 * 
-	 * @param path      String path of the key/certificate file
-	 * @param plainText String UTF-8 signed text
-	 * @param signature String Base64 signature of plainText
-	 * @param options   Options data type to sel alias and pasword for pkcs12
-	 *                  certificate
-	 * @return boolean true if signature is valid for the specified parameters,
-	 *         false if it is invalid
-	 */
 	@Override
 	public boolean doVerify(CertificateX509 cert, String plainText, String signature) {
+		/******** INPUT VERIFICATION - BEGIN ********/
+		if(cert == null)
+		{
+			error.setError("AE009", "Certificate cannot be null");
+			return false;
+		}
+		if(plainText == null || plainText.length() == 0 || SecurityUtils.compareStrings("", plainText))
+		{
+			error.setError("AE010", "The plainText value to verify cannot be empty");
+			return false;
+		}
+		if(signature == null || signature.length() == 0 || SecurityUtils.compareStrings("", signature))
+		{
+			error.setError("AE011", "The signature value to verify cannot be empty");
+			return false;
+		}
+		/******** INPUT VERIFICATION - END ********/
+		
+		
 		EncodingUtil eu = new EncodingUtil();
 		byte[] inputText = eu.getBytes(plainText);
 		if (eu.hasError()) {
 			this.error = eu.getError();
 			return false;
 		}
-		InputStream is = new ByteArrayInputStream(inputText);
-		return doVerifyPKCS12(cert, is, signature);
+		boolean result = false;
+		try(InputStream inputStream = new ByteArrayInputStream(inputText))
+		{
+			result = verify(cert, inputStream, signature);
+		}catch(Exception e)
+		{
+			error.setError("AE012", e.getMessage() );
+		}
+		return result;
 	}
 
 	@Override
 	public boolean doVerifyFile(CertificateX509 cert, String path, String signature) {
-		InputStream input = SecurityUtils.getFileStream(path, this.error);
-		if (this.hasError()) {
+		/******** INPUT VERIFICATION - BEGIN ********/
+		if(cert == null)
+		{
+			error.setError("AE013", "Certificate cannot be null");
 			return false;
 		}
-		return doVerifyPKCS12(cert, input, signature);
+		if(path == null || path.length() == 0 || SecurityUtils.compareStrings("", path))
+		{
+			error.setError("AE014", "The path value of the faile to verify cannot be empty");
+			return false;
+		}
+		if(signature == null || signature.length() == 0 || SecurityUtils.compareStrings("", signature))
+		{
+			error.setError("AE015", "The signature value to verify cannot be empty");
+			return false;
+		}
+		/******** INPUT VERIFICATION - END ********/
+		
+		boolean result = false;
+		try(InputStream input = SecurityUtils.getFileStream(path, this.error))
+		{
+			if (this.hasError()) {
+				return false;
+			}
+			result = verify(cert, input, signature);
+		}catch(Exception e)
+		{
+			error.setError("AE016", e.getMessage());
+		}
+		return result;
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
-	/**
-	 * Implements signature calculationwith RSA or ECDSA keys.
-	 * 
-	 * @param path          String path of the key/certificate file
-	 * @param hashAlgorithm String HashAlgorithm enum, algorithm name
-	 * @param alias         String alias of the certificate/keystore in pkcs12
-	 *                      format
-	 * @param password      String password of the certificate/keystore in pkcs12
-	 *                      format
-	 * @param plainText     String UTF-8 text to sign
-	 * @return String Base64 signature of plainText text
-	 */
-	private String doSignPKCS12(PrivateKey key, String hashAlgorithm, InputStream input) {
-		this.error.cleanError();
-		HashAlgorithm hash = HashAlgorithm.getHashAlgorithm(hashAlgorithm, this.error);
-		if (this.error.existsError()) {
-			return "";
-		}
+	private String sign(PrivateKey key, String hashAlgorithm, InputStream input) {
 		PrivateKeyManager keyMan = (PrivateKeyManager) key;
-		String algorithm = keyMan.getPrivateKeyAlgorithm();
-		if (keyMan.getError().existsError()) {
+		if (keyMan.hasError()) {
 			this.error = keyMan.getError();
 			return "";
 		}
-
-		if (SecurityUtils.compareStrings(algorithm, "RSA")) {
-			return signRSA(hash, input, keyMan);
+		AsymmetricSigningAlgorithm asymmetricSigningAlgorithm = AsymmetricSigningAlgorithm
+				.getAsymmetricSigningAlgorithm(keyMan.getPrivateKeyAlgorithm(), this.error);
+		if (this.hasError()) return "";
+		Signer signer = AsymmetricSigningAlgorithm.getSigner(asymmetricSigningAlgorithm, getHash(hashAlgorithm),
+				this.error);
+		if (this.hasError()) return "";
+		setUpSigner(signer, input, keyMan.getPrivateKeyParameterForSigning(), true);
+		if (this.hasError()) return "";
+		byte[] outputBytes = null;
+		try {
+			outputBytes = signer.generateSignature();
+		} catch (Exception e) {
+			error.setError("AE01", e.getMessage());
+			return "";
 		}
-		if (SecurityUtils.compareStrings(algorithm, "ECDSA")) {
-			return signECDSA(hash, input, keyMan);
+		String result = "";
+		try {
+			result = Base64.toBase64String(outputBytes);
+		} catch (Exception e) {
+			error.setError("AE018", e.getMessage());
+			return "";
 		}
-		this.error.setError("AE047", "Unrecognized signing algorithm " + algorithm);
-		return "";
+		return result;
 	}
 
-	/**
-	 * Implements signature verification with RSA or ECDSA keys
-	 * 
-	 * @param path      String path of the key/certificate file
-	 * @param alias     String alias of the certificate/keystore in pkcs12 format
-	 * @param password  String password of the certificate/keystore in pkcs12 format
-	 * @param plainText String UTF-8 signed text
-	 * @param signature String Base64 signature of plainText
-	 * @return boolean true if signature is valid for the specified parameters,
-	 *         false if it is invalid
-	 */
-	private boolean doVerifyPKCS12(Certificate certificate, InputStream input, String signature) {
-		this.error.cleanError();
+	private boolean verify(Certificate certificate, InputStream input, String signature) {
 		CertificateX509 cert = (CertificateX509) certificate;
 		if (!cert.Inicialized() || cert.hasError()) {
 			this.error = cert.getError();
 			return false;
 		}
+		String hashAlgorithm = "";
+		if (SecurityUtils.compareStrings(cert.getPublicKeyHash(), "ECDSA")) {
+			hashAlgorithm = "SHA1";
+		} else {
+			hashAlgorithm = cert.getPublicKeyHash();
+		}
 		AsymmetricSigningAlgorithm asymmetricSigningAlgorithm = AsymmetricSigningAlgorithm
 				.getAsymmetricSigningAlgorithm(cert.getPublicKeyAlgorithm(), this.error);
-		if (this.error.existsError()) {
-			return false;
-		}
-		switch (asymmetricSigningAlgorithm) {
-		case RSA:
-			return verifyRSA(input, signature, cert);
-		case ECDSA:
-			return verifyECDSA(input, signature, cert);
-		default:
-			this.error.setError("AE048", "Cannot verify signature");
-			return false;
-		}
-
-	}
-
-	/**
-	 * Implements signature verification with RSA keys, hash value NONE is not
-	 * valid. Uses hash specified on certificate by default
-	 * 
-	 * @param plainText String UTF-8 signed text
-	 * @param signature String Base64 signature of plainText
-	 * @param km        KeyManager Data Type loaded with keys and key information
-	 * @return boolean true if signature is valid for the specified parameters,
-	 *         false if it is invalid
-	 */
-	private boolean verifyRSA(InputStream input, String signature, CertificateX509 cert) {
-		HashAlgorithm hashAlgorithm = HashAlgorithm.valueOf(cert.getPublicKeyHash());
-		if (HashAlgorithm.NONE != hashAlgorithm) {
-			Hashing digest = new Hashing();
-			Digest hash = digest.createHash(hashAlgorithm);
-			if (digest.getError().existsError()) {
-				this.error = digest.getError();
-				return false;
-			}
-			RSADigestSigner signerRSA = new RSADigestSigner(hash);
-			AsymmetricKeyParameter asymmetricKeyParameter = cert.getPublicKeyParameterForSigning();
-			if (this.error.existsError()) {
-				return false;
-			}
-			signerRSA.init(false, asymmetricKeyParameter);
-			byte[] buffer = new byte[8192];
-			int n;
-			byte[] signatureBytes = null;
-			try {
-				while ((n = input.read(buffer)) > 0) {
-					signerRSA.update(buffer, 0, n);
-				}
-			} catch (Exception e) {
-				error.setError("AE057", e.getMessage());
-				return false;
-			}
-			signatureBytes = Base64.decode(signature);
-			if (signatureBytes == null || signatureBytes.length == 0) {
-				this.error.setError("AE049", "Error on signature verification");
-				return false;
-			}
-			this.error.cleanError();
-			return signerRSA.verifySignature(signatureBytes);
-		}
-		this.error.setError("AE050", "Hashalgorithm cannot be NONE");
-		return false;
-	}
-
-	/**
-	 * Implements signature verification with ECDSA keys, if no hash is defined uses
-	 * default SHA1
-	 * 
-	 * @param plainText String UTF-8 signed text
-	 * @param signature String Base64 signature of plainText
-	 * @param km        KeyManager Data Type loaded with keys and key information
-	 * @return boolean true if signature is valid for the specified parameters,
-	 *         false if it is invalid
-	 */
-	private boolean verifyECDSA(InputStream input, String signature, CertificateX509 cert) {
-		HashAlgorithm hashAlgorithm = null;
-
-		if (SecurityUtils.compareStrings(cert.getPublicKeyHash(), "ECDSA")) {
-			hashAlgorithm = HashAlgorithm.SHA1;
-		} else {
-			hashAlgorithm = HashAlgorithm.valueOf(cert.getPublicKeyHash());
-		}
-		Hashing hash = new Hashing();
-		Digest digest = hash.createHash(hashAlgorithm);
-		if (hash.getError().existsError()) {
-			this.error = hash.getError();
-			return false;
-		}
-		ECDSASigner dsaSigner = new ECDSASigner();
-		DSADigestSigner digestSigner = new DSADigestSigner(dsaSigner, digest);
-		AsymmetricKeyParameter asymmetricKeyParameter = cert.getPublicKeyParameterForSigning();
-		if (this.error.existsError()) {
-			return false;
-		}
-		digestSigner.init(false, asymmetricKeyParameter);
-		byte[] buffer = new byte[8192];
-		int n;
+		if (this.hasError()) return false;
+		Signer signer = AsymmetricSigningAlgorithm.getSigner(asymmetricSigningAlgorithm, getHash(hashAlgorithm),
+				this.error);
+		if (this.hasError()) return false;
+		setUpSigner(signer, input, cert.getPublicKeyParameterForSigning(), false);
+		if (this.hasError()) return false;
 		byte[] signatureBytes = null;
 		try {
-			while ((n = input.read(buffer)) > 0) {
-				digestSigner.update(buffer, 0, n);
-			}
-
 			signatureBytes = Base64.decode(signature);
 		} catch (Exception e) {
-			error.setError("AE056", e.getMessage());
+			error.setError("AE019", e.getMessage());
 			return false;
 		}
+
 		if (signatureBytes == null || signatureBytes.length == 0) {
-			this.error.setError("AE051", "Error on signature verification");
+			this.error.setError("AE020", "Error reading signature");
 			return false;
 		}
-		this.error.cleanError();
-		return digestSigner.verifySignature(signatureBytes);
+		boolean result = false;
+		try {
+			result = signer.verifySignature(signatureBytes);
+		} catch (Exception e) {
+			error.setError("AE021", e.getMessage());
+			return false;
+		}
+		return result;
 
 	}
 
-	/**
-	 * Implements ECDSA signature. Uses specified hash value or SHA1 for default
-	 * 
-	 * @param hashAlgorithm HashAlgorithm enum, algorithm name
-	 * @param plainText     String UTF-8 to sign
-	 * @param km            KeyManager Data Type loaded with keys and key
-	 *                      information
-	 * @return String Base64 ECDSA signature of plainText
-	 */
-	private String signECDSA(HashAlgorithm hashAlgorithm, InputStream input, PrivateKeyManager km) {
-		Hashing hash = new Hashing();
-		Digest digest = hash.createHash(hashAlgorithm);
-		if (hash.getError().existsError()) {
-			this.error = hash.getError();
-			return "";
+	private void setUpSigner(Signer signer, InputStream input, AsymmetricKeyParameter asymmetricKeyParameter,
+			boolean toSign) {
+		try {
+			signer.init(toSign, asymmetricKeyParameter);
+		} catch (Exception e) {
+			error.setError("AE022", e.getMessage());
+			return;
 		}
-		ECDSASigner dsaSigner = new ECDSASigner();
-		DSADigestSigner digestSigner = new DSADigestSigner(dsaSigner, digest);
-		AsymmetricKeyParameter asymmetricKeyParameter = km.getPrivateKeyParameterForSigning();
-		if (this.error.existsError()) {
-			return "";
-		}
-		digestSigner.init(true, asymmetricKeyParameter);
 		byte[] buffer = new byte[8192];
 		int n;
-		byte[] output = null;
 		try {
 			while ((n = input.read(buffer)) > 0) {
-				digestSigner.update(buffer, 0, n);
+				signer.update(buffer, 0, n);
 			}
-
-			// digestSigner.update(input, 0, input.length);
-			output = digestSigner.generateSignature();
 		} catch (Exception e) {
-			error.setError("AE055", e.getMessage());
-			return "";
+			error.setError("AE023", e.getMessage());
+			return;
 		}
-		if (output == null || output.length == 0) {
-			this.error.setError("AE052", "Error on signing");
-		}
-		this.error.cleanError();
-		return new String(Base64.encode(output));
-
 	}
-
-	/**
-	 * Implements RSSA signature. Hash NONE is not a valid value
-	 * 
-	 * @param hashAlgorithm HashAlgorithm enum, algorithm name
-	 * @param plainText     String UTF-8 to sign
-	 * @param km            KeyManager Data Type loaded with keys and key
-	 *                      information
-	 * @return String Base64 RSA signature of plainText
-	 */
-	private String signRSA(HashAlgorithm hashAlgorithm, InputStream input, PrivateKeyManager km) {
-		if (hashAlgorithm != HashAlgorithm.NONE) {
-			Hashing digest = new Hashing();
-			Digest hash = digest.createHash(hashAlgorithm);
-			if (digest.getError().existsError()) {
-				this.error = digest.getError();
-				return "";
-			}
-			RSADigestSigner signerRSA = new RSADigestSigner(hash);
-			AsymmetricKeyParameter asymmetricKeyParameter = km.getPrivateKeyParameterForSigning();
-			if (this.error.existsError()) {
-
-				return "";
-			}
-			signerRSA.init(true, asymmetricKeyParameter);
-			byte[] buffer = new byte[8192];
-			int n;
-			byte[] outputBytes;
-			try {
-				while ((n = input.read(buffer)) > 0) {
-					signerRSA.update(buffer, 0, n);
-				}
-				outputBytes = signerRSA.generateSignature();
-			} catch (DataLengthException | CryptoException | IOException e) {
-				this.error.setError("AE053", "RSA signing error");
-				return "";
-			}
-			this.error.cleanError();
-			return new String(Base64.encode(outputBytes));
+	
+	private Digest getHash(String hashAlgorithm) {
+		HashAlgorithm hash = HashAlgorithm.getHashAlgorithm(hashAlgorithm, this.error);
+		if (this.hasError()) {
+			return null;
 		}
-		this.error.setError("AE054", "HashAlgorithm cannot be NONE");
-		return "";
+		Hashing hashing = new Hashing();
+		Digest digest = hashing.createHash(hash);
+		if (hashing.hasError()) {
+			this.error = hashing.getError();
+			return null;
+		}
+		return digest;
 	}
-
 }
