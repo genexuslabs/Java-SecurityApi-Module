@@ -1,8 +1,5 @@
 package com.genexus.cryptography.checksum.utils;
 
-import java.io.File;
-import java.nio.file.Files;
-
 import com.genexus.securityapicommons.commons.Error;
 import com.genexus.securityapicommons.config.EncodingUtil;
 import com.genexus.securityapicommons.utils.SecurityUtils;
@@ -75,12 +72,7 @@ public enum ChecksumInputType {
 			}
 			break;
 		case LOCAL_FILE:
-			try {
-				File initialFile = new File(input);
-				aux = Files.readAllBytes(initialFile.toPath());
-			} catch (Exception e) {
-				error.setError("CI005", e.getMessage());
-			}
+			aux = SecurityUtils.getFileBytes(input, error);
 			break;
 		default:
 			error.setError("CI006", "Unrecognized checksum input type");

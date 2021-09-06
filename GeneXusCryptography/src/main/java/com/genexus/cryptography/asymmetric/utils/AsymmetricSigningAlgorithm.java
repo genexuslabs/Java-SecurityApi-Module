@@ -1,5 +1,11 @@
 package com.genexus.cryptography.asymmetric.utils;
 
+import org.bouncycastle.crypto.Digest;
+import org.bouncycastle.crypto.Signer;
+import org.bouncycastle.crypto.signers.DSADigestSigner;
+import org.bouncycastle.crypto.signers.ECDSASigner;
+import org.bouncycastle.crypto.signers.RSADigestSigner;
+
 import com.genexus.securityapicommons.commons.Error;
 
 /**
@@ -50,5 +56,27 @@ public enum AsymmetricSigningAlgorithm {
 			error.setError("AE006", "Unrecognized AsymmetricSigningAlgorithm");
 			return "";
 		}
+	}
+	
+	public static Signer getSigner(AsymmetricSigningAlgorithm asymmetricSigningAlgorithm, Digest hash, Error error)
+	{
+		if(hash == null)
+		{
+			error.setError("AE008", "Hash digest is null");
+			return null;
+		}
+		Signer sig = null;
+		switch (asymmetricSigningAlgorithm) {
+		case RSA:
+			sig = new RSADigestSigner(hash);
+			break;
+		case ECDSA:
+			ECDSASigner dsaSigner = new ECDSASigner();
+			sig = new DSADigestSigner(dsaSigner, hash);
+			break;
+		default:
+			error.setError("AE007", "Unrecognized AsymmetricSigningAlgorithm");
+		}
+		return sig;
 	}
 }

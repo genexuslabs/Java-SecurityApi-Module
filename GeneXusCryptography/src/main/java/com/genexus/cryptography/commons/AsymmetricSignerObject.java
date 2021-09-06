@@ -31,6 +31,8 @@ public abstract class AsymmetricSignerObject extends SecurityAPIObject {
 	 * @return String Base64 signature of plainText text
 	 */
 	public abstract String doSign(PrivateKeyManager key, String hashAlgorithm, String plainText);
+	
+	public abstract String doSignFile(PrivateKeyManager key, String hashAlgorithm, String path);
 
 	/**
 	 * Implements signature verification with RSA or ECDSA keys
@@ -47,5 +49,7 @@ public abstract class AsymmetricSignerObject extends SecurityAPIObject {
 	 *         false if it is invalid
 	 */
 	public abstract boolean doVerify(CertificateX509 cert, String plainText, String signature);
+	
+	public abstract boolean doVerifyFile(CertificateX509 cert, String path, String signature);
 
 }

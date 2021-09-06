@@ -4,8 +4,10 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import com.genexus.securityapicommons.commons.Error;
@@ -24,6 +26,29 @@ public class SecurityUtils {
 			return false;
 		}
 
+	}
+	
+	public static byte[] getFileBytes(String pathInput, Error error)
+	{
+		byte[] aux = null;
+		try {
+			File initialFile = new File(pathInput);
+			aux = Files.readAllBytes(initialFile.toPath());
+		} catch (Exception e) {
+			error.setError("SU001", e.getMessage());
+		}
+		return aux;
+	}
+	
+	public static InputStream getFileStream(String pathInput, Error error)
+	{
+		InputStream aux= null;
+		 try {
+			aux = new FileInputStream(new File(pathInput));
+		} catch (FileNotFoundException e) {
+			error.setError("SU002", e.getMessage());
+		}
+		 return aux;
 	}
 
 	public static boolean validateExtension(String path, String extension) {
