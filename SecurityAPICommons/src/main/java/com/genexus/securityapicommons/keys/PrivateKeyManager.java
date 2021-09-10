@@ -91,7 +91,7 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 		boolean res;
 		try {
 			res = readBase64(base64);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			this.error.setError("PK0015", e.getMessage());
 			return false;
 		}
@@ -105,7 +105,7 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 			String encoded = "";
 			try {
 				encoded = Base64.toBase64String(this.privateKeyInfo.getEncoded());
-			} catch (IOException e) {
+			} catch (Exception e) {
 				this.error.setError("PK0017", e.getMessage());
 				return "";
 			}
