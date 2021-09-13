@@ -96,7 +96,7 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 			this.cert = (X509Certificate) cf.engineGenerateCertificate(bI);
 			inicializeParameters();
 			flag = true;
-		} catch (CertificateException e) {
+		} catch (Exception e) {
 			this.error.setError("CE002", "Error loading certificate from base64");
 			flag = false;
 		}
