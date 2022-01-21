@@ -64,5 +64,29 @@ public class HexaEncoder extends SecurityAPIObject {
 		this.error.cleanError();
 		return result;
 	}
+	
+	public boolean isHexa(String input)
+	{
+		this.error.cleanError();
+		try
+		{
+			Hex.decode(fixString(input));
+		}catch(Exception e)
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	private String fixString(String input)
+	{
+		if(!input.contains("-"))
+		{
+			return input;
+		}else {
+			String inputStr = input.replace("-", "");
+			return inputStr;
+		}
+	}
 
 }
