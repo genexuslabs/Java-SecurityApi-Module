@@ -371,6 +371,7 @@ public class XmlDSigSigner extends SecurityAPIObject {
 			try {
 				X509Certificate x509Certificate = certificate.Cert();
 				X509Data x509data = new X509Data(sig.getDocument());
+				x509data.addIssuerSerial(x509Certificate.getIssuerDN().getName(), x509Certificate.getSerialNumber());			
 				x509data.addSubjectName(x509Certificate);
 				x509data.addCertificate(x509Certificate);
 				sig.getKeyInfo().add(x509data);
