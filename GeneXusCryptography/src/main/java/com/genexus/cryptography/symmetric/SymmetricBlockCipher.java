@@ -2,8 +2,6 @@ package com.genexus.cryptography.symmetric;
 
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.BufferedBlockCipher;
-import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.engines.BlowfishEngine;
 import org.bouncycastle.crypto.engines.CAST5Engine;
@@ -49,6 +47,7 @@ import org.bouncycastle.crypto.paddings.ZeroBytePadding;
 import org.bouncycastle.crypto.params.AEADParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
+import org.bouncycastle.util.Strings;
 import org.bouncycastle.util.encoders.Base64;
 
 import com.genexus.cryptography.commons.SymmetricBlockCipherObject;
@@ -89,53 +88,26 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	public String doAEADEncrypt(String symmetricBlockAlgorithm, String symmetricBlockMode, String key, int macSize,
 			String nonce, String plainText) {
 		this.error.cleanError();
-		SymmetricBlockAlgorithm algorithm = SymmetricBlockAlgorithm.getSymmetricBlockAlgorithm(symmetricBlockAlgorithm,
-				this.error);
-		SymmetricBlockMode mode = SymmetricBlockMode.getSymmetricBlockMode(symmetricBlockMode, this.error);
-		if (this.error.existsError()) {
-			return "";
-		}
-		BlockCipher engine = getCipherEngine(algorithm);
-		AEADBlockCipher bbc = getAEADCipherMode(engine, mode);
-		if (this.error.existsError() && !(this.error.getCode().compareToIgnoreCase("SB016") == 0)) {
-			return "";
-		}
 
-		byte[] nonceBytes = SecurityUtils.getHexa(nonce, "SB024", this.error);
-		byte[] keyBytes = SecurityUtils.getHexa(key, "SB024", this.error);
-		if (this.hasError()) {
-			return "";
-		}
-
-		KeyParameter keyParam = new KeyParameter(keyBytes);
-		AEADParameters AEADparams = new AEADParameters(keyParam, macSize, nonceBytes);
-		try {
-			bbc.init(true, AEADparams);
-		} catch (Exception e) {
-			this.error.setError("SB029", e.getMessage());
-			return "";
-		}
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+		SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
+		SecurityUtils.validateStringInput("key", key, this.error);
+		SecurityUtils.validateStringInput("nonce", nonce, this.error);
+		SecurityUtils.validateStringInput("plainText", plainText, this.error);
+		if(this.hasError()) { return "";};	
+		/*******INPUT VERIFICATION - END*******/
+		
 		EncodingUtil eu = new EncodingUtil();
-		byte[] inputBytes = eu.getBytes(plainText);
-		if (eu.getError().existsError()) {
-			this.error = eu.getError();
-			return "";
-		}
-		byte[] outputBytes = new byte[bbc.getOutputSize(inputBytes.length)];
-		int length = bbc.processBytes(inputBytes, 0, inputBytes.length, outputBytes, 0);
-		try {
-			bbc.doFinal(outputBytes, length);
-		} catch (DataLengthException | IllegalStateException | InvalidCipherTextException e) {
-			this.error.setError("SB010", "AEAD encryption exception");
-			e.printStackTrace();
-		}
-		String result = new String(Base64.encode(outputBytes));
-		if (result == null || result.length() == 0) {
-			this.error.setError("SB011", "Error encoding base64");
-			return "";
-		}
-		this.error.cleanError();
-		return result.trim();
+		byte[] txtBytes = eu.getBytes(plainText);
+		if(eu.hasError()) {this.error = eu.getError(); }
+		if (this.hasError()) { return ""; }
+		
+		byte[] encryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, null,nonce, key, txtBytes, macSize, true, true);
+		if (this.hasError()) { return ""; }
+		
+		return Strings.fromByteArray(Base64.encode(encryptedBytes)).trim();
+
 	}
 
 	/**
@@ -154,49 +126,35 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	public String doAEADDecrypt(String symmetricBlockAlgorithm, String symmetricBlockMode, String key, int macSize,
 			String nonce, String encryptedInput) {
 		this.error.cleanError();
-		SymmetricBlockAlgorithm algorithm = SymmetricBlockAlgorithm.getSymmetricBlockAlgorithm(symmetricBlockAlgorithm,
-				this.error);
-		SymmetricBlockMode mode = SymmetricBlockMode.getSymmetricBlockMode(symmetricBlockMode, this.error);
-		if (this.error.existsError()) {
-			return "";
-		}
-		BlockCipher engine = getCipherEngine(algorithm);
-		AEADBlockCipher bbc = getAEADCipherMode(engine, mode);
-		if (this.error.existsError() && !(this.error.getCode().compareToIgnoreCase("SB016") == 0)) {
-			return "";
-		}
-		byte[] nonceBytes = SecurityUtils.getHexa(nonce, "SB025", this.error);
-		byte[] keyBytes = SecurityUtils.getHexa(key, "SB025", this.error);
-		if (this.hasError()) {
-			return "";
-		}
-
-		KeyParameter keyParam = new KeyParameter(keyBytes);
-		AEADParameters AEADparams = new AEADParameters(keyParam, macSize, nonceBytes);
+		
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+		SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
+		SecurityUtils.validateStringInput("key", key, this.error);
+		SecurityUtils.validateStringInput("nonce", nonce, this.error);
+		SecurityUtils.validateStringInput("encryptedInput", encryptedInput, this.error);
+		if(this.hasError()) { return "";};	
+		/*******INPUT VERIFICATION - END*******/
+		
+		byte[] input = null;
 		try {
-			bbc.init(false, AEADparams);
-		} catch (Exception e) {
-			this.error.setError("SB030", e.getMessage());
+			input = Base64.decode(encryptedInput);
+		}catch(Exception e)
+		{
+			this.error.setError("SB001", e.getMessage());
 			return "";
 		}
-		byte[] out2 = Base64.decode(encryptedInput);
-		byte[] comparisonBytes = new byte[bbc.getOutputSize(out2.length)];
-		int length = bbc.processBytes(out2, 0, out2.length, comparisonBytes, 0);
-		try {
-			bbc.doFinal(comparisonBytes, length);
-		} catch (DataLengthException | IllegalStateException | InvalidCipherTextException e) {
-			this.error.setError("SB012", "AEAD decryption exception");
-			e.printStackTrace();
-		}
+				
+		byte[] decryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, null, nonce, key, input, macSize, false, true);
+		if (this.hasError()) {return "";}
+		
 		EncodingUtil eu = new EncodingUtil();
-		String result = eu.getString(comparisonBytes);
-		if (eu.getError().existsError()) {
+		String result = eu.getString(decryptedBytes);
+		if (eu.hasError()) {
 			this.error = eu.getError();
 			return "";
 		}
-		this.error.cleanError();
 		return result.trim();
-
 	}
 
 	/**
@@ -215,64 +173,28 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	public String doEncrypt(String symmetricBlockAlgorithm, String symmetricBlockMode, String symmetricBlockPadding,
 			String key, String IV, String plainText) {
 		this.error.cleanError();
-		SymmetricBlockAlgorithm algorithm = SymmetricBlockAlgorithm.getSymmetricBlockAlgorithm(symmetricBlockAlgorithm,
-				this.error);
-		SymmetricBlockMode mode = SymmetricBlockMode.getSymmetricBlockMode(symmetricBlockMode, this.error);
-		SymmetricBlockPadding padding = SymmetricBlockPadding.getSymmetricBlockPadding(symmetricBlockPadding,
-				this.error);
-
-		if (this.error.existsError()) {
-			return "";
-		}
-		BufferedBlockCipher bbc = getCipher(algorithm, mode, padding);
-		if (this.error.existsError() && !(this.error.getCode().compareToIgnoreCase("SB016") == 0)) {
-			return "";
-		}
-		byte[] byteIV = SecurityUtils.getHexa(IV, "SB022", this.error);
-		byte[] byteKey = SecurityUtils.getHexa(key, "SB022", this.error);
-		if (this.hasError()) {
-			return "";
-		}
-
-		KeyParameter keyParam = new KeyParameter(byteKey);
-
-		if (SymmetricBlockMode.ECB != mode && SymmetricBlockMode.OPENPGPCFB != mode) {
-			ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, byteIV);
-			try {
-				bbc.init(true, keyParamWithIV);
-			} catch (Exception e) {
-				this.error.setError("SB025", e.getMessage());
-				return "";
-			}
-		} else {
-			try {
-				bbc.init(true, keyParam);
-			} catch (Exception e) {
-				this.error.setError("SB026", e.getMessage());
-				return "";
-			}
-		}
+		
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+		SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
+		SecurityUtils.validateStringInput("symmetricBlockPadding", symmetricBlockPadding, this.error);
+		SecurityUtils.validateStringInput("key", key, this.error);
+		SecurityUtils.validateStringInput("IV", IV, this.error);
+		SecurityUtils.validateStringInput("plainText", plainText, this.error);
+		if(this.hasError()) { return "";};	
+		/*******INPUT VERIFICATION - END*******/
+		
 		EncodingUtil eu = new EncodingUtil();
-		byte[] inputBytes = eu.getBytes(plainText);// plainText.getBytes();
+		byte[] inputBytes = eu.getBytes(plainText);
 		if (eu.hasError()) {
 			this.error = eu.getError();
 			return "";
 		}
-		byte[] outputBytes = new byte[bbc.getOutputSize(inputBytes.length)];
-		int length = bbc.processBytes(inputBytes, 0, inputBytes.length, outputBytes, 0);
-		try {
-			bbc.doFinal(outputBytes, length);
-		} catch (DataLengthException | IllegalStateException | InvalidCipherTextException e) {
-			this.error.setError("SB013", "Block encryption exception");
-			e.printStackTrace();
-		}
-		String result = new String(Base64.encode(outputBytes));
-		if (result == null || result.length() == 0) {
-			this.error.setError("SB014", "Error encoding base64");
-			return "";
-		}
-		this.error.cleanError();
-		return result.trim();
+		
+		byte[] encryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, IV, key, inputBytes, 0, true, false);
+		if(this.hasError()){ return ""; }
+		
+		return Strings.fromByteArray(Base64.encode(encryptedBytes)).trim();
 	}
 
 	/**
@@ -291,58 +213,37 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	public String doDecrypt(String symmetricBlockAlgorithm, String symmetricBlockMode, String symmetricBlockPadding,
 			String key, String IV, String encryptedInput) {
 		this.error.cleanError();
-		SymmetricBlockAlgorithm algorithm = SymmetricBlockAlgorithm.getSymmetricBlockAlgorithm(symmetricBlockAlgorithm,
-				this.error);
-		SymmetricBlockMode mode = SymmetricBlockMode.getSymmetricBlockMode(symmetricBlockMode, this.error);
-		SymmetricBlockPadding padding = SymmetricBlockPadding.getSymmetricBlockPadding(symmetricBlockPadding,
-				this.error);
-		if (this.error.existsError()) {
-			return "";
-		}
-		BufferedBlockCipher bbc = getCipher(algorithm, mode, padding);
-		if (this.error.existsError() && !(this.error.getCode().compareToIgnoreCase("SB016") == 0)) {
-			return "";
-		}
-		byte[] bytesKey = SecurityUtils.getHexa(key, "SB023", this.error);
-		byte[] bytesIV = SecurityUtils.getHexa(IV, "SB023", this.error);
-		if (this.hasError()) {
-			return "";
-		}
-		KeyParameter keyParam = new KeyParameter(bytesKey);
-		if (SymmetricBlockMode.ECB != mode && SymmetricBlockMode.OPENPGPCFB != mode) {
-			ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, bytesIV);
-			try {
-				bbc.init(false, keyParamWithIV);
-			} catch (Exception e) {
-				this.error.setError("SB027", e.getMessage());
-				return "";
-			}
-		} else {
-			try {
-				bbc.init(false, keyParam);
-			} catch (Exception e) {
-				this.error.setError("SB028", e.getMessage());
-				return "";
-			}
-		}
-
-		byte[] out2 = Base64.decode(encryptedInput);
-		byte[] comparisonBytes = new byte[bbc.getOutputSize(out2.length)];
-		int length = bbc.processBytes(out2, 0, out2.length, comparisonBytes, 0);
+		
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+		SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
+		SecurityUtils.validateStringInput("symmetricBlockPadding", symmetricBlockPadding, this.error);
+		SecurityUtils.validateStringInput("key", key, this.error);
+		SecurityUtils.validateStringInput("IV", IV, this.error);
+		SecurityUtils.validateStringInput("encryptedInput", encryptedInput, this.error);
+		if(this.hasError()) { return "";};	
+		/*******INPUT VERIFICATION - END*******/
+		
+		byte[] input = null;
 		try {
-			bbc.doFinal(comparisonBytes, length);
-		} catch (DataLengthException | IllegalStateException | InvalidCipherTextException e) {
-			this.error.setError("SB015", "Block decryption exception");
-			e.printStackTrace();
+			input = Base64.decode(encryptedInput);
+		}catch(Exception e)
+		{
+			this.error.setError("SB002", e.getMessage());
+			return "";
 		}
+		
+		byte[] decryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, IV, key, input, 0, false, false);
+		if(this.hasError()) { return ""; }
+		
 		EncodingUtil eu = new EncodingUtil();
-		String result = eu.getString(comparisonBytes);
-		if (eu.getError().existsError()) {
+		String result = eu.getString(decryptedBytes);
+		if (eu.hasError()) {
 			this.error = eu.getError();
 			return "";
 		}
-		this.error.cleanError();
 		return result.trim();
+
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
@@ -502,7 +403,7 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 			engine = new XTEAEngine();
 			break;
 		default:
-			this.error.setError("SB020", "Cipher " + algorithm + " not recognised.");
+			this.error.setError("SB003", "Unrecognized symmetric block algoritm");
 			break;
 		}
 		return engine;
@@ -539,7 +440,7 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 			paddingCipher = new ZeroBytePadding();
 			break;
 		default:
-			this.error.setError("SB018", "Cipher " + padding + " not recognised.");
+			this.error.setError("SB004", "Unrecognized symmetric block padding.");
 			break;
 		}
 		return paddingCipher;
@@ -568,7 +469,7 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 			bc = new KCCMBlockCipher(blockCipher);
 			break;
 		default:
-			this.error.setError("SB017", "AEADCipher " + mode + " not recognised.");
+			this.error.setError("SB005", "Unrecognized symmetric AEAD mode");
 			break;
 		}
 		return bc;
@@ -611,19 +512,96 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 			bc = new OpenPGPCFBBlockCipher(blockCipher);
 			break;
 		case SIC:
-			if (blockCipher.getBlockSize() < 16) {
-				this.error.setError("SB016",
-						"Warning: SIC-Mode can become a twotime-pad if the blocksize of the cipher is too small. Use a cipher with a block size of at least 128 bits (e.g. AES)");
-			}
 			blockCipher = new SICBlockCipher(blockCipher);
 			break;
 
 		default:
-			this.error.setError("SB021", "Ciphermode  " + mode + " not recognised.");
+			this.error.setError("SB006", "Unrecognized symmetric block mode");
 			break;
 
 		}
 		return bc;
 	}
+	
+	private byte[] setUp(String symmetricBlockAlgorithm, String symmetricBlockMode, String symmetricBlockPadding, String nonce, String key, byte[] input, int macSize, boolean toEncrypt, boolean isAEAD)
+	{
+		SymmetricBlockAlgorithm algorithm = SymmetricBlockAlgorithm.getSymmetricBlockAlgorithm(symmetricBlockAlgorithm,
+				this.error);
+		SymmetricBlockMode mode = SymmetricBlockMode.getSymmetricBlockMode(symmetricBlockMode, this.error);
+		SymmetricBlockPadding padding = null;
+		if(!isAEAD)
+		{
+			 padding = SymmetricBlockPadding.getSymmetricBlockPadding(symmetricBlockPadding,
+					this.error);
+		}
 
+		byte[] nonceBytes = SecurityUtils.hexaToByte(nonce, this.error);
+		byte[] keyBytes = SecurityUtils.hexaToByte(key, this.error);
+		
+		if(this.hasError()) { return null; }
+
+		return isAEAD? encryptAEAD(algorithm,  mode, keyBytes, nonceBytes, input, macSize,  toEncrypt):	encrypt(algorithm, mode, padding, keyBytes, nonceBytes, input, toEncrypt);
+		
+	}
+	
+	
+	private byte[] encryptAEAD(SymmetricBlockAlgorithm algorithm, SymmetricBlockMode mode, byte[] key, byte[] nonce, byte[] txt, int macSize, boolean toEncrypt)
+	{
+		BlockCipher engine = getCipherEngine(algorithm);
+		AEADBlockCipher bbc = getAEADCipherMode(engine, mode);
+		if(this.hasError()) { return null; }
+	
+		KeyParameter keyParam = new KeyParameter(key);
+		AEADParameters AEADparams = new AEADParameters(keyParam, macSize, nonce);
+		
+		try {
+			bbc.init(toEncrypt, AEADparams);
+		} catch (Exception e) {
+			this.error.setError("SB007", e.getMessage());
+			return null;
+		}
+
+		byte[] outputBytes = new byte[bbc.getOutputSize(txt.length)];
+		try {
+		
+			int length = bbc.processBytes(txt, 0, txt.length, outputBytes, 0);
+			bbc.doFinal(outputBytes, length);
+		} catch (Exception e) {
+			this.error.setError("SB008", e.getMessage());
+			return null;
+		}
+		return outputBytes;
+	}
+	
+
+	
+	private byte[] encrypt(SymmetricBlockAlgorithm algorithm, SymmetricBlockMode mode, SymmetricBlockPadding padding, byte[] key, byte[] iv, byte[] input, boolean toEncrypt)
+	{
+		if(padding == null) {return null;}
+		
+		BufferedBlockCipher bbc = getCipher(algorithm, mode, padding);
+		KeyParameter keyParam = new KeyParameter(key);
+		if(this.hasError()) { return null; }
+
+		try {
+			if (SymmetricBlockMode.ECB != mode && SymmetricBlockMode.OPENPGPCFB != mode) {
+				ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, iv);
+				bbc.init(toEncrypt, keyParamWithIV);
+			}else {
+				bbc.init(toEncrypt, keyParam);
+			}
+		}catch(Exception e) {
+			this.error.setError("SB009", e.getMessage());
+			return null;
+		}
+		byte[] outputBytes = new byte[bbc.getOutputSize(input.length)];
+		try {
+			int length = bbc.processBytes(input, 0, input.length, outputBytes, 0);
+			bbc.doFinal(outputBytes, length);
+		} catch (Exception e) {
+			this.error.setError("SB010", e.getMessage());
+			return null;
+		}
+		return outputBytes;
+	}
 }

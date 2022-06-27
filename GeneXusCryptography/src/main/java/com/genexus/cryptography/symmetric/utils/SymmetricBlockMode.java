@@ -21,6 +21,12 @@ public enum SymmetricBlockMode {
 	 * @return SymmetricBlockMode enum representation
 	 */
 	public static SymmetricBlockMode getSymmetricBlockMode(String symmetricBlockMode, Error error) {
+		if (error == null) return SymmetricBlockMode.NONE;
+		if(symmetricBlockMode == null)
+		{
+			error.setError("SBM04", "Unrecognized SymmetricBlockMode");
+			return SymmetricBlockMode.NONE;
+		}
 		switch (symmetricBlockMode.toUpperCase().trim()) {
 		case "ECB":
 			return SymmetricBlockMode.ECB;
@@ -51,7 +57,7 @@ public enum SymmetricBlockMode {
 		case "AEAD_CCM":
 			return SymmetricBlockMode.AEAD_CCM;
 		default:
-			error.setError("SB005", "Unrecognized SymmetricBlockMode");
+			error.setError("SBM01", "Unrecognized SymmetricBlockMode");
 			return null;
 		}
 	}
@@ -64,6 +70,8 @@ public enum SymmetricBlockMode {
 	 * @return SymmetricBlockMode name value in String
 	 */
 	public static String valueOf(SymmetricBlockMode symmetricBlockMode, Error error) {
+		if (error == null) return "Unrecognized operation mode";
+		
 		switch (symmetricBlockMode) {
 		case ECB:
 			return "ECB";
@@ -94,7 +102,7 @@ public enum SymmetricBlockMode {
 		case AEAD_CCM:
 			return "AEAD_CCM";
 		default:
-			error.setError("SB006", "Unrecognized SymmetricBlockMode");
+			error.setError("SBM02", "Unrecognized SymmetricBlockMode");
 			return "Unrecognized operation mode";
 		}
 	}
@@ -107,6 +115,8 @@ public enum SymmetricBlockMode {
 	 * @return boolean true if operation mode is AEAD type
 	 */
 	public static boolean isAEAD(SymmetricBlockMode symmetricBlockMode, Error error) {
+		if (error == null) return false;
+		
 		switch (symmetricBlockMode) {
 		case AEAD_EAX:
 		case AEAD_GCM:
@@ -114,7 +124,7 @@ public enum SymmetricBlockMode {
 		case AEAD_CCM:
 			return true;
 		default:
-			error.setError("SB007", "Unrecognized Symmetric AEAD BlockMode");
+			error.setError("SBM03", "Unrecognized Symmetric AEAD BlockMode");
 			return false;
 		}
 	}

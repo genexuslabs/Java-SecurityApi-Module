@@ -6,9 +6,15 @@ import com.genexus.securityapicommons.utils.SecurityUtils;
 
 public enum ChecksumInputType {
 
-	BASE64, HEX, TXT, ASCII, LOCAL_FILE;
+	BASE64, HEX, TXT, ASCII, LOCAL_FILE, NONE;
 
 	public static ChecksumInputType getChecksumInputType(String checksumInputType, Error error) {
+		if(error == null) return ChecksumInputType.NONE;
+		if (checksumInputType == null)
+		{
+			error.setError("CHI06", "Unrecognized checksum input type");
+			return ChecksumInputType.NONE;
+		}
 		switch (checksumInputType.toUpperCase().trim()) {
 		case "BASE64":
 			return ChecksumInputType.BASE64;
@@ -21,12 +27,13 @@ public enum ChecksumInputType {
 		case "LOCAL_FILE":
 			return ChecksumInputType.LOCAL_FILE;
 		default:
-			error.setError("CI001", "Unrecognized checksum input type");
+			error.setError("CHI01", "Unrecognized checksum input type");
 			return null;
 		}
 	}
 
 	public static String valueOf(ChecksumInputType checksumInputType, Error error) {
+		if (error == null) return "";
 		switch (checksumInputType) {
 		case BASE64:
 			return "BASE64";
@@ -39,12 +46,13 @@ public enum ChecksumInputType {
 		case LOCAL_FILE:
 			return "LOCAL_FILE";
 		default:
-			error.setError("CI002", "Unrecognized checksum input type");
+			error.setError("CHI02", "Unrecognized checksum input type");
 			return "";
 		}
 	}
 
 	public static byte[] getBytes(ChecksumInputType checksumInputType, String input, Error error) {
+		if (error == null) return null;
 		EncodingUtil eu = new EncodingUtil();
 		byte[] aux = null;
 		switch (checksumInputType) {
@@ -52,11 +60,11 @@ public enum ChecksumInputType {
 			try {
 				aux = org.bouncycastle.util.encoders.Base64.decode(input);
 			} catch (Exception e) {
-				error.setError("CI003", e.getMessage());
+				error.setError("CHI03", e.getMessage());
 			}
 			break;
 		case HEX:
-			aux = SecurityUtils.getHexa(input, "CI004", error);
+			aux = SecurityUtils.hexaToByte(input, error);
 			break;
 		case TXT:
 			aux = eu.getBytes(input);
@@ -68,14 +76,14 @@ public enum ChecksumInputType {
 			try {
 				aux = input.getBytes("US-ASCII");
 			} catch (Exception e) {
-				error.setError("CI004", e.getMessage());
+				error.setError("CHI04", e.getMessage());
 			}
 			break;
 		case LOCAL_FILE:
 			aux = SecurityUtils.getFileBytes(input, error);
 			break;
 		default:
-			error.setError("CI006", "Unrecognized checksum input type");
+			error.setError("CHII05", "Unrecognized checksum input type");
 			break;
 		}
 		return aux;

@@ -20,6 +20,13 @@ public enum SymmetricBlockPadding {
 	 * @return SymmetricBlockPadding enum representation
 	 */
 	public static SymmetricBlockPadding getSymmetricBlockPadding(String symmetricBlockPadding, Error error) {
+		if (error == null) return SymmetricBlockPadding.NOPADDING;
+		if(symmetricBlockPadding == null)
+		{
+			error.setError("SBP03", "Unrecognized SymmetricBlockPadding");
+			return SymmetricBlockPadding.NOPADDING;
+		}
+		
 		switch (symmetricBlockPadding.toUpperCase().trim()) {
 		case "NOPADDING":
 			return SymmetricBlockPadding.NOPADDING;
@@ -36,7 +43,7 @@ public enum SymmetricBlockPadding {
 		case "WITHCTS":
 			return SymmetricBlockPadding.WITHCTS;
 		default:
-			error.setError("SB008", "Unrecognized SymmetricBlockPadding");
+			error.setError("SBP01", "Unrecognized SymmetricBlockPadding");
 			return null;
 		}
 	}
@@ -49,6 +56,8 @@ public enum SymmetricBlockPadding {
 	 * @return String name value of SymmetricBlockPadding
 	 */
 	public static String valueOf(SymmetricBlockPadding symmetricBlockPadding, Error error) {
+		if(error == null) return "Unrecognized block padding";
+		
 		switch (symmetricBlockPadding) {
 		case NOPADDING:
 			return "NOPADDING";
@@ -65,7 +74,7 @@ public enum SymmetricBlockPadding {
 		case WITHCTS:
 			return "WITHCTS";
 		default:
-			error.setError("SB009", "Unrecognized SymmetricBlockPadding");
+			error.setError("SBP02", "Unrecognized SymmetricBlockPadding");
 			return "Unrecognized block padding";
 		}
 	}

@@ -7,7 +7,7 @@ import com.genexus.securityapicommons.commons.Error;
  *
  */
 public enum SymmetricStreamAlgorithm {
-	RC4, HC128, HC256, CHACHA20, SALSA20, XSALSA20, ISAAC, VMPC,;
+	RC4, HC128, HC256, CHACHA20, SALSA20, XSALSA20, ISAAC, VMPC, NONE;
 
 	/**
 	 * Mapping between String name and SymmetricStreamAlgorithm enum representation
@@ -19,6 +19,13 @@ public enum SymmetricStreamAlgorithm {
 	 * @return SymmetricStreamAlgorithm enum representation
 	 */
 	public static SymmetricStreamAlgorithm getSymmetricStreamAlgorithm(String symmetricStreamAlgorithm, Error error) {
+		if (error == null) return SymmetricStreamAlgorithm.NONE;
+		if( symmetricStreamAlgorithm == null)
+		{
+			error.setError("SSA05", "Unrecognized SymmetricStreamAlgorithm");
+			return SymmetricStreamAlgorithm.NONE;
+		}
+		
 		switch (symmetricStreamAlgorithm.toUpperCase().trim()) {
 		case "RC4":
 			return SymmetricStreamAlgorithm.RC4;
@@ -37,7 +44,7 @@ public enum SymmetricStreamAlgorithm {
 		case "VMPC":
 			return SymmetricStreamAlgorithm.VMPC;
 		default:
-			error.setError("SS001", "Unrecognized SymmetricStreamAlgorithm");
+			error.setError("SSA01", "Unrecognized SymmetricStreamAlgorithm");
 			return null;
 		}
 	}
@@ -50,6 +57,8 @@ public enum SymmetricStreamAlgorithm {
 	 * @return String SymmetrcStreamAlgorithm name value
 	 */
 	public static String valueOf(SymmetricStreamAlgorithm symmetrcStreamAlgorithm, Error error) {
+		if(error == null) return "Unrecognized algorithm";
+		
 		switch (symmetrcStreamAlgorithm) {
 		case RC4:
 			return "RC4";
@@ -68,7 +77,7 @@ public enum SymmetricStreamAlgorithm {
 		case VMPC:
 			return "VMPC";
 		default:
-			error.setError("SS002", "Unrecognized SymmetricStreamAlgorithm");
+			error.setError("SSA02", "Unrecognized SymmetricStreamAlgorithm");
 			return "Unrecognized algorithm";
 		}
 	}
@@ -82,6 +91,8 @@ public enum SymmetricStreamAlgorithm {
 	 *         fixed values
 	 */
 	protected static int[] getKeySize(SymmetricStreamAlgorithm algorithm, Error error) {
+		if (error == null) return null;
+		
 		int[] keySize = new int[3];
 		switch (algorithm) {
 		case RC4:
@@ -115,7 +126,7 @@ public enum SymmetricStreamAlgorithm {
 			keySize[2] = 6144;
 			break;
 		default:
-			error.setError("SS003", "Unrecognized SymmetricStreamAlgorithm");
+			error.setError("SSA03", "Unrecognized SymmetricStreamAlgorithm");
 			break;
 		}
 		return keySize;
@@ -141,7 +152,7 @@ public enum SymmetricStreamAlgorithm {
 		case VMPC:
 			return true;
 		default:
-			error.setError("SS007", "Unrecognized SymmetricStreamAlgorithm");
+			error.setError("SSA04", "Unrecognized SymmetricStreamAlgorithm");
 			return true;
 		}
 

@@ -1,14 +1,16 @@
 package com.genexus.cryptography.mac;
 
+import java.io.InputStream;
+
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.macs.CMac;
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.util.encoders.Hex;
 
 import com.genexus.cryptography.commons.CmacObject;
 import com.genexus.cryptography.symmetric.SymmetricBlockCipher;
 import com.genexus.cryptography.symmetric.utils.SymmetricBlockAlgorithm;
-import com.genexus.securityapicommons.config.EncodingUtil;
 import com.genexus.securityapicommons.utils.SecurityUtils;
 
 public class Cmac extends CmacObject {
@@ -21,98 +23,98 @@ public class Cmac extends CmacObject {
 
 	@Override
 	public String calculate(String plainText, String key, String algorithm, int macSize) {
-		if (!isValidAlgorithm(algorithm)) {
-			this.error.setError("CM001", "Invalid Symmetric block algorithm for CMAC");
-			return "";
-		}
+		this.error.cleanError();
+		
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateStringInput("plainText", plainText, this.error);
+		SecurityUtils.validateStringInput("key", key, this.error);
+		SecurityUtils.validateStringInput("algorithm", algorithm, this.error);
+		if(this.hasError()) { return "";};	
+		/*******INPUT VERIFICATION - END*******/
+		
 		SymmetricBlockAlgorithm symmetricBlockAlgorithm = SymmetricBlockAlgorithm.getSymmetricBlockAlgorithm(algorithm,
 				this.error);
+		InputStream input = SecurityUtils.stringToStream(plainText, this.error);
+		byte[] byteKey = SecurityUtils.hexaToByte(key, this.error);		
+		if(this.hasError() ) { return "";}
+		
 		SymmetricBlockCipher symCipher = new SymmetricBlockCipher();
 		BlockCipher blockCipher = symCipher.getCipherEngine(symmetricBlockAlgorithm);
-		if (symCipher.hasError()) {
+		
+		if(symCipher.hasError()) 
+		{ 
 			this.error = symCipher.getError();
 			return "";
 		}
-		if (macSize > blockCipher.getBlockSize() * 8) {
-			this.error.setError("CM002", "The mac length must be less or equal than the algorithm block size.");
+		
+		
+		int blockSize = blockCipher.getBlockSize() * 8;
+		
+		if (macSize > blockSize) {
+			this.error.setError("CM001", "The mac length must be less or equal than the algorithm block size.");
 			return "";
 		}
-		byte[] byteKey = SecurityUtils.getHexa(key, "CM003", this.error);
-		if (this.hasError()) {
+		
+		if (blockSize != 64 && blockSize != 128) {
+			this.error.setError("CM002", "The block size must be 64 or 128 bits for CMAC. Wrong symmetric algorithm");
 			return "";
 		}
-		EncodingUtil eu = new EncodingUtil();
-		byte[] byteInput = eu.getBytes(plainText);
+		
+		byte[] resBytes = calculate(input, byteKey, macSize, blockCipher);
 
-		CipherParameters params = new KeyParameter(byteKey);
-
-		org.bouncycastle.crypto.macs.CMac mac = null;
-		if (macSize != 0) {
-			mac = new CMac(blockCipher, macSize);
-		} else {
-			mac = new CMac(blockCipher);
-		}
-		try {
-			mac.init(params);
-		} catch (Exception e) {
-			this.error.setError("CM004", e.getMessage());
-			return "";
-		}
-		byte[] resBytes = new byte[mac.getMacSize()];
-		mac.update(byteInput, 0, byteInput.length);
-		mac.doFinal(resBytes, 0);
-		String result = toHexaString(resBytes);
-		if (!this.error.existsError()) {
-			return result;
-		}
-		return "";
+		return this.hasError() ? "": Hex.toHexString(resBytes);
 
 	}
 
 	@Override
 	public boolean verify(String plainText, String key, String mac, String algorithm, int macSize) {
+		this.error.cleanError();
+		
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateStringInput("plainText", plainText, this.error);
+		SecurityUtils.validateStringInput("key", key, this.error);
+		SecurityUtils.validateStringInput("mac", mac, this.error);
+		SecurityUtils.validateStringInput("algorithm", algorithm, this.error);
+		if(this.hasError()) { return false;};
+		/*******INPUT VERIFICATION - END*******/
+		
 		String res = calculate(plainText, key, algorithm, macSize);
 		return SecurityUtils.compareStrings(res, mac);
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
-	/**
-	 * @param digest byte array
-	 * @return String Hexa respresentation of the byte array digest
-	 */
-	private String toHexaString(byte[] digest) {
+	
+	private byte[] calculate(InputStream input, byte[] key , int macSize, BlockCipher blockCipher) {
 
-		if (this.error.existsError()) {
-			return "";
-		}
+		CipherParameters params = new KeyParameter(key);
 
-		StringBuilder sb = new StringBuilder();
-		for (byte b : digest) {
-			sb.append(String.format("%02X ", b));
-		}
-		String result = sb.toString().replaceAll("\\s", "");
-		if (result == null || result.length() == 0) {
-			this.error.setError("HS001", "Error encoding hexa");
-			return "";
-		}
-		return result.trim();
+		org.bouncycastle.crypto.macs.CMac mac = null;
 
+		mac = macSize !=0 ? new CMac(blockCipher, macSize): new CMac(blockCipher);
+
+		try {
+			mac.init(params);
+		} catch (Exception e) {
+			this.error.setError("CM003", e.getMessage());
+			return null;
+		}
+		byte[] retValue = new byte[mac.getMacSize()];
+		byte[] buffer = new byte[8192];
+		int n;
+		try {
+			while ((n = input.read(buffer)) > 0) {
+				mac.update(buffer, 0, n);
+			}
+			mac.doFinal(retValue, 0);
+		} catch (Exception e)
+		{
+			this.error.setError("CM004", e.getMessage());
+			return null;
+		}
+		
+		return retValue;
+		
 	}
 
-	private boolean isValidAlgorithm(String algorithm) {
-		SymmetricBlockAlgorithm symmetricBlockAlgorithm = SymmetricBlockAlgorithm.getSymmetricBlockAlgorithm(algorithm,
-				this.error);
-		int blockSize = SymmetricBlockAlgorithm.getBlockSize(symmetricBlockAlgorithm, this.error);
-		if (this.hasError()) {
-
-			return false;
-		}
-		if (blockSize != 64 && blockSize != 128) {
-
-			return false;
-		}
-
-		return true;
-	}
 }

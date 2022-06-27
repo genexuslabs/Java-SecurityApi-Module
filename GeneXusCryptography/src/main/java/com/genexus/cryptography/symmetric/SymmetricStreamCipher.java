@@ -11,6 +11,7 @@ import org.bouncycastle.crypto.engines.VMPCEngine;
 import org.bouncycastle.crypto.engines.XSalsa20Engine;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
+import org.bouncycastle.util.Strings;
 import org.bouncycastle.util.encoders.Base64;
 
 import com.genexus.cryptography.commons.SymmectricStreamCipherObject;
@@ -45,58 +46,25 @@ public class SymmetricStreamCipher extends SymmectricStreamCipherObject {
 	 */
 	public String doEncrypt(String symmetricStreamAlgorithm, String key, String IV, String plainText) {
 		this.error.cleanError();
-		SymmetricStreamAlgorithm algorithm = SymmetricStreamAlgorithm
-				.getSymmetricStreamAlgorithm(symmetricStreamAlgorithm, this.error);
-
-		if (this.error.existsError()) {
-			return "";
-		}
-
-		StreamCipher engine = getCipherEngine(algorithm);
-		if (this.error.existsError()) {
-			return "";
-		}
-
-		byte[] keyBytes = SecurityUtils.getHexa(key, "SS007", this.error);
-		byte[] ivBytes = SecurityUtils.getHexa(IV, "SS007", this.error);
-		if (this.hasError()) {
-			return "";
-		}
-		KeyParameter keyParam = new KeyParameter(keyBytes);
-		if (SymmetricStreamAlgorithm.usesIV(algorithm, this.error)) {
-			if (!this.error.existsError()) {
-				ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, ivBytes);
-				try {
-					engine.init(true, keyParamWithIV);
-				} catch (Exception e) {
-					this.error.setError("SS008", e.getMessage());
-					return "";
-				}
-			}
-		} else {
-			try {
-				engine.init(true, keyParam);
-			} catch (Exception e) {
-				this.error.setError("SS009", e.getLocalizedMessage());
-				return "";
-			}
-		}
+		
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateStringInput("symmetricStreamAlgorithm", symmetricStreamAlgorithm, this.error);
+		SecurityUtils.validateStringInput("key", key, this.error);
+		SecurityUtils.validateStringInput("plainText", plainText, this.error);
+		if(this.hasError()) { return "";};	
+		/*******INPUT VERIFICATION - END*******/
+		
 		EncodingUtil eu = new EncodingUtil();
 		byte[] input = eu.getBytes(plainText);
-		if (eu.getError().existsError()) {
+		if (eu.hasError()) {
 			this.error = eu.getError();
 			return "";
 		}
-		byte[] output = new byte[input.length];
-		engine.processBytes(input, 0, input.length, output, 0);
-		String result = new String(Base64.encode(output));
-		if (result == null || result.length() == 0) {
-			this.error.setError("SS004", "Stream encryption exception");
-			return "";
-		}
-		this.error.cleanError();
-		return result;
-
+		
+		byte[] encryptedBytes = setUp(symmetricStreamAlgorithm, key, IV, input,  true);
+		if(this.hasError()) {return null; }
+		
+		return Strings.fromByteArray(Base64.encode(encryptedBytes)).trim();
 	}
 
 	/**
@@ -112,58 +80,33 @@ public class SymmetricStreamCipher extends SymmectricStreamCipherObject {
 	 */
 	public String doDecrypt(String symmetricStreamAlgorithm, String key, String IV, String encryptedInput) {
 		this.error.cleanError();
-		SymmetricStreamAlgorithm algorithm = SymmetricStreamAlgorithm
-				.getSymmetricStreamAlgorithm(symmetricStreamAlgorithm, this.error);
-
-		if (this.error.existsError()) {
+		
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateStringInput("symmetricStreamAlgorithm", symmetricStreamAlgorithm, this.error);
+		SecurityUtils.validateStringInput("key", key, this.error);
+		SecurityUtils.validateStringInput("encryptedInput", encryptedInput, this.error);
+		if(this.hasError()) { return "";};
+		/*******INPUT VERIFICATION - END*******/
+		
+		byte[] input = null;
+		try {
+			input = Base64.decode(encryptedInput);
+		}catch(Exception e)
+		{
+			this.error.setError("SS001", e.getMessage());
 			return "";
 		}
-
-		StreamCipher engine = getCipherEngine(algorithm);
-		if (this.error.existsError()) {
-			return "";
-		}
-		byte[] keyBytes = SecurityUtils.getHexa(key, "SS010", this.error);
-		byte[] ivBytes = SecurityUtils.getHexa(IV, "SS010", this.error);
-		if (this.hasError()) {
-			return "";
-		}
-
-		KeyParameter keyParam = new KeyParameter(keyBytes);
-		if (SymmetricStreamAlgorithm.usesIV(algorithm, this.error)) {
-			if (!this.error.existsError()) {
-				ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, ivBytes);
-				try {
-					engine.init(false, keyParamWithIV);
-				} catch (Exception e) {
-					this.error.setError("SS011", e.getMessage());
-					return "";
-				}
-			}
-		} else {
-			try {
-				engine.init(false, keyParam);
-			} catch (Exception e) {
-				this.error.setError("SS012", e.getMessage());
-				return "";
-			}
-		}
-
-		byte[] input = Base64.decode(encryptedInput);
-		byte[] output = new byte[input.length];
-		engine.processBytes(input, 0, input.length, output, 0);
-		if (output == null || output.length == 0) {
-			this.error.setError("SS006", "Stream decryption exception");
-		}
+		
+		byte[] decryptedBytes = setUp(symmetricStreamAlgorithm, key, IV, input,  false);
+		if(this.hasError()) {return null; }
+		
 		EncodingUtil eu = new EncodingUtil();
-		String result = eu.getString(output).trim();
-		if (eu.getError().existsError()) {
+		String result = eu.getString(decryptedBytes);
+		if (eu.hasError()) {
 			this.error = eu.getError();
 			return "";
 		}
-		this.error.cleanError();
-		return result;
-
+		return result.trim();
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
@@ -173,9 +116,6 @@ public class SymmetricStreamCipher extends SymmectricStreamCipherObject {
 	 * @return StreamCipher with the algorithm Stream Engine
 	 */
 	private StreamCipher getCipherEngine(SymmetricStreamAlgorithm algorithm) {
-		// System.out.print("algorithm: "+ SymmetricStreamAlgorithm.valueOf(algorithm,
-		// error));
-
 		StreamCipher engine = null;
 
 		switch (algorithm) {
@@ -204,10 +144,54 @@ public class SymmetricStreamCipher extends SymmectricStreamCipherObject {
 			engine = new VMPCEngine();
 			break;
 		default:
-			this.error.setError("SS005", "Cipher " + algorithm + " not recognised.");
+			this.error.setError("SS002", "Unrecognized stream cipher algorithm");
 			break;
 		}
 		return engine;
 
+	}
+	
+	private byte[] setUp(String symmetricStreamAlgorithm, String key, String IV, byte[] input, boolean toEncrypt)
+	{
+		byte[] keyBytes = SecurityUtils.hexaToByte(key, this.error);
+		byte[] ivBytes = SecurityUtils.hexaToByte(IV, this.error);
+		SymmetricStreamAlgorithm algorithm = SymmetricStreamAlgorithm
+				.getSymmetricStreamAlgorithm(symmetricStreamAlgorithm, this.error);
+		if(this.hasError()) { return null; }
+		
+		return encrypt(algorithm, keyBytes, ivBytes, input, toEncrypt);
+		
+	}
+	
+	private byte[] encrypt(SymmetricStreamAlgorithm algorithm, byte[] key, byte[] IV, byte[] input, boolean toEncrypt)
+	{
+		StreamCipher engine = getCipherEngine(algorithm);
+		if(this.hasError()) { return null; }
+
+
+		KeyParameter keyParam = new KeyParameter(key);
+		
+		try {
+			if (SymmetricStreamAlgorithm.usesIV(algorithm, this.error))
+			{
+				ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, IV);
+				engine.init(toEncrypt, keyParamWithIV);
+			}else {
+				engine.init(toEncrypt, keyParam);
+			}
+		}catch(Exception e) {
+			this.error.setError("SS003", e.getMessage());
+			return null;
+		}
+		
+
+		byte[] output = new byte[input.length];
+		try {
+			engine.processBytes(input, 0, input.length, output, 0);
+		}catch(Exception e) {
+			this.error.setError("SS004", e.getMessage());
+			return null;
+		}
+		return output;
 	}
 }

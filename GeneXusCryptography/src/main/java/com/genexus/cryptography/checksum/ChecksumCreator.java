@@ -1,5 +1,10 @@
 package com.genexus.cryptography.checksum;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import org.bouncycastle.util.encoders.Hex;
+
 import com.genexus.cryptography.checksum.utils.CRCParameters;
 import com.genexus.cryptography.checksum.utils.ChecksumAlgorithm;
 import com.genexus.cryptography.checksum.utils.ChecksumInputType;
@@ -17,6 +22,15 @@ public class ChecksumCreator extends ChecksumObject {
 	/********EXTERNAL OBJECT PUBLIC METHODS  - BEGIN ********/
 	
 	public String generateChecksum(String input, String inputType, String checksumAlgorithm) {
+		this.error.cleanError();
+		
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateStringInput("input", input, this.error);
+		SecurityUtils.validateStringInput("inputType", inputType, this.error);
+		SecurityUtils.validateStringInput("checksumAlgorithm", checksumAlgorithm, this.error);
+		if(this.hasError()) { return "";};
+		/*******INPUT VERIFICATION - END*******/
+		
 		ChecksumInputType chksumInputType = ChecksumInputType.getChecksumInputType(inputType, this.error);
 		byte[] inputBytes = ChecksumInputType.getBytes(chksumInputType, input, this.error);
 		if (this.hasError()) {
@@ -32,6 +46,16 @@ public class ChecksumCreator extends ChecksumObject {
 	
 	public boolean verifyChecksum(String input, String inputType, String checksumAlgorithm, String digest)
 	{
+		this.error.cleanError();
+		
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateStringInput("input", input, this.error);
+		SecurityUtils.validateStringInput("inputType", inputType, this.error);
+		SecurityUtils.validateStringInput("checksumAlgorithm", checksumAlgorithm, this.error);
+		SecurityUtils.validateStringInput("digest", digest, this.error);
+		if(this.hasError()) { return false;};	
+		/*******INPUT VERIFICATION - END*******/
+		
 		String result = generateChecksum(input,  inputType,  checksumAlgorithm);
 		if(SecurityUtils.compareStrings(result, "") || this.hasError())
 		{
@@ -71,36 +95,22 @@ public class ChecksumCreator extends ChecksumObject {
 			return "";
 		}
 		Hashing hash = new Hashing();
-		byte[] digest = hash.calculateHash(alg, input);
+		byte[] digest = null;
+		try (InputStream inputStream = new ByteArrayInputStream(input)) {
+			digest = hash.calculateHash(alg, inputStream);
+		} catch (Exception e) {
+			error.setError("CH001", e.getMessage());
+			return "";
+		}		
 		if (hash.hasError()) {
 			this.error = hash.getError();
 			return "";
 		}
-		return toHexaString(digest);
+		return Hex.toHexString(digest);
 	}
 
 	private HashAlgorithm getHashAlgorithm(ChecksumAlgorithm checksumAlgorithm) {
 		return HashAlgorithm.getHashAlgorithm(ChecksumAlgorithm.valueOf(checksumAlgorithm, this.error), this.error);
-	}
-
-	private String toHexaString(byte[] digest) {
-
-		if (this.error.existsError()) {
-			return "";
-		}
-
-		StringBuilder sb = new StringBuilder();
-		for (byte b : digest) {
-			sb.append(String.format("%02X ", b));
-		}
-		String result = sb.toString().replaceAll("\\s", "");
-		if (result == null || result.length() == 0) {
-			this.error.setError("HS001", "Error encoding hexa");
-			return "";
-		}
-		
-		return result.trim().toUpperCase();
-
 	}
 
 	private long calculateCRC(byte[] input, CRCParameters parms) {

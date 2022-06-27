@@ -24,23 +24,23 @@ public class HexaEncoder extends SecurityAPIObject {
 	 * @return String Hexa hexadecimal representation of plainText
 	 */
 	public String toHexa(String plainText) {
+		this.error.cleanError();
 		EncodingUtil eu = new EncodingUtil();
 		byte[] stringBytes = eu.getBytes(plainText);
 		if (eu.hasError()) {
 			this.error = eu.getError();
 			return "";
 		}
-		StringBuilder sb = new StringBuilder();
-		for (byte b : stringBytes) {
-			sb.append(String.format("%02X ", b));
-		}
-		String result = sb.toString().replaceAll("\\s", "");
-		if (result == null || result.length() == 0) {
-			this.error.setError("HE001", "Error encoding hexa");
+		String hexa = "";
+		try
+		{
+			hexa = Hex.toHexString(stringBytes, 0, stringBytes.length);
+		}catch(Exception e)
+		{
+			this.error.setError("HE001", e.getMessage());
 			return "";
 		}
-		this.error.cleanError();
-		return result;
+		return hexa;
 	}
 
 	/**
@@ -50,20 +50,25 @@ public class HexaEncoder extends SecurityAPIObject {
 	 */
 	public String fromHexa(String stringHexa) {
 
-		byte[] resBytes = Hex.decode(stringHexa);
+		this.error.cleanError();
+		byte[] resBytes;
+		try
+		{
+			resBytes = Hex.decode(fixString(stringHexa));
+		}catch(Exception e)
+		{
+			this.error.setError("HE002", e.getMessage());
+			return "";
+		}
 		EncodingUtil eu = new EncodingUtil();
 		String result = eu.getString(resBytes);
 		if (eu.hasError()) {
 			this.error = eu.getError();
 			return "";
 		}
-		if (result == null || result.length() == 0) {
-			this.error.setError("HE002", "Error decoding hexa");
-			return "";
-		}
-		this.error.cleanError();
 		return result;
 	}
+	
 	
 	public boolean isHexa(String input)
 	{
@@ -78,7 +83,7 @@ public class HexaEncoder extends SecurityAPIObject {
 		return true;
 	}
 	
-	private String fixString(String input)
+	public static String fixString(String input)
 	{
 		if(!input.contains("-"))
 		{
@@ -88,5 +93,6 @@ public class HexaEncoder extends SecurityAPIObject {
 			return inputStr;
 		}
 	}
+	
 
 }
