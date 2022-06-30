@@ -40,7 +40,7 @@ public class HexaEncoder extends SecurityAPIObject {
 			this.error.setError("HE001", e.getMessage());
 			return "";
 		}
-		return hexa;
+		return hexa.toUpperCase();
 	}
 
 	/**
