@@ -30,7 +30,7 @@ public enum XMLSignatureWrapper {
 		case "ECDSA_SHA256":
 			return ECDSA_SHA256;
 		default:
-			error.setError("XS001", "Unrecognized algorithm: " + xMLSignatureWrapper);
+			error.setError("XSW01", "Unrecognized algorithm");
 			return null;
 		}
 	}
@@ -55,7 +55,7 @@ public enum XMLSignatureWrapper {
 		case ECDSA_SHA256:
 			return "ECDSA_SHA256";
 		default:
-			error.setError("XS002", "Unrecognized algorithm");
+			error.setError("XSW02", "Unrecognized algorithm");
 			return null;
 		}
 	}
@@ -73,7 +73,7 @@ public enum XMLSignatureWrapper {
 		case ECDSA_SHA256:
 			return XMLSignature.ALGO_ID_SIGNATURE_ECDSA_SHA256;
 		default:
-			error.setError("XS003", "Unrecognized algorithm");
+			error.setError("XSW03", "Unrecognized algorithm");
 			return null;
 		}
 	}

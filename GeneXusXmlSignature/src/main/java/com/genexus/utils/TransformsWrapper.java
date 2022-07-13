@@ -26,7 +26,7 @@ public enum TransformsWrapper {
 		case "DETACHED":
 			return TransformsWrapper.DETACHED;
 		default:
-			error.setError("TW001", "Unrecognized transformation: " + transformsWrapper);
+			error.setError("TRW01", "Unrecognized transformation");
 			return null;
 		}
 	}
@@ -47,7 +47,7 @@ public enum TransformsWrapper {
 		case DETACHED:
 			return "DETACHED";
 		default:
-			error.setError("TW002", "Unrecognized transformation");
+			error.setError("TRW02", "Unrecognized transformation");
 			return null;
 		}
 	}
@@ -61,7 +61,7 @@ public enum TransformsWrapper {
 		case DETACHED:
 			return "http://www.w3.org/2000/09/xmldsig#detached-signature";
 		default:
-			error.setError("TW003", "Unrecognized transformation");
+			error.setError("TRW03", "Unrecognized transformation");
 			return null;
 
 		}

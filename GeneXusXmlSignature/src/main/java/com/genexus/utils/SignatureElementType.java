@@ -14,7 +14,7 @@ public enum SignatureElementType {
 		case document:
 			return "document";
 		default:
-			error.setError("SE001", "Unrecognized SignatureElementType");
+			error.setError("SET01", "Unrecognized SignatureElementType");
 			return "";
 
 		}

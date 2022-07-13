@@ -15,7 +15,7 @@ public enum KeyInfoType {
 		case "X509Certificate":
 			return X509Certificate;
 		default:
-			error.setError("KI001", "Unrecognized KeyInfoType");
+			error.setError("KIT01", "Unrecognized KeyInfoType");
 			return NONE;
 		}
 
@@ -30,7 +30,7 @@ public enum KeyInfoType {
 		case X509Certificate:
 			return "X509Certificate";
 		default:
-			error.setError("KI002", "Unrecognized KeyInfoType");
+			error.setError("KIT02", "Unrecognized KeyInfoType");
 			return "";
 		}
 	}

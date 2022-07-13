@@ -28,7 +28,7 @@ public enum AsymmetricSigningAlgorithm {
 		case "ECDSA":
 			return AsymmetricSigningAlgorithm.ECDSA;
 		default:
-			error.setError("AS001", "Unrecognized AsymmetricSigningAlgorithm");
+			error.setError("ASA01", "Unrecognized AsymmetricSigningAlgorithm");
 			return null;
 		}
 	}
@@ -47,7 +47,7 @@ public enum AsymmetricSigningAlgorithm {
 		case ECDSA:
 			return "ECDSA";
 		default:
-			error.setError("AS002", "Unrecognized AsymmetricSigningAlgorithm");
+			error.setError("ASA02", "Unrecognized AsymmetricSigningAlgorithm");
 			return "";
 		}
 	}
