@@ -85,7 +85,7 @@ public class Base64Encoder extends SecurityAPIObject {
 		}
 		String result = "";
 		try {
-			result = Hex.toHexString(bytes);
+			result = Hex.toHexString(bytes).toUpperCase();
 		}catch(Exception e)
 		{
 			this.error.setError("BS004", e.getMessage());

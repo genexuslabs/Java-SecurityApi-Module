@@ -65,7 +65,7 @@ public class Hashing extends HashObject {
 		
 		byte[] resBytes = calculateHash(hashAlgorithmObj, input);
 		
-		return this.hasError() ? "": Hex.toHexString(resBytes);
+		return this.hasError() ? "": Hex.toHexString(resBytes).toUpperCase();
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
