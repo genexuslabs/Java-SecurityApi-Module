@@ -39,15 +39,17 @@ public class JWTOptions extends SecurityAPIObject {
 	}
 	
 	public void setSecret(String value) {
-		
 		try {
-			secret = Hex.decode(value);
+			this.secret = Hex.decode(value);
 		} catch (Exception e) {
 			this.error.setError("OP001", e.getMessage());
 			secret = null;
 		}
 
 	}
+	
+	
+	
 
 	public boolean addCustomTimeValidationClaim(String key, String value, String customTime) {
 		this.registeredClaims.setTimeValidatingClaim(key, value, customTime, this.error);

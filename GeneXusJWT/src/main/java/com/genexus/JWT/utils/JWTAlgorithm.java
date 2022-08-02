@@ -25,7 +25,7 @@ public enum JWTAlgorithm {
 		case ES512:
 			return "ES512";
 		default:
-			error.setError("JA001", "Unrecognized algorithm");
+			error.setError("JWA01", "Unrecognized algorithm");
 			return "Unrecognized algorithm";
 		}
 	}
@@ -47,7 +47,7 @@ public enum JWTAlgorithm {
 		case "ES512":
 			return JWTAlgorithm.ES512;
 		default:
-			error.setError("JA002", "Unrecognized algorithm");
+			error.setError("JWA02", "Unrecognized algorithm");
 			return null;
 		}
 	}
@@ -67,7 +67,7 @@ public enum JWTAlgorithm {
 
 	public static Algorithm getSymmetricAlgorithm(JWTAlgorithm algorithm, byte[] secret, Error error) {
 		if (isPrivate(algorithm)) {
-			error.setError("JA003", "It is not a symmetric algorithm name");
+			error.setError("JWA03", "It is not a symmetric algorithm name");
 			return null;
 		} else {
 			switch (algorithm) {
@@ -76,7 +76,7 @@ public enum JWTAlgorithm {
 			case HS512:
 				return Algorithm.HMAC512(secret);
 			default:
-				error.setError("JA004", "Unknown symmetric algorithm");
+				error.setError("JWA04", "Unknown symmetric algorithm");
 				return null;
 			}
 		}

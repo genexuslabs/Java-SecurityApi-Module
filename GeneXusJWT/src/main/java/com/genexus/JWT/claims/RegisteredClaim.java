@@ -29,7 +29,7 @@ public enum RegisteredClaim {
 		case jti:
 			return "jti";
 		default:
-			error.setError("RC001", "Unknown registered Claim");
+			error.setError("RCL01", "Unknown registered Claim");
 			return "Unknown registered claim";
 
 		}
@@ -52,7 +52,7 @@ public enum RegisteredClaim {
 		case "jti":
 			return RegisteredClaim.jti;
 		default:
-			error.setError("RC002", "Unknown registered Claim");
+			error.setError("RCL02", "Unknown registered Claim");
 			return null;
 		}
 	}
@@ -126,7 +126,7 @@ public enum RegisteredClaim {
 			verification.withJWTId(registeredClaimValue);
 			break;
 		default:
-			error.setError("RC005", "Unknown registered claim");
+			error.setError("RCL03", "Unknown registered claim");
 			return null;
 		}
 		return verification;
@@ -152,7 +152,7 @@ public enum RegisteredClaim {
 			try {
 				tokenBuilder.withIssuer(registeredClaimValue);
 			} catch (Exception e) {
-				error.setError("RC003", e.getMessage());
+				error.setError("RCL04", e.getMessage());
 				return null;
 			}
 			break;
@@ -165,14 +165,14 @@ public enum RegisteredClaim {
 				date = dateFormat.parse(registeredClaimValue);
 				
 			} catch (Exception e) {
-				error.setError("RC004", "Date format error; expected yyyy/MM/dd HH:mm:ss");
+				error.setError("RCL05", "Date format error; expected yyyy/MM/dd HH:mm:ss");
 				return null;
 			}
 			try {
 				
 				tokenBuilder.withExpiresAt(date);
 			} catch (Exception e) {
-				error.setError("RC005", e.getMessage());
+				error.setError("RCL06", e.getMessage());
 				return null;
 			}
 			break;
@@ -181,7 +181,7 @@ public enum RegisteredClaim {
 			try {
 				tokenBuilder.withSubject(registeredClaimValue);
 			} catch (Exception e) {
-				error.setError("RC006", e.getMessage());
+				error.setError("RCL07", e.getMessage());
 				return null;
 			}
 			break;
@@ -189,7 +189,7 @@ public enum RegisteredClaim {
 			try {
 				tokenBuilder.withAudience(registeredClaimValue);
 			} catch (Exception e) {
-				error.setError("RC007", e.getMessage());
+				error.setError("RCL08", e.getMessage());
 				return null;
 			}
 			break;
@@ -198,13 +198,13 @@ public enum RegisteredClaim {
 			try {
 				dateNbf = dateFormat.parse(registeredClaimValue);
 			} catch (Exception e) {
-				error.setError("RC008", "Date format error; expected yyyy/MM/dd HH:mm:ss");
+				error.setError("RCL05", "Date format error; expected yyyy/MM/dd HH:mm:ss");
 				return null;
 			}
 			try {
 				tokenBuilder.withNotBefore(dateNbf);
 			} catch (Exception e) {
-				error.setError("RC009", e.getMessage());
+				error.setError("RCL09", e.getMessage());
 				return null;
 			}
 			break;
@@ -213,13 +213,13 @@ public enum RegisteredClaim {
 			try {
 				dateIat = dateFormat.parse(registeredClaimValue);
 			} catch (Exception e) {
-				error.setError("RC010", "Date format error; expected yyyy/MM/dd HH:mm:ss");
+				error.setError("RCL05", "Date format error; expected yyyy/MM/dd HH:mm:ss");
 				return null;
 			}
 			try {
 				tokenBuilder.withIssuedAt(dateIat);
 			} catch (Exception e) {
-				error.setError("RC011", e.getMessage());
+				error.setError("RCL10", e.getMessage());
 				return null;
 			}
 			break;
@@ -227,12 +227,12 @@ public enum RegisteredClaim {
 			try {
 				tokenBuilder.withJWTId(registeredClaimValue);
 			} catch (Exception e) {
-				error.setError("RC012", e.getMessage());
+				error.setError("RCL11", e.getMessage());
 				return null;
 			}
 			break;
 		default:
-			error.setError("RC013", "Unknown registered claim");
+			error.setError("RCL12", "Unknown registered claim");
 			return null;
 		}
 		return tokenBuilder;

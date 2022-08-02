@@ -43,10 +43,70 @@ public class JWTCreator extends JWTObject {
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
+
 	public String doCreate(String algorithm, PrivateClaims privateClaims, JWTOptions options) {
 		this.error.cleanError();
-		if (options.hasError()) {
-			this.error = options.getError();
+		return create_Aux(algorithm, privateClaims, options);
+	}
+
+	public boolean doVerify(String token, String expectedAlgorithm, PrivateClaims privateClaims, JWTOptions options) {
+		this.error.cleanError();
+		return doVerify(token, expectedAlgorithm, privateClaims, options, true, true);
+	}
+
+	public boolean doVerifyJustSignature(String token, String expectedAlgorithm, JWTOptions options) {
+		this.error.cleanError();
+		return doVerify(token, expectedAlgorithm, null, options, false, false);
+	}
+
+	public boolean doVerifySignature(String token, String expectedAlgorithm, JWTOptions options) {
+		this.error.cleanError();
+		return doVerify(token, expectedAlgorithm, null, options, false, true);
+	}
+
+	public String getPayload(String token) {
+		this.error.cleanError();
+		String res = "";
+		try {
+			res = getTokenPart(token, "payload");
+		} catch (Exception e) {
+			this.error.setError("JW001", e.getMessage());
+			return "";
+		}
+		return res;
+
+	}
+
+	public String getHeader(String token) {
+		this.error.cleanError();
+		String res = "";
+		try {
+			res = getTokenPart(token, "header");
+		} catch (Exception e) {
+			this.error.setError("JW002", e.getMessage());
+			return "";
+		}
+		return res;
+	}
+
+	public String getTokenID(String token) {
+		this.error.cleanError();
+		String res = "";
+		try {
+
+			res = getTokenPart(token, "id");
+		} catch (Exception e) {
+			this.error.setError("JW003", e.getMessage());
+			return "";
+		}
+		return res;
+	}
+
+	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
+
+	private String create_Aux(String algorithm, PrivateClaims privateClaims, JWTOptions options) {
+		if (options == null) {
+			this.error.setError("JW004", "Options parameter is null");
 			return "";
 		}
 		JWTAlgorithm alg = JWTAlgorithm.getJWTAlgorithm(algorithm, this.error);
@@ -58,13 +118,17 @@ public class JWTCreator extends JWTObject {
 			HeaderParameters parameters = options.getHeaderParameters();
 			tokenBuilder.withHeader(parameters.getMap());
 		}
+		if (privateClaims == null) {
+			this.error.setError("JW005", "PrivateClaims parameter is null");
+			return "";
+		}
 		tokenBuilder = doBuildPayload(tokenBuilder, privateClaims, options);
 		if (this.hasError()) {
 			return "";
 		}
 		Algorithm algorithmType = null;
 		if (JWTAlgorithm.isPrivate(alg)) {
-			
+
 			PrivateKeyManager key = options.getPrivateKey();
 			if (key.hasError()) {
 				this.error = key.getError();
@@ -75,7 +139,7 @@ public class JWTCreator extends JWTObject {
 			if (this.hasError()) {
 				return "";
 			}
-			
+
 		} else {
 
 			algorithmType = JWTAlgorithm.getSymmetricAlgorithm(alg, options.getSecret(), this.error);
@@ -87,67 +151,18 @@ public class JWTCreator extends JWTObject {
 		try {
 			signedJwt = tokenBuilder.sign(algorithmType);
 		} catch (Exception e) {
-			this.error.setError("JW003", e.getMessage());
+			this.error.setError("JW006", e.getMessage());
 			return "";
 		}
 
 		return signedJwt;
 	}
 
-	public boolean doVerify(String token, String expectedAlgorithm, PrivateClaims privateClaims, JWTOptions options) {
-		return doVerify(token, expectedAlgorithm, privateClaims, options, true, true);
-	}
-
-	public boolean doVerifyJustSignature(String token, String expectedAlgorithm, JWTOptions options) {
-		return doVerify(token, expectedAlgorithm, null, options, false, false);
-	}
-
-	public boolean doVerifySignature(String token, String expectedAlgorithm, JWTOptions options) {
-		return doVerify(token, expectedAlgorithm, null, options, false, true);
-	}
-
-	public String getPayload(String token) {
-		String res = "";
-		try {
-			res = getTokenPart(token, "payload");
-		} catch (Exception e) {
-			this.error.setError("JW009", e.getMessage());
-			return "";
-		}
-		return res;
-
-	}
-
-	public String getHeader(String token) {
-		String res = "";
-		try {
-			res = getTokenPart(token, "header");
-		} catch (Exception e) {
-			this.error.setError("JW010", e.getMessage());
-			return "";
-		}
-		return res;
-	}
-
-	public String getTokenID(String token) {
-		String res = "";
-		try {
-
-			res = getTokenPart(token, "id");
-		} catch (Exception e) {
-			this.error.setError("JW011", e.getMessage());
-			return "";
-		}
-		return res;
-	}
-
-	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
-
 	private boolean doVerify(String token, String expectedAlgorithm, PrivateClaims privateClaims, JWTOptions options,
 			boolean verifyClaims, boolean verifyRegClaims) {
-		this.error.cleanError();
-		if (options.hasError()) {
-			this.error = options.getError();
+
+		if (options == null) {
+			this.error.setError("JW004", "Options parameter is null");
 			return false;
 		}
 		DecodedJWT decodedJWT = null;
@@ -155,7 +170,7 @@ public class JWTCreator extends JWTObject {
 			decodedJWT = JWT.decode(token);
 
 		} catch (Exception e) {
-			this.error.setError("JW005", e.getMessage());
+			this.error.setError("JW007", e.getMessage());
 			return false;
 		}
 		if (isRevoqued(decodedJWT, options)) {
@@ -199,14 +214,14 @@ public class JWTCreator extends JWTObject {
 		if (this.hasError()) {
 			return false;
 		}
-
 		try {
 			JWTVerifier verifier = verification.build();
 			DecodedJWT decodedToken = JWT.decode(token);
 
 			verifier.verify(decodedToken);
 		} catch (Exception e) {
-			error.setError("JW006", e.getMessage());
+
+			error.setError("JW009", e.getMessage());
 			return false;
 		}
 
@@ -227,7 +242,7 @@ public class JWTCreator extends JWTObject {
 		case "id":
 			return decodedToken.getId();
 		default:
-			error.setError("JW007", "Unknown token segment");
+			error.setError("JW010", "Unknown token segment");
 			return "";
 		}
 		byte[] base64Bytes = Base64.decodeBase64(base64Part);
@@ -268,7 +283,7 @@ public class JWTCreator extends JWTObject {
 						return null;
 					}
 				} else {
-					error.setError("JW002", registeredC.get(z).getKey() + " wrong registered claim key");
+					error.setError("JW011", String.format("%s wrong registered claim key", registeredC.get(z).getKey()));
 					return null;
 				}
 			}
@@ -303,7 +318,7 @@ public class JWTCreator extends JWTObject {
 					// tokenBuilder.withClaim(privateC.get(i).getKey(), privateC.get(i).getValue());
 				}
 			} catch (Exception e) {
-				this.error.setError("JW004", e.getMessage());
+				this.error.setError("JW012", e.getMessage());
 				return null;
 			}
 		}
@@ -315,7 +330,7 @@ public class JWTCreator extends JWTObject {
 				try {
 					tokenBuilder.withClaim(publicC.get(j).getKey(), (String) publicC.get(j).getValue());
 				} catch (Exception e) {
-					this.error.setError("JW003", e.getMessage());
+					this.error.setError("JW013", e.getMessage());
 					return null;
 				}
 			}
@@ -332,7 +347,7 @@ public class JWTCreator extends JWTObject {
 						return null;
 					}
 				} else {
-					error.setError("JW002", registeredC.get(z).getKey() + " wrong registered claim key");
+					error.setError("JW011", String.format("%s wrong registered claim key", registeredC.get(z).getKey()));
 					return null;
 				}
 			}
@@ -358,7 +373,7 @@ public class JWTCreator extends JWTObject {
 			map = (HashMap<String, Object>) mapper.readValue(plainTextPart, new TypeReference<Map<String, Object>>() {
 			});
 		} catch (Exception e) {
-			this.error.setError("JW009", "Cannot parse JWT payload");
+			this.error.setError("JW014", e.getMessage());
 			return false;
 		}
 		this.counter = 0;
@@ -394,23 +409,21 @@ public class JWTCreator extends JWTObject {
 					if (!SecurityUtils.compareStrings(((String) op).trim(), ((String) ot).trim())) {
 						return false;
 					}
-					
-				} else if((op instanceof Integer || op instanceof Long) && (ot instanceof Integer || ot instanceof Long)) {
-					if((convertToLong(op)).compareTo(convertToLong(ot)) != 0)
-					{
+
+				} else if ((op instanceof Integer || op instanceof Long)
+						&& (ot instanceof Integer || ot instanceof Long)) {
+					if ((convertToLong(op)).compareTo(convertToLong(ot)) != 0) {
 						return false;
 					}
-				}else if((op instanceof Double && ot instanceof Double)) {
-					if((double)op != (double)ot)
-					{
+				} else if ((op instanceof Double && ot instanceof Double)) {
+					if ((double) op != (double) ot) {
 						return false;
 					}
-				}else if((op instanceof Boolean && ot instanceof Boolean)) {
-					if(Boolean.compare((boolean)op, (boolean)ot) != 0)
-					{
+				} else if ((op instanceof Boolean && ot instanceof Boolean)) {
+					if (Boolean.compare((boolean) op, (boolean) ot) != 0) {
 						return false;
 					}
-				}else if (op instanceof HashMap && ot instanceof HashMap) {
+				} else if (op instanceof HashMap && ot instanceof HashMap) {
 					@SuppressWarnings("unchecked")
 					boolean flag = verifyNestedClaims((HashMap<String, Object>) op, (HashMap<String, Object>) ot,
 							registeredClaims, publicClaims);
@@ -511,12 +524,12 @@ public class JWTCreator extends JWTObject {
 		return map.size();
 
 	}
-	
-	 private Long convertToLong(Object o){
-	        String stringToConvert = String.valueOf(o);
-	        Long convertedLong = Long.parseLong(stringToConvert);
-	        return convertedLong;
 
-	    }
+	private Long convertToLong(Object o) {
+		String stringToConvert = String.valueOf(o);
+		Long convertedLong = Long.parseLong(stringToConvert);
+		return convertedLong;
+
+	}
 
 }
