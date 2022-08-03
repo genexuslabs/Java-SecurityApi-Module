@@ -2,18 +2,13 @@ package com.genexus.dsig;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.net.MalformedURLException;
-
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.security.PrivateKey;
 
 import org.apache.xml.security.algorithms.SignatureAlgorithm;
-import org.apache.xml.security.exceptions.XMLSecurityException;
 import org.apache.xml.security.keys.content.X509Data;
 import org.apache.xml.security.signature.XMLSignature;
-import org.apache.xml.security.signature.XMLSignatureException;
-import org.apache.xml.security.transforms.TransformationException;
 import org.apache.xml.security.transforms.Transforms;
 import org.apache.xml.security.transforms.params.XPathContainer;
 import org.apache.xml.security.utils.Constants;
@@ -59,221 +54,77 @@ public class XmlDSigSigner extends SecurityAPIObject {
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
 
-	public boolean doSignFile(String xmlFilePath, com.genexus.securityapicommons.commons.PrivateKey key, Certificate certificate, String outputPath,
-			DSigOptions options) {
-		this.error.cleanError();
-		return doSignFilePKCS12(xmlFilePath, key, certificate, options.getDSigSignatureType(),
-				options.getCanonicalization(), outputPath,
-				options.getKeyInfoType(), options.getXmlSchemaPath());
-	}
-
-	public boolean doSignFileElement(String xmlFilePath, String xPath, com.genexus.securityapicommons.commons.PrivateKey key,
+	public boolean doSignFile(String xmlFilePath, com.genexus.securityapicommons.commons.PrivateKey key,
 			Certificate certificate, String outputPath, DSigOptions options) {
-		this.error.cleanError();
-		return doSignFileElementPKCS12(xmlFilePath, xPath, key, certificate, options.getDSigSignatureType(),
-				options.getCanonicalization(), outputPath,
-				options.getKeyInfoType(), options.getXmlSchemaPath(), options.getIdentifierAttribute());
+		return Boolean.valueOf(axuiliarSign(xmlFilePath, key, certificate, outputPath, options, true, ""));
 	}
 
-	public String doSign(String xmlInput, com.genexus.securityapicommons.commons.PrivateKey key, Certificate certificate, DSigOptions options) {
-		this.error.cleanError();
-		return doSignPKCS12(xmlInput, key, certificate, options.getDSigSignatureType(),
-				options.getCanonicalization(), options.getKeyInfoType(),
-				options.getXmlSchemaPath());
+	public String doSign(String xmlInput, com.genexus.securityapicommons.commons.PrivateKey key,
+			Certificate certificate, DSigOptions options) {
+		return axuiliarSign(xmlInput, key, certificate, "", options, false, "");
 	}
 
-	public String doSignElement(String xmlInput, String xPath, com.genexus.securityapicommons.commons.PrivateKey key, Certificate certificate,
+	public boolean doSignFileElement(String xmlFilePath, String xPath,
+			com.genexus.securityapicommons.commons.PrivateKey key, Certificate certificate, String outputPath,
 			DSigOptions options) {
-		this.error.cleanError();
-		return doSignElementPKCS12(xmlInput, xPath, key, certificate, options.getDSigSignatureType(),
-				options.getCanonicalization(), options.getKeyInfoType(),
-				options.getXmlSchemaPath(), options.getIdentifierAttribute());
+		return Boolean.valueOf(axuiliarSign(xmlFilePath, key, certificate, outputPath, options, true, xPath));
+	}
+
+	public String doSignElement(String xmlInput, String xPath, com.genexus.securityapicommons.commons.PrivateKey key,
+			Certificate certificate, DSigOptions options) {
+		return axuiliarSign(xmlInput, key, certificate, "", options, false, xPath);
 	}
 
 	public boolean doVerify(String xmlSigned, DSigOptions options) {
-		this.error.cleanError();
-		Document doc = SignatureUtils.documentFromString(xmlSigned, options.getXmlSchemaPath(), this.error);
-		if (this.hasError()) {
-			return false;
-		}
-		String baseURI = "";
-		return verify(doc, baseURI, options.getIdentifierAttribute());
+		return auxiliarVerify(xmlSigned, options, false, false, null);
 	}
 
 	public boolean doVerifyFile(String xmlFilePath, DSigOptions options) {
-		this.error.cleanError();
-		if (!SignatureUtils.validateExtensionXML(xmlFilePath)) {
-			this.error.setError("DS001", "The file is not an xml file");
-			return false;
-		}
-		Document doc = SignatureUtils.documentFromFile(xmlFilePath, options.getXmlSchemaPath(), this.error);
-		if (this.hasError()) {
-			return false;
-		}
-		File f = new File(xmlFilePath);
-		String baseURI = "";
-		try {
-			baseURI = f.toURI().toURL().toString();
-		} catch (MalformedURLException e) {
-			this.error.setError("DS002", "Error on baseURI");
-			return false;
-		}
-		return verify(doc, baseURI, options.getIdentifierAttribute());
-
+		return auxiliarVerify(xmlFilePath, options, true, false, null);
 	}
 
 	public boolean doVerifyWithCert(String xmlSigned, Certificate certificate, DSigOptions options) {
-		this.error.cleanError();
-		CertificateX509 cert = (CertificateX509) certificate;
-		if (!cert.Inicialized()) {
-			this.error.setError("DS003", "Certificate not loaded");
-			return false;
-		}
-		Document doc = SignatureUtils.documentFromString(xmlSigned, options.getXmlSchemaPath(), this.error);
-		if (this.hasError()) {
-			return false;
-		}
-		String baseURI = "";
-		return verify(doc, baseURI, cert, options.getIdentifierAttribute());
+		return auxiliarVerify(xmlSigned, options, false, true, certificate);
 	}
 
 	public boolean doVerifyFileWithCert(String xmlFilePath, Certificate certificate, DSigOptions options) {
-		this.error.cleanError();
-		if (!SignatureUtils.validateExtensionXML(xmlFilePath)) {
-			this.error.setError("DS007", "The file is not an xml file");
-			return false;
-		}
-		CertificateX509 cert = (CertificateX509)certificate;
-		if (!cert.Inicialized()) {
-			this.error.setError("DS005", "Certificate not loaded");
-			return false;
-		}
-		Document doc = SignatureUtils.documentFromFile(xmlFilePath, options.getXmlSchemaPath(), this.error);
-		if (this.hasError()) {
-			return false;
-		}
-		File f = new File(xmlFilePath);
-		String baseURI = "";
-		try {
-			baseURI = f.toURI().toURL().toString();
-		} catch (MalformedURLException e) {
-			this.error.setError("DS008", "Error on baseURI");
-			return false;
-		}
-
-		return verify(doc, baseURI, cert, options.getIdentifierAttribute());
+		return auxiliarVerify(xmlFilePath, options, true, true, certificate);
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
-	private boolean doSignFileElementPKCS12(String xmlFilePath, String xPath, com.genexus.securityapicommons.commons.PrivateKey key,
-			Certificate certificate, String dSigType, String canonicalizationType, String outputPath, String keyInfoType, String xmlSchemaPath, String id) {
-		if (TransformsWrapper.getTransformsWrapper(dSigType, this.error) != TransformsWrapper.ENVELOPED) {
-			error.setError("DS013", "Not implemented DSigType");
-			return false;
+	private String axuiliarSign(String xmlInput, com.genexus.securityapicommons.commons.PrivateKey key,
+			Certificate certificate, String outputPath, DSigOptions options, boolean isFile, String xPath) {
+		if (TransformsWrapper.getTransformsWrapper(options.getDSigSignatureType(),
+				this.error) != TransformsWrapper.ENVELOPED) {
+			error.setError("XD001", "Not implemented DSigType");
 		}
-		if (!SignatureUtils.validateExtensionXML(xmlFilePath)) {
-			this.error.setError("DS014", "Not XML file");
-			return false;
-		}
-		CertificateX509 cert = (CertificateX509)certificate;
+		CertificateX509 cert = (CertificateX509) certificate;
 		if (!cert.Inicialized()) {
-			this.error.setError("DS015", "Certificate not loaded");
-			return false;
-		}
-		Document xmlDoc = SignatureUtils.documentFromFile(xmlFilePath, xmlSchemaPath, this.error);
-		if (this.hasError()) {
-			return false;
+			this.error.setError("XD002", "Certificate not loaded");
 		}
 
-		String result = Sign(xmlDoc, (PrivateKeyManager)key, cert,dSigType, canonicalizationType,
-				keyInfoType, xPath, id);
-		if (result == null || SecurityUtils.compareStrings("", result)) {
-			this.error.setError("DS016", "Error generating signature");
-			return false;
-		} else {
+		Document xmlDoc = loadDocument(isFile, xmlInput, options);
+		if (this.hasError()) {
+			return "";
+		}
+		String result = Sign(xmlDoc, (PrivateKeyManager) key, cert, options.getDSigSignatureType(),
+				options.getCanonicalization(), options.getKeyInfoType(), xPath, options.getIdentifierAttribute());
+		if (isFile) {
 			String prefix = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-			return SignatureUtils.writeToFile(result, outputPath, prefix, this.error);
+			result = Boolean.toString(SignatureUtils.writeToFile(result, outputPath, prefix, this.error));
 		}
+		return result;
 	}
 
-	private String doSignElementPKCS12(String xmlInput, String xPath, com.genexus.securityapicommons.commons.PrivateKey key,
-			Certificate certificate, String dSigType, String canonicalizationType,
-			String keyInfoType, String xmlSchemaPath, String id) {
-		if (TransformsWrapper.getTransformsWrapper(dSigType, this.error) != TransformsWrapper.ENVELOPED) {
-			error.setError("DS017", "Not implemented DSigType");
-			return "";
-		}
-		CertificateX509 cert = (CertificateX509)certificate;
-		if (!cert.Inicialized()) {
-			this.error.setError("DS018", "Certificate not loaded");
-			return "";
-		}
-		Document xmlDoc = SignatureUtils.documentFromString(xmlInput, xmlSchemaPath, this.error);
-		if (this.hasError()) {
-			return "";
-		}
-		return Sign(xmlDoc, (PrivateKeyManager)key, cert, dSigType, canonicalizationType, keyInfoType,
-				xPath, id);
-	}
-
-	private String doSignPKCS12(String xmlInput, com.genexus.securityapicommons.commons.PrivateKey key, Certificate certificate, String dSigType,
-			String canonicalizationType, String keyInfoType, String xmlSchemaPath) {
-		if (TransformsWrapper.getTransformsWrapper(dSigType, this.error) != TransformsWrapper.ENVELOPED) {
-			error.setError("DS019", "Not implemented DSigType");
-			return "";
-		}
-		CertificateX509 cert = (CertificateX509)certificate;
-		if (!cert.Inicialized()) {
-			this.error.setError("DS020", "Certificate not loaded");
-			return "";
-		}
-		Document xmlDoc = SignatureUtils.documentFromString(xmlInput, xmlSchemaPath, this.error);
-		if (this.hasError()) {
-			return "";
-		}
-		return Sign(xmlDoc, (PrivateKeyManager)key, cert, dSigType, canonicalizationType, keyInfoType,
-				"", "");
-	}
-
-	private boolean doSignFilePKCS12(String xmlFilePath, com.genexus.securityapicommons.commons.PrivateKey key, Certificate certificate,
-			String dSigType, String canonicalizationType, String outputPath,
-			String keyInfoType, String xmlSchemaPath) {
-		if (TransformsWrapper.getTransformsWrapper(dSigType, this.error) != TransformsWrapper.ENVELOPED) {
-			error.setError("DS009", "Not implemented DSigType");
-			return false;
-		}
-		if (!SignatureUtils.validateExtensionXML(xmlFilePath)) {
-			this.error.setError("DS010", "Not XML file");
-			return false;
-		}
-		CertificateX509 cert = (CertificateX509)certificate;
-		if (!cert.Inicialized()) {
-			this.error.setError("DS011", "Certificate not loaded");
-		}
-		Document xmlDoc = SignatureUtils.documentFromFile(xmlFilePath, xmlSchemaPath, this.error);
-		if (this.hasError()) {
-			return false;
-		}
-		String result = Sign(xmlDoc, (PrivateKeyManager)key, cert, dSigType, canonicalizationType,
-				keyInfoType, "", "");
-		if (result == null || SecurityUtils.compareStrings("", result)) {
-			this.error.setError("DS012", "Error generating signature");
-			return false;
-		} else {
-			String prefix = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-			return SignatureUtils.writeToFile(result, outputPath, prefix, this.error);
-		}
-	}
-
-	private String Sign(Document xmlInput, PrivateKeyManager key, CertificateX509 certificate, String dSigType, String canonicalizationType, String keyInfoType, String xpath,
-			String id) {
+	private String Sign(Document xmlInput, PrivateKeyManager key, CertificateX509 certificate, String dSigType,
+			String canonicalizationType, String keyInfoType, String xpath, String id) {
 		SignatureElementType signatureElementType;
 		if (!SecurityUtils.compareStrings(xpath, "")) {
 			if (xpath.charAt(0) == '#') {
 				signatureElementType = SignatureElementType.id;
 				if (id == null || SecurityUtils.compareStrings(id, "")) {
-					this.error.setError("DS021", "identifier attribute name missing");
+					this.error.setError("XD003", "Identifier attribute name missing");
 					return "";
 				}
 			} else {
@@ -313,8 +164,8 @@ public class XmlDSigSigner extends SecurityAPIObject {
 				return "";
 			}
 			sig = new XMLSignature(xmlInput, null, signatureAlgorithm.getElement(), canonElem);
-		} catch (XMLSecurityException e) {
-			this.error.setError("DS022", "Error on signature algorithm");
+		} catch (Exception e) {
+			this.error.setError("XD004", e.getMessage());
 			return null;
 		}
 
@@ -356,8 +207,8 @@ public class XmlDSigSigner extends SecurityAPIObject {
 			}
 			sig.addDocument(referenceURI, transforms,
 					MessageDigestAlgorithmWrapper.getDigestMethod(messageDigestAlgorithmWrapper, this.error));
-		} catch (TransformationException | XMLSignatureException e) {
-			this.error.setError("DS024", "Transformation errors");
+		} catch (Exception e) {
+			this.error.setError("XD005", e.getMessage());
 			return "";
 		}
 		KeyInfoType kyInfo = KeyInfoType.getKeyInfoType(keyInfoType, this.error);
@@ -371,12 +222,12 @@ public class XmlDSigSigner extends SecurityAPIObject {
 			try {
 				X509Certificate x509Certificate = certificate.Cert();
 				X509Data x509data = new X509Data(sig.getDocument());
-				x509data.addIssuerSerial(x509Certificate.getIssuerDN().getName(), x509Certificate.getSerialNumber());			
+				x509data.addIssuerSerial(x509Certificate.getIssuerDN().getName(), x509Certificate.getSerialNumber());
 				x509data.addSubjectName(x509Certificate);
 				x509data.addCertificate(x509Certificate);
 				sig.getKeyInfo().add(x509data);
-			} catch (XMLSecurityException e) {
-				this.error.setError("DS025", "Error adding certificate to signature");
+			} catch (Exception e) {
+				this.error.setError("XD006", e.getMessage());
 			}
 			break;
 		case KeyValue:
@@ -385,13 +236,13 @@ public class XmlDSigSigner extends SecurityAPIObject {
 		case NONE:
 			break;
 		default:
-			this.error.setError("DS026", "Undefined KeyInfo type");
+			this.error.setError("XD007", "Undefined KeyInfo type");
 			return "";
 		}
 		try {
 			sig.sign(this.privateKey);
-		} catch (XMLSignatureException e) {
-			error.setError("DS027", "Error at signing");
+		} catch (Exception e) {
+			error.setError("XD008", e.getMessage());
 			e.printStackTrace();
 
 			return null;
@@ -405,7 +256,6 @@ public class XmlDSigSigner extends SecurityAPIObject {
 
 	private boolean inicializeInstanceVariables(PrivateKeyManager key, CertificateX509 certificate) {
 
-
 		this.privateKey = key.getPrivateKeyXML();
 		this.publicKey = certificate.getPublicKeyXML();
 		this.digest = certificate.getPublicKeyHash();
@@ -413,7 +263,31 @@ public class XmlDSigSigner extends SecurityAPIObject {
 		return true;
 	}
 
-	private boolean verify(Document doc, String baseURI, String id) {
+	private boolean auxiliarVerify(String input, DSigOptions options, boolean isFile, boolean withCert,
+			Certificate certificate) {
+		if (TransformsWrapper.getTransformsWrapper(options.getDSigSignatureType(),
+				this.error) != TransformsWrapper.ENVELOPED) {
+			error.setError("XD001", "Not implemented DSigType");
+		}
+		Document doc = loadDocument(isFile, input, options);
+		if (this.hasError()) {
+			return false;
+		}
+		String baseURI = "";
+		if (isFile) {
+
+			try {
+				File f = new File(input);
+				baseURI = f.toURI().toURL().toString();
+			} catch (Exception e) {
+				this.error.setError("XD009", e.getMessage());
+				return false;
+			}
+		}
+		return verify(doc, baseURI, options.getIdentifierAttribute(), withCert, (CertificateX509) certificate);
+	}
+
+	private boolean verify(Document doc, String baseURI, String id, boolean withCert, CertificateX509 certificate) {
 		Element sigElement = (Element) doc.getElementsByTagNameNS(Constants.SignatureSpecNS, Constants._TAG_SIGNATURE)
 				.item(0);
 		if (id != null && !SecurityUtils.compareStrings(id, "")) {
@@ -422,53 +296,48 @@ public class XmlDSigSigner extends SecurityAPIObject {
 					.item(0);
 			String sigId = ref.getAttribute(Constants._ATT_URI);
 			if (sigId == null || SecurityUtils.compareStrings(sigId, "")) {
-				this.error.setError("DS029", "Could not find Reference URI for id");
+				this.error.setError("XD010", "Could not find Reference URI for id");
 				return false;
 			}
 			Element idElement = (Element) SignatureUtils.getNodeFromID(doc, id, sigId, this.error);
 			if (idElement == null) {
-				this.error.setError("DS030", "Could not find node from ID");
+				this.error.setError("XD011", "Could not find node from ID");
 				return false;
 			}
 			idElement.setIdAttribute(id, true);
 		}
 
+		boolean result = false;
 		try {
-			XMLSignature signature = new XMLSignature(sigElement, baseURI);
-			return signature.checkSignatureValue(signature.getKeyInfo().getPublicKey());
-		} catch (XMLSecurityException e) {
 
-			this.error.setError("DS031", "Error on signature verification");
+			XMLSignature signature = new XMLSignature(sigElement, baseURI);
+			if (withCert) {
+				PublicKey pk = certificate.getPublicKeyXML();
+				result = signature.checkSignatureValue(pk);
+			} else {
+				result = signature.checkSignatureValue(signature.getKeyInfo().getPublicKey());
+			}
+		} catch (Exception e) {
+
+			this.error.setError("XD012", e.getMessage());
 			return false;
 		}
+		return result;
 	}
 
-	private boolean verify(Document doc, String baseURI, CertificateX509 certificate, String id) {
-		Element sigElement = (Element) doc.getElementsByTagNameNS(Constants.SignatureSpecNS, Constants._TAG_SIGNATURE)
-				.item(0);
-		if (id != null && !SecurityUtils.compareStrings(id, "")) {
-			Element ref = (Element) doc.getElementsByTagNameNS(Constants.SignatureSpecNS, Constants._TAG_REFERENCE)
-					.item(0);
-			String sigId = ref.getAttribute(Constants._ATT_URI);
-			if (sigId == null || SecurityUtils.compareStrings(sigId, "")) {
-				this.error.setError("DS032", "Could not find Reference URI for id");
-				return false;
+	private Document loadDocument(boolean isFile, String path, DSigOptions options) {
+		Document xmlDoc = null;
+		if (isFile) {
+			if (!SignatureUtils.validateExtensionXML(path)) {
+				this.error.setError("XD013", "Not XML file");
+				return null;
 			}
-			Element idElement = (Element) SignatureUtils.getNodeFromID(doc, id, sigId, this.error);
-			if (idElement == null) {
-				this.error.setError("DS033", "Could not find node from ID");
-				return false;
-			}
-			idElement.setIdAttribute(id, true);
-		}
+			xmlDoc = SignatureUtils.documentFromFile(path, options.getXmlSchemaPath(), this.error);
 
-		try {
-			XMLSignature signature = new XMLSignature(sigElement, baseURI);
-			PublicKey pk = certificate.getPublicKeyXML();
-			return signature.checkSignatureValue(pk);
-		} catch (XMLSecurityException e) {
-			this.error.setError("DS034", "Error on verification");
-			return false;
+		} else {
+			xmlDoc = SignatureUtils.documentFromString(path, options.getXmlSchemaPath(), this.error);
 		}
+		return xmlDoc;
 	}
+
 }

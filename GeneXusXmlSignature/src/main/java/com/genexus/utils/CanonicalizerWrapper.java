@@ -32,7 +32,7 @@ public enum CanonicalizerWrapper {
 		case "exc_C14N_WITH_COMMENTS":
 			return CanonicalizerWrapper.ALGO_ID_C14N_EXCL_WITH_COMMENTS;
 		default:
-			error.setError("CM001", "Unrecognized CanonicalizationMethod: " + canonicalizerWrapper);
+			error.setError("CAW01", "Unrecognized CanonicalizationMethod");
 			return null;
 		}
 	}
@@ -55,7 +55,7 @@ public enum CanonicalizerWrapper {
 		case ALGO_ID_C14N_EXCL_WITH_COMMENTS:
 			return "exc_C14N_WITH_COMMENTS";
 		default:
-			error.setError("CM002", "Unrecognized CanonicalizationMethod");
+			error.setError("CAW02", "Unrecognized CanonicalizationMethod");
 			return "";
 		}
 	}
@@ -78,7 +78,7 @@ public enum CanonicalizerWrapper {
 		case ALGO_ID_C14N_EXCL_WITH_COMMENTS:
 			return "ALGO_ID_C14N_EXCL_WITH_COMMENTS";
 		default:
-			error.setError("CM003", "Unrecognized CanonicalizationMethod");
+			error.setError("CAW03", "Unrecognized CanonicalizationMethod");
 			return "";
 		}
 	}
@@ -94,7 +94,7 @@ public enum CanonicalizerWrapper {
 		case ALGO_ID_C14N_EXCL_OMIT_COMMENTS:
 			return Canonicalizer.ALGO_ID_C14N_EXCL_OMIT_COMMENTS;
 		default:
-			error.setError("CM004", "Unrecognized CanonicalizationMethod");
+			error.setError("CAW04", "Unrecognized CanonicalizationMethod");
 			return null;
 
 		}

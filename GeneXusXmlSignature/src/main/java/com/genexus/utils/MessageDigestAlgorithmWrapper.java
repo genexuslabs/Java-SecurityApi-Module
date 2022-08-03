@@ -28,7 +28,7 @@ public enum MessageDigestAlgorithmWrapper {
 		case "SHA512":
 			return MessageDigestAlgorithmWrapper.SHA512;
 		default:
-			error.setError("MD001", "Algorithm not found: " + messageDigestAlgorithmWrapper);
+			error.setError("MDA01", "Not recognized digest algorithm");
 			return null;
 		}
 	}
@@ -49,7 +49,7 @@ public enum MessageDigestAlgorithmWrapper {
 		case SHA512:
 			return "SHA512";
 		default:
-			error.setError("MD002", "Not recognized digest algorithm");
+			error.setError("MDA02", "Not recognized digest algorithm");
 			return null;
 		}
 	}
@@ -63,7 +63,7 @@ public enum MessageDigestAlgorithmWrapper {
 		case SHA512:
 			return MessageDigestAlgorithm.ALGO_ID_DIGEST_SHA512;
 		default:
-			error.setError("MD003", "Not recognized digest algorithm");
+			error.setError("MDA03", "Not recognized digest algorithm");
 			return null;
 		}
 	}
