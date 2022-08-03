@@ -7,7 +7,7 @@ import com.genexus.securityapicommons.commons.Error;
  *
  */
 public enum PasswordDerivationAlgorithm {
-	SCrypt, Bcrypt,Argon2;
+	SCrypt, Bcrypt,Argon2, NONE;
 
 	/**
 	 * Mapping between String name and PasswordDerivationAlgorithm enum
@@ -21,6 +21,12 @@ public enum PasswordDerivationAlgorithm {
 	 */
 	public static PasswordDerivationAlgorithm getPasswordDerivationAlgorithm(String passwordDerivationAlgorithm,
 			Error error) {
+		if (error == null) return PasswordDerivationAlgorithm.NONE;
+		if(passwordDerivationAlgorithm == null)
+		{
+			error.setError("PDA03", "Unrecognized PasswordDerivationAlgorithm");
+			return PasswordDerivationAlgorithm.NONE;
+		}
 		switch (passwordDerivationAlgorithm.trim()) {
 		case "SCrypt":
 			return PasswordDerivationAlgorithm.SCrypt;
@@ -29,7 +35,7 @@ public enum PasswordDerivationAlgorithm {
 		case "Argon2":
 			return PasswordDerivationAlgorithm.Argon2;
 		default:
-			error.setError("PD001", "Unrecognized PasswordDerivationAlgorithm");
+			error.setError("PDA01", "Unrecognized PasswordDerivationAlgorithm");
 			return null;
 		}
 	}
@@ -42,6 +48,7 @@ public enum PasswordDerivationAlgorithm {
 	 * @return PasswordDerivationAlgorithm value in String
 	 */
 	public static String valueOf(PasswordDerivationAlgorithm passwordDerivationAlgorithm, Error error) {
+		if(error == null) return "Unrecognized algorithm";
 		switch (passwordDerivationAlgorithm) {
 		case SCrypt:
 			return "SCrypt";
@@ -50,7 +57,7 @@ public enum PasswordDerivationAlgorithm {
 		case Argon2:
 			return "Argon2";
 		default:
-			error.setError("PD002", "Unrecognized PasswordDerivationAlgorithm");
+			error.setError("PDA02", "Unrecognized PasswordDerivationAlgorithm");
 			return "Unrecognized algorithm";
 		}
 	}

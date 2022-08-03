@@ -10,11 +10,10 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
-import com.genexus.securityapicommons.commons.Error;
 
 import org.bouncycastle.util.encoders.Hex;
 
-import com.genexus.securityapicommons.commons.SecurityAPIObject;
+import com.genexus.securityapicommons.commons.Error;
 import com.genexus.securityapicommons.config.EncodingUtil;
 
 public class SecurityUtils {
@@ -27,9 +26,8 @@ public class SecurityUtils {
 		}
 
 	}
-	
-	public static byte[] getFileBytes(String pathInput, Error error)
-	{
+
+	public static byte[] getFileBytes(String pathInput, Error error) {
 		byte[] aux = null;
 		try {
 			File initialFile = new File(pathInput);
@@ -39,16 +37,15 @@ public class SecurityUtils {
 		}
 		return aux;
 	}
-	
-	public static InputStream getFileStream(String pathInput, Error error)
-	{
-		InputStream aux= null;
-		 try {
+
+	public static InputStream getFileStream(String pathInput, Error error) {
+		InputStream aux = null;
+		try {
 			aux = new FileInputStream(new File(pathInput));
 		} catch (FileNotFoundException e) {
 			error.setError("SU002", e.getMessage());
 		}
-		 return aux;
+		return aux;
 	}
 
 	public static boolean validateExtension(String path, String extension) {
@@ -60,8 +57,7 @@ public class SecurityUtils {
 	}
 
 	/**
-	 * @param path
-	 *            path to the file
+	 * @param path path to the file
 	 * @return file extension
 	 */
 	public static String getFileExtension(String path) {
@@ -74,10 +70,8 @@ public class SecurityUtils {
 	}
 
 	/**
-	 * @param path
-	 *            path to the file
-	 * @param ext
-	 *            extension of the file
+	 * @param path path to the file
+	 * @param ext  extension of the file
 	 * @return true if the file has the extension
 	 */
 	public static boolean extensionIs(String path, String ext) {
@@ -104,18 +98,57 @@ public class SecurityUtils {
 		final InputStream targetStream = new DataInputStream(new FileInputStream(initialFile));
 		return targetStream;
 	}
-	
-	public static byte[] getHexa(String hex, String code, Error error)
-	{
+
+	public static byte[] hexaToByte(String hex, Error error) {
 		byte[] output;
-		try 
-		{
+		try {
 			output = Hex.decode(hex);
-		}catch(Exception e)
-		{
-			error.setError(code, e.getMessage());
+		} catch (Exception e) {
+			error.setError("SU004", e.getMessage());
 			return null;
 		}
 		return output;
+	}
+
+	public static InputStream stringToStream(String input, Error error) {
+		EncodingUtil eu = new EncodingUtil();
+		byte[] inputText = eu.getBytes(input);
+		if (eu.hasError()) {
+			error = eu.getError();
+			return null;
+		} else {
+
+			try (InputStream inputStream = new ByteArrayInputStream(inputText)) {
+				return inputStream;
+			} catch (Exception e) {
+				error.setError("SU003", e.getMessage());
+			}
+			return null;
+		}
+	}
+	
+	public static boolean validateStringInput(String name, String value, Error error)
+	{
+		if(value == null)
+		{
+			error.setError("SU005", String.format("The parameter %s cannot be empty", name));
+			return false;
+		}
+		if(value.isEmpty())
+		{
+			error.setError("SU006", String.format("The parameter %s cannot be empty", name));
+			return false;
+		}
+		return true;
+	}
+	
+	public static boolean validateObjectInput(String name, Object value, Error error)
+	{
+		if(value == null)
+		{
+			error.setError("SU007", String.format("The parameter %a cannot be empty", name));
+			return false;
+		}
+		return true;
 	}
 }

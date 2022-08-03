@@ -20,6 +20,12 @@ public enum HashAlgorithm {
 	 * @return HashAlgorithm enum representation
 	 */
 	public static HashAlgorithm getHashAlgorithm(String hashAlgorithm, Error error) {
+		if(error == null) return HashAlgorithm.NONE; 
+		if (hashAlgorithm == null)
+		{
+			error.setError("HAA01", "Unrecognized HashAlgorihm");
+			return HashAlgorithm.NONE;
+		}
 		switch (hashAlgorithm.toUpperCase().trim()) {
 		case "MD5":
 			return HashAlgorithm.MD5;
@@ -86,10 +92,10 @@ public enum HashAlgorithm {
 		case "SHA3-512":
 			return HashAlgorithm.SHA3_512;
 		case "SHAKE_128":
-			error.setError("HA003", "Not implemented algorithm SHAKE_128");
+			error.setError("HAA04", "Not implemented algorithm SHAKE_128");
 			return null;
 		case "SHAKE_256":
-			error.setError("HA004", "Not implemented algorithm SHAKE_256");
+			error.setError("HAA05", "Not implemented algorithm SHAKE_256");
 			return null;
 		case "SM3":
 			return HashAlgorithm.SM3;
@@ -98,7 +104,7 @@ public enum HashAlgorithm {
 		case "WHIRLPOOL":
 			return HashAlgorithm.WHIRLPOOL;
 		default:
-			error.setError("HA001", "Unrecognized HashAlgorihm");
+			error.setError("HAA02", "Unrecognized HashAlgorihm");
 			return null;
 		}
 	}
@@ -111,6 +117,7 @@ public enum HashAlgorithm {
 	 * @return String name value of HashAlgorithm
 	 */
 	public static String valueOf(HashAlgorithm hashAlgorithm, Error error) {
+		if(error == null) return "Unrecognized algorithm";
 		switch (hashAlgorithm) {
 		case MD5:
 			return "MD5";
@@ -183,7 +190,7 @@ public enum HashAlgorithm {
 		case WHIRLPOOL:
 			return "WHIRLPOOL";
 		default:
-			error.setError("HA002", "Unrecognized HashAlgorihm");
+			error.setError("HAA03", "Unrecognized HashAlgorihm");
 			return "Unrecognized algorithm";
 		}
 	}

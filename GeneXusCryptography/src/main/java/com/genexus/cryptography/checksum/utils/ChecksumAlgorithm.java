@@ -9,9 +9,15 @@ public enum ChecksumAlgorithm {
 	CRC16_DECT_X, CRC16_DNP, CRC16_EN_13757, CRC16_GENIBUS, CRC16_MAXIM, CRC16_MCRF4XX, CRC16_RIELLO, CRC16_T10_DIF,
 	CRC16_TELEDISK, CRC16_TMS_37157, CRC16_USB, CRC_A, CRC16_KERMIT, CRC16_MODBUS, CRC16_X_25, CRC16_XMODEM, CRC32,
 	CRC32_BZIP2, CRC32C, CRC32D, CRC32_MPEG_2, CRC32_POSIX, CRC32Q, CRC32_JAMCRC, CRC32_XFER, MD5, SHA1, SHA256,
-	SHA512,;
+	SHA512,NONE;
 
 	public static ChecksumAlgorithm getChecksumAlgorithm(String checksumAlgorithm, Error error) {
+		if(error == null) return ChecksumAlgorithm.NONE;
+		if (checksumAlgorithm == null)
+		{
+			error.setError("CHA04", "Unrecognized checksum algorithm");
+			return ChecksumAlgorithm.NONE;
+		}
 		switch (checksumAlgorithm.toUpperCase().trim()) {
 		case "CRC8":
 			return ChecksumAlgorithm.CRC8;
@@ -106,12 +112,13 @@ public enum ChecksumAlgorithm {
 		case "SHA512":
 			return ChecksumAlgorithm.SHA512;
 		default:
-			error.setError("CA001", "Unrecognized checksum algorithm");
+			error.setError("CHA01", "Unrecognized checksum algorithm");
 			return null;
 		}
 	}
 
 	public static String valueOf(ChecksumAlgorithm checksumAlgorithm, Error error) {
+		if (error == null) return null;
 		switch (checksumAlgorithm) {
 		case CRC8:
 			return "CRC8";
@@ -206,7 +213,7 @@ public enum ChecksumAlgorithm {
 		case SHA512:
 			return "SHA512";
 		default:
-			error.setError("CA002", "Unrecognized checksum algorithm");
+			error.setError("CHA02", "Unrecognized checksum algorithm");
 			return null; 
 		}
 	}
@@ -227,6 +234,7 @@ public enum ChecksumAlgorithm {
 	
 	public static CRCParameters getParameters(ChecksumAlgorithm checksumAlgorithm, Error error)
 	{
+		if (error == null) return new CRCParameters(0, 0x00, 0x00, false, false, 0x00);
 		switch (checksumAlgorithm) {
 		case CRC8:
 			return new CRCParameters(8, 0x07, 0x00, false, false, 0x00);
@@ -313,7 +321,7 @@ public enum ChecksumAlgorithm {
 		case CRC32_XFER:
 			return new CRCParameters(32, 0x000000AF, 0x00000000, false, false, 0x0000000);
 		default:
-			error.setError("CA004", "Unrecognized checksum algorithm");
+			error.setError("CHA03", "Unrecognized checksum algorithm");
 			return null;
 		}
 	}

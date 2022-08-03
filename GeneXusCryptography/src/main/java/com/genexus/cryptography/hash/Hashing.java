@@ -1,5 +1,7 @@
 package com.genexus.cryptography.hash;
 
+import java.io.InputStream;
+
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.Blake2bDigest;
 import org.bouncycastle.crypto.digests.Blake2sDigest;
@@ -20,14 +22,14 @@ import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.crypto.digests.SHA384Digest;
 import org.bouncycastle.crypto.digests.SHA3Digest;
 import org.bouncycastle.crypto.digests.SHA512Digest;
-import org.bouncycastle.crypto.digests.SHAKEDigest;
 import org.bouncycastle.crypto.digests.SM3Digest;
 import org.bouncycastle.crypto.digests.TigerDigest;
 import org.bouncycastle.crypto.digests.WhirlpoolDigest;
+import org.bouncycastle.util.encoders.Hex;
 
 import com.genexus.cryptography.commons.HashObject;
 import com.genexus.cryptography.hash.utils.HashAlgorithm;
-import com.genexus.securityapicommons.config.EncodingUtil;
+import com.genexus.securityapicommons.utils.SecurityUtils;
 
 public class Hashing extends HashObject {
 
@@ -50,39 +52,24 @@ public class Hashing extends HashObject {
 	 */
 	public String doHash(String hashAlgorithm, String txtToHash) {
 		this.error.cleanError();
-		byte[] resBytes = calculateHash(HashAlgorithm.getHashAlgorithm(hashAlgorithm, this.error), txtToHash);
-		String result = toHexaString(resBytes);
-		if (!this.error.existsError()) {
-			return result;
-		}
-		return "";
+		
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateStringInput("hashAlgorithm", hashAlgorithm, this.error);
+		SecurityUtils.validateStringInput("txtToHash", txtToHash, this.error);
+		if(this.hasError()) { return "";};	
+		/*******INPUT VERIFICATION - END*******/
+		
+		HashAlgorithm hashAlgorithmObj =HashAlgorithm.getHashAlgorithm(hashAlgorithm, this.error);
+		InputStream input = SecurityUtils.stringToStream(txtToHash, this.error);
+		if(this.hasError()) {return null;}
+		
+		byte[] resBytes = calculateHash(hashAlgorithmObj, input);
+		
+		return this.hasError() ? "": Hex.toHexString(resBytes).toUpperCase();
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
-	/**
-	 * @param digest
-	 *            byte array
-	 * @return String Hexa respresentation of the byte array digest
-	 */
-	private String toHexaString(byte[] digest) {
-
-		if (this.error.existsError()) {
-			return "";
-		}
-
-		StringBuilder sb = new StringBuilder();
-		for (byte b : digest) {
-			sb.append(String.format("%02X ", b));
-		}
-		String result = sb.toString().replaceAll("\\s", "");
-		if (result == null || result.length() == 0) {
-			this.error.setError("HS001", "Error encoding hexa");
-			return "";
-		}
-		return result.trim();
-
-	}
 
 	/**
 	 * @param hashAlgorithm
@@ -91,24 +78,20 @@ public class Hashing extends HashObject {
 	 *            plain text to hcalculate hash
 	 * @return byte array of the txtToHash with the algorithm indicated
 	 */
-	public byte[] calculateHash(HashAlgorithm hashAlgorithm, String txtToHash) {
-		EncodingUtil eu = new EncodingUtil();
-		byte[] inputAsBytes = eu.getBytes(txtToHash);
-		if (eu.getError().existsError()) {
-			this.error = eu.getError();
-			return null;
-		}
-		return calculateHash( hashAlgorithm, inputAsBytes);
-	}
-	
-	public byte[] calculateHash(HashAlgorithm hashAlgorithm, byte[] inputAsBytes) {
-
-		if (this.error.existsError()) {
-			return null;
-		}
-		Digest alg = createHash(hashAlgorithm);
+	public byte[] calculateHash(HashAlgorithm hashAlgorithm, InputStream input) {
+		
+		Digest alg = createHash(hashAlgorithm);	
+		byte[] buffer = new byte[8192];
+		int n;
 		byte[] retValue = new byte[alg.getDigestSize()];
-		alg.update(inputAsBytes, 0, inputAsBytes.length);
+		try {
+			while ((n = input.read(buffer)) > 0) {
+				alg.update(buffer, 0, n);
+			}
+		} catch (Exception e)
+		{
+			this.error.setError("HA001", e.getMessage());
+		}
 		alg.doFinal(retValue, 0);
 		return retValue;
 	}
@@ -192,7 +175,7 @@ public class Hashing extends HashObject {
 		case WHIRLPOOL:
 			return new WhirlpoolDigest();
 		default:
-			this.error.setError("HS002", "Unrecognized HashAlgorithm");
+			this.error.setError("HA002", "Unrecognized HashAlgorithm");
 			return null;
 		}
 	}

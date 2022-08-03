@@ -32,25 +32,15 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 	
 	@Override
 	public String doSign(PrivateKeyManager key, String hashAlgorithm, String plainText) {
-		/******** INPUT VERIFICATION - BEGIN ********/
-		if(key == null)
-		{
-			error.setError("AE001", "Private key cannot be null");
-			return "";
-		}
-		if(hashAlgorithm == null || hashAlgorithm.length() == 0 || SecurityUtils.compareStrings("", hashAlgorithm))
-		{
-			error.setError("AE002", "HashAlgorithm cannot be empty value; use HashAlgorithm domain");
-			return "";
-		}
-		if(plainText == null || plainText.length() == 0 || SecurityUtils.compareStrings("", plainText))
-		{
-			error.setError("AE003", "The plainText value to sign cannot be empty");
-			return "";
-		}
-		/******** INPUT VERIFICATION - END ********/
+		this.error.cleanError();
 		
-		
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateObjectInput("key", key, this.error);
+		SecurityUtils.validateStringInput("hashAlgorithm", hashAlgorithm, this.error);
+		SecurityUtils.validateStringInput("plainText", plainText, this.error);
+		if(this.hasError()) { return "";};
+		/*******INPUT VERIFICATION - END*******/
+
 		EncodingUtil eu = new EncodingUtil();
 		byte[] inputText = eu.getBytes(plainText);
 		if (eu.hasError()) {
@@ -63,30 +53,21 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 			result = sign(key, hashAlgorithm, inputStream);
 		}catch(Exception e)
 		{
-			error.setError("AE004", e.getMessage());
+			error.setError("AS001", e.getMessage());
 		}
 		return result;
 	}
 
 	@Override
 	public String doSignFile(PrivateKeyManager key, String hashAlgorithm, String path) {
-		/******** INPUT VERIFICATION - BEGIN ********/
-		if(key == null)
-		{
-			error.setError("AE005", "Private key cannot be null");
-			return "";
-		}
-		if(hashAlgorithm == null || hashAlgorithm.length() == 0 || SecurityUtils.compareStrings("", hashAlgorithm))
-		{
-			error.setError("AE006", "HashAlgorithm cannot be empty value; use HashAlgorithm domain");
-			return "";
-		}
-		if(path == null || path.length() == 0 || SecurityUtils.compareStrings("", path))
-		{
-			error.setError("AE007", "The path value of the file to sign cannot be empty");
-			return "";
-		}
-		/******** INPUT VERIFICATION - END ********/
+		this.error.cleanError();
+
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateObjectInput("key", key, this.error);
+		SecurityUtils.validateStringInput("hashAlgorithm", hashAlgorithm, this.error);
+		SecurityUtils.validateStringInput("path", path,  this.error);
+		if(this.hasError()) { return "";} 
+		/*******INPUT VERIFICATION - END*******/
 		
 		String result = "";
 		try(InputStream input = SecurityUtils.getFileStream(path, this.error))
@@ -98,32 +79,22 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 			result = sign(key, hashAlgorithm, input);
 		}catch(Exception e)
 		{
-			error.setError("AE008", e.getMessage());
+			error.setError("AS002", e.getMessage());
 		}
 		return result;
 	}
 
 	@Override
 	public boolean doVerify(CertificateX509 cert, String plainText, String signature) {
-		/******** INPUT VERIFICATION - BEGIN ********/
-		if(cert == null)
-		{
-			error.setError("AE009", "Certificate cannot be null");
-			return false;
-		}
-		if(plainText == null || plainText.length() == 0 || SecurityUtils.compareStrings("", plainText))
-		{
-			error.setError("AE010", "The plainText value to verify cannot be empty");
-			return false;
-		}
-		if(signature == null || signature.length() == 0 || SecurityUtils.compareStrings("", signature))
-		{
-			error.setError("AE011", "The signature value to verify cannot be empty");
-			return false;
-		}
-		/******** INPUT VERIFICATION - END ********/
+		this.error.cleanError();
 		
-		
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateObjectInput("cert", cert, this.error);
+		SecurityUtils.validateStringInput("plainText", plainText, this.error);
+		SecurityUtils.validateStringInput("signature", signature,  this.error);
+		if(this.hasError()) { return false;} 
+		/*******INPUT VERIFICATION - END*******/
+				
 		EncodingUtil eu = new EncodingUtil();
 		byte[] inputText = eu.getBytes(plainText);
 		if (eu.hasError()) {
@@ -136,30 +107,21 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 			result = verify(cert, inputStream, signature);
 		}catch(Exception e)
 		{
-			error.setError("AE012", e.getMessage() );
+			error.setError("AS003", e.getMessage() );
 		}
 		return result;
 	}
 
 	@Override
 	public boolean doVerifyFile(CertificateX509 cert, String path, String signature) {
-		/******** INPUT VERIFICATION - BEGIN ********/
-		if(cert == null)
-		{
-			error.setError("AE013", "Certificate cannot be null");
-			return false;
-		}
-		if(path == null || path.length() == 0 || SecurityUtils.compareStrings("", path))
-		{
-			error.setError("AE014", "The path value of the faile to verify cannot be empty");
-			return false;
-		}
-		if(signature == null || signature.length() == 0 || SecurityUtils.compareStrings("", signature))
-		{
-			error.setError("AE015", "The signature value to verify cannot be empty");
-			return false;
-		}
-		/******** INPUT VERIFICATION - END ********/
+		this.error.cleanError();
+
+		/*******INPUT VERIFICATION - BEGIN*******/
+		SecurityUtils.validateObjectInput("cert", cert, this.error);
+		SecurityUtils.validateStringInput("path", path, this.error);
+		SecurityUtils.validateStringInput("signature", signature,  this.error);
+		if(this.hasError()) { return false;} 
+		/*******INPUT VERIFICATION - END*******/
 		
 		boolean result = false;
 		try(InputStream input = SecurityUtils.getFileStream(path, this.error))
@@ -170,13 +132,13 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 			result = verify(cert, input, signature);
 		}catch(Exception e)
 		{
-			error.setError("AE016", e.getMessage());
+			error.setError("AS004", e.getMessage());
 		}
 		return result;
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
-
+	
 	private String sign(PrivateKey key, String hashAlgorithm, InputStream input) {
 		PrivateKeyManager keyMan = (PrivateKeyManager) key;
 		if (keyMan.hasError()) {
@@ -195,14 +157,14 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 		try {
 			outputBytes = signer.generateSignature();
 		} catch (Exception e) {
-			error.setError("AE01", e.getMessage());
+			error.setError("AS005", e.getMessage());
 			return "";
 		}
 		String result = "";
 		try {
 			result = Base64.toBase64String(outputBytes);
 		} catch (Exception e) {
-			error.setError("AE018", e.getMessage());
+			error.setError("AS006", e.getMessage());
 			return "";
 		}
 		return result;
@@ -232,19 +194,14 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 		try {
 			signatureBytes = Base64.decode(signature);
 		} catch (Exception e) {
-			error.setError("AE019", e.getMessage());
-			return false;
-		}
-
-		if (signatureBytes == null || signatureBytes.length == 0) {
-			this.error.setError("AE020", "Error reading signature");
+			error.setError("AS007", e.getMessage());
 			return false;
 		}
 		boolean result = false;
 		try {
 			result = signer.verifySignature(signatureBytes);
 		} catch (Exception e) {
-			error.setError("AE021", e.getMessage());
+			error.setError("AS008", e.getMessage());
 			return false;
 		}
 		return result;
@@ -256,7 +213,7 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 		try {
 			signer.init(toSign, asymmetricKeyParameter);
 		} catch (Exception e) {
-			error.setError("AE022", e.getMessage());
+			error.setError("AS009", e.getMessage());
 			return;
 		}
 		byte[] buffer = new byte[8192];
@@ -266,7 +223,7 @@ public class AsymmetricSigner extends AsymmetricSignerObject {
 				signer.update(buffer, 0, n);
 			}
 		} catch (Exception e) {
-			error.setError("AE023", e.getMessage());
+			error.setError("AS010", e.getMessage());
 			return;
 		}
 	}

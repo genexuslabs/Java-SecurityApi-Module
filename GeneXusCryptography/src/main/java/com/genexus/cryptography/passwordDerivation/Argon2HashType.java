@@ -16,7 +16,7 @@ public enum Argon2HashType {
 		case "ARGON2_id":
 			return Argon2HashType.ARGON2_id;
 		default:
-			error.setError("A2001", "Unrecognized Arggon2HashType");
+			error.setError("PDH01", "Unrecognized Argon2HashType");
 			return null;
 		}
 
@@ -31,7 +31,7 @@ public enum Argon2HashType {
 		case ARGON2_id:
 			return "ARGON2_id";
 		default:
-			error.setError("A2002", "Unrecognized Arggon2HashType");
+			error.setError("PDH02", "Unrecognized Argon2HashType");
 			return "";
 		}
 	}
@@ -45,7 +45,7 @@ public enum Argon2HashType {
 		case ARGON2_id:
 			return Argon2Parameters.ARGON2_id;
 		default:
-			error.setError("A2003", "Unrecognized Arggon2HashType");
+			error.setError("PDH03", "Unrecognized Argon2HashType");
 			return 0;
 		}
 	}

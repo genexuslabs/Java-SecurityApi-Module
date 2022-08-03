@@ -25,13 +25,21 @@ public class Base64Encoder extends SecurityAPIObject {
 	 * @return Base64 String text encoded
 	 */
 	public String toBase64(String text) {
-		byte[] textBytes = new EncodingUtil().getBytes(text);
-		String result = new String(Base64.encode(textBytes));
-		if (result == null || result.length() == 0) {
-			this.error.setError("B64001", "Error encoding base64");
+		this.error.cleanError();
+		EncodingUtil eu = new EncodingUtil();
+		byte[] textBytes = eu.getBytes(text);
+		if(eu.hasError()) {
+			this.error = eu.getError();
 			return "";
 		}
-		this.error.cleanError();
+		String result = "";
+		try {
+			result =  Base64.toBase64String(textBytes);
+		}catch(Exception e)
+		{
+			this.error.setError("BS001", e.getMessage());
+			return "";
+		}
 		return result;
 	}
 
@@ -41,14 +49,22 @@ public class Base64Encoder extends SecurityAPIObject {
 	 * @return String UTF-8 plain text from Base64
 	 */
 	public String toPlainText(String base64Text) {
-		byte[] bytes = Base64.decode(base64Text);
-
-		String result = new EncodingUtil().getString(bytes);
-		if (result == null || result.length() == 0) {
-			this.error.setError("B64002", "Error decoding base64");
+		this.error.cleanError();
+		byte[] bytes;
+		try {
+			bytes = Base64.decode(base64Text);
+		}catch(Exception e)
+		{
+			this.error.setError("BS002", e.getMessage());
 			return "";
 		}
-		this.error.cleanError();
+		EncodingUtil eu = new EncodingUtil();
+		String result = eu.getString(bytes);
+		if(eu.hasError())
+		{
+			this.error = eu.getError();
+			return "";
+		}
 		return result;
 	}
 
@@ -58,17 +74,23 @@ public class Base64Encoder extends SecurityAPIObject {
 	 * @return String Hexa representation of base64Text
 	 */
 	public String toStringHexa(String base64Text) {
-		byte[] bytes = Base64.decode(base64Text);
-		StringBuilder sb = new StringBuilder();
-		for (byte b : bytes) {
-			sb.append(String.format("%02X ", b));
-		}
-		String result = sb.toString().replaceAll("\\s", "");
-		if (result == null || result.length() == 0) {
-			this.error.setError("B64003", "Error decoding base64 to hexa");
+		this.error.cleanError();
+		byte[] bytes;
+		try {
+			bytes = Base64.decode(base64Text);
+		}catch(Exception e)
+		{
+			this.error.setError("BS003", e.getMessage());
 			return "";
 		}
-		this.error.cleanError();
+		String result = "";
+		try {
+			result = Hex.toHexString(bytes).toUpperCase();
+		}catch(Exception e)
+		{
+			this.error.setError("BS004", e.getMessage());
+			return "";
+		}
 		return result;
 	}
 
@@ -78,13 +100,23 @@ public class Base64Encoder extends SecurityAPIObject {
 	 * @return String Base64 encoded of stringHexa
 	 */
 	public String fromStringHexaToBase64(String stringHexa) {
-		byte[] stringBytes = Hex.decode(stringHexa);
-		String result = new String(Base64.encode(stringBytes));
-		if (result == null || result.length() == 0) {
-			this.error.setError("B64004", "Error encoding base64 from hexa");
+		this.error.cleanError();
+		byte[] stringBytes;
+		try {
+			stringBytes = Hex.decode(stringHexa);
+		}catch(Exception e)
+		{
+			this.error.setError("BS005", e.getMessage());
 			return "";
 		}
-		this.error.cleanError();
+		String result = "";
+		try {
+			result = Base64.toBase64String(stringBytes);
+		}catch(Exception e)
+		{
+			this.error.setError("BS006", e.getMessage());
+			return "";
+		}
 		return result;
 	}
 }

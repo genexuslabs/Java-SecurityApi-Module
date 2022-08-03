@@ -15,7 +15,7 @@ public enum Argon2Version {
 		case "ARGON2_VERSION_13":
 			return Argon2Version.ARGON2_VERSION_13;
 		default:
-			error.setError("AR001", "Unrecognized Argon2Version");
+			error.setError("PDV01", "Unrecognized Argon2Version");
 			return null;
 		}
 	}
@@ -27,7 +27,7 @@ public enum Argon2Version {
 		case ARGON2_VERSION_13:
 			return "ARGON2_VERSION_13";
 		default:
-			error.setError("AR002", "Unrecognized Argon2Version");
+			error.setError("PDV02", "Unrecognized Argon2Version");
 			return "";
 		}
 	}
@@ -39,7 +39,7 @@ public enum Argon2Version {
 		case ARGON2_VERSION_13:
 			return Argon2Parameters.ARGON2_VERSION_13;
 		default:
-			error.setError("AR003", "Unrecognized Argon2Version");
+			error.setError("PDV03", "Unrecognized Argon2Version");
 			return 0;
 		}
 	}
