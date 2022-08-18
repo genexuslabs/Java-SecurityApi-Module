@@ -86,7 +86,7 @@ public enum JWTAlgorithm {
 	public static Algorithm getAsymmetricAlgorithm(JWTAlgorithm algorithm, PrivateKeyManager key, CertificateX509 cert,
 			Error error) {
 		if (!isPrivate(algorithm)) {
-			error.setError("JA005", "It is not an asymmetric algorithm name");
+			error.setError("JWA07", "It is not an asymmetric algorithm name");
 			return null;
 		} else {
 			switch (algorithm) {
@@ -100,7 +100,7 @@ public enum JWTAlgorithm {
 								: Algorithm.RSA256(cert.getRSAPublicKey(), null);
 					}
 				} catch (Exception e) {
-					error.setError("JA007", e.getMessage());
+					error.setError("JWA08", e.getMessage());
 					return null;
 				}
 			case RS512:
@@ -113,7 +113,7 @@ public enum JWTAlgorithm {
 								: Algorithm.RSA512(cert.getRSAPublicKey(), null);
 					}
 				} catch (Exception e) {
-					error.setError("JA008", e.getMessage());
+					error.setError("JWA09", e.getMessage());
 					return null;
 				}
 			case ES256:
@@ -126,7 +126,7 @@ public enum JWTAlgorithm {
 								: Algorithm.ECDSA256(cert.getECPublicKeyJWT(), null);
 					}
 				} catch (Exception e) {
-					error.setError("JA008", e.getMessage());
+					error.setError("JWA10", e.getMessage());
 					return null;
 				}
 			case ES384:
@@ -139,7 +139,7 @@ public enum JWTAlgorithm {
 								: Algorithm.ECDSA384(cert.getECPublicKeyJWT(), null);
 					}
 				} catch (Exception e) {
-					error.setError("JA008", e.getMessage());
+					error.setError("JWA11", e.getMessage());
 					return null;
 				}
 			case ES512:
@@ -152,11 +152,11 @@ public enum JWTAlgorithm {
 								: Algorithm.ECDSA512(cert.getECPublicKeyJWT(), null);
 					}
 				} catch (Exception e) {
-					error.setError("JA008", e.getMessage());
+					error.setError("JWA12", e.getMessage());
 					return null;
 				}
 			default:
-				error.setError("JA006", "Unknown asymmetric algorithm");
+				error.setError("JWA13", "Unknown asymmetric algorithm");
 				return null;
 			}
 		}

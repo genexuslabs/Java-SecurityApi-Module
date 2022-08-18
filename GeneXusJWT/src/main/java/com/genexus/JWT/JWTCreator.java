@@ -313,7 +313,7 @@ public class JWTCreator extends JWTObject {
 					} else if (obj instanceof Boolean) {
 						tokenBuilder.withClaim(privateC.get(i).getKey(), (boolean) privateC.get(i).getValue());
 					} else {
-						this.error.setError("JW012", "Unrecognized data type");
+						this.error.setError("JW016", "Unrecognized data type");
 					}
 					// tokenBuilder.withClaim(privateC.get(i).getKey(), privateC.get(i).getValue());
 				}
