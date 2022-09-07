@@ -1,5 +1,8 @@
 package com.genexus.cryptography.symmetric;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.BufferedBlockCipher;
 import org.bouncycastle.crypto.engines.AESEngine;
@@ -89,23 +92,33 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 			String nonce, String plainText) {
 		this.error.cleanError();
 
-		/*******INPUT VERIFICATION - BEGIN*******/
+		/******* INPUT VERIFICATION - BEGIN *******/
 		SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
 		SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
 		SecurityUtils.validateStringInput("key", key, this.error);
 		SecurityUtils.validateStringInput("nonce", nonce, this.error);
 		SecurityUtils.validateStringInput("plainText", plainText, this.error);
-		if(this.hasError()) { return "";};	
-		/*******INPUT VERIFICATION - END*******/
-		
+		if (this.hasError()) {
+			return "";
+		}
+		;
+		/******* INPUT VERIFICATION - END *******/
+
 		EncodingUtil eu = new EncodingUtil();
 		byte[] txtBytes = eu.getBytes(plainText);
-		if(eu.hasError()) {this.error = eu.getError(); }
-		if (this.hasError()) { return ""; }
-		
-		byte[] encryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, null,nonce, key, txtBytes, macSize, true, true);
-		if (this.hasError()) { return ""; }
-		
+		if (eu.hasError()) {
+			this.error = eu.getError();
+		}
+		if (this.hasError()) {
+			return "";
+		}
+
+		byte[] encryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, null, nonce, key, txtBytes, macSize,
+				true, true, false, null, null);
+		if (this.hasError()) {
+			return "";
+		}
+
 		return Strings.fromByteArray(Base64.encode(encryptedBytes)).trim();
 
 	}
@@ -126,28 +139,33 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	public String doAEADDecrypt(String symmetricBlockAlgorithm, String symmetricBlockMode, String key, int macSize,
 			String nonce, String encryptedInput) {
 		this.error.cleanError();
-		
-		/*******INPUT VERIFICATION - BEGIN*******/
+
+		/******* INPUT VERIFICATION - BEGIN *******/
 		SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
 		SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
 		SecurityUtils.validateStringInput("key", key, this.error);
 		SecurityUtils.validateStringInput("nonce", nonce, this.error);
 		SecurityUtils.validateStringInput("encryptedInput", encryptedInput, this.error);
-		if(this.hasError()) { return "";};	
-		/*******INPUT VERIFICATION - END*******/
-		
+		if (this.hasError()) {
+			return "";
+		}
+		;
+		/******* INPUT VERIFICATION - END *******/
+
 		byte[] input = null;
 		try {
 			input = Base64.decode(encryptedInput);
-		}catch(Exception e)
-		{
+		} catch (Exception e) {
 			this.error.setError("SB001", e.getMessage());
 			return "";
 		}
-				
-		byte[] decryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, null, nonce, key, input, macSize, false, true);
-		if (this.hasError()) {return "";}
-		
+
+		byte[] decryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, null, nonce, key, input, macSize,
+				false, true, false, null, null);
+		if (this.hasError()) {
+			return "";
+		}
+
 		EncodingUtil eu = new EncodingUtil();
 		String result = eu.getString(decryptedBytes);
 		if (eu.hasError()) {
@@ -173,27 +191,33 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	public String doEncrypt(String symmetricBlockAlgorithm, String symmetricBlockMode, String symmetricBlockPadding,
 			String key, String IV, String plainText) {
 		this.error.cleanError();
-		
-		/*******INPUT VERIFICATION - BEGIN*******/
+
+		/******* INPUT VERIFICATION - BEGIN *******/
 		SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
 		SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
 		SecurityUtils.validateStringInput("symmetricBlockPadding", symmetricBlockPadding, this.error);
 		SecurityUtils.validateStringInput("key", key, this.error);
 		SecurityUtils.validateStringInput("IV", IV, this.error);
 		SecurityUtils.validateStringInput("plainText", plainText, this.error);
-		if(this.hasError()) { return "";};	
-		/*******INPUT VERIFICATION - END*******/
-		
+		if (this.hasError()) {
+			return "";
+		}
+		;
+		/******* INPUT VERIFICATION - END *******/
+
 		EncodingUtil eu = new EncodingUtil();
 		byte[] inputBytes = eu.getBytes(plainText);
 		if (eu.hasError()) {
 			this.error = eu.getError();
 			return "";
 		}
-		
-		byte[] encryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, IV, key, inputBytes, 0, true, false);
-		if(this.hasError()){ return ""; }
-		
+
+		byte[] encryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, IV, key,
+				inputBytes, 0, true, false, false, null, null);
+		if (this.hasError()) {
+			return "";
+		}
+
 		return Strings.fromByteArray(Base64.encode(encryptedBytes)).trim();
 	}
 
@@ -213,29 +237,34 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 	public String doDecrypt(String symmetricBlockAlgorithm, String symmetricBlockMode, String symmetricBlockPadding,
 			String key, String IV, String encryptedInput) {
 		this.error.cleanError();
-		
-		/*******INPUT VERIFICATION - BEGIN*******/
+
+		/******* INPUT VERIFICATION - BEGIN *******/
 		SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
 		SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
 		SecurityUtils.validateStringInput("symmetricBlockPadding", symmetricBlockPadding, this.error);
 		SecurityUtils.validateStringInput("key", key, this.error);
 		SecurityUtils.validateStringInput("IV", IV, this.error);
 		SecurityUtils.validateStringInput("encryptedInput", encryptedInput, this.error);
-		if(this.hasError()) { return "";};	
-		/*******INPUT VERIFICATION - END*******/
-		
+		if (this.hasError()) {
+			return "";
+		}
+		;
+		/******* INPUT VERIFICATION - END *******/
+
 		byte[] input = null;
 		try {
 			input = Base64.decode(encryptedInput);
-		}catch(Exception e)
-		{
+		} catch (Exception e) {
 			this.error.setError("SB002", e.getMessage());
 			return "";
 		}
-		
-		byte[] decryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, IV, key, input, 0, false, false);
-		if(this.hasError()) { return ""; }
-		
+
+		byte[] decryptedBytes = setUp(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, IV, key,
+				input, 0, false, false, false, null, null);
+		if (this.hasError()) {
+			return "";
+		}
+
 		EncodingUtil eu = new EncodingUtil();
 		String result = eu.getString(decryptedBytes);
 		if (eu.hasError()) {
@@ -244,6 +273,83 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 		}
 		return result.trim();
 
+	}
+
+	public boolean doAEADEncryptFile(String symmetricBlockAlgorithm, String symmetricBlockMode, String key, int macSize,
+			String nonce, String pathInputFile, String pathOutputFile) {
+		this.error.cleanError();
+
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+		SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
+		SecurityUtils.validateStringInput("key", key, this.error);
+		SecurityUtils.validateStringInput("nonce", nonce, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		;
+		/******* INPUT VERIFICATION - END *******/
+
+		return setUpFile(symmetricBlockAlgorithm, symmetricBlockMode, null, nonce, key, pathInputFile, pathOutputFile,
+				macSize, true, true);
+	}
+
+	public boolean doAEADDecryptFile(String symmetricBlockAlgorithm, String symmetricBlockMode, String key, int macSize,
+			String nonce, String pathInputFile, String pathOutputFile) {
+		this.error.cleanError();
+
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+		SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
+		SecurityUtils.validateStringInput("key", key, this.error);
+		SecurityUtils.validateStringInput("nonce", nonce, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		;
+		/******* INPUT VERIFICATION - END *******/
+
+		return setUpFile(symmetricBlockAlgorithm, symmetricBlockMode, null, nonce, key, pathInputFile, pathOutputFile,
+				macSize, false, true);
+	}
+
+	public boolean doEncryptFile(String symmetricBlockAlgorithm, String symmetricBlockMode,
+			String symmetricBlockPadding, String key, String IV, String pathInputFile, String pathOutputFile) {
+		this.error.cleanError();
+
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+		SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
+		SecurityUtils.validateStringInput("symmetricBlockPadding", symmetricBlockPadding, this.error);
+		SecurityUtils.validateStringInput("key", key, this.error);
+		SecurityUtils.validateStringInput("IV", IV, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		;
+		/******* INPUT VERIFICATION - END *******/
+
+		return setUpFile(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, IV, key, pathInputFile,
+				pathOutputFile, 0, true, false);
+	}
+
+	public boolean doDecryptFile(String symmetricBlockAlgorithm, String symmetricBlockMode,
+			String symmetricBlockPadding, String key, String IV, String pathInputFile, String pathOutputFile) {
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("symmetricBlockAlgorithm", symmetricBlockAlgorithm, this.error);
+		SecurityUtils.validateStringInput("symmetricBlockMode", symmetricBlockMode, this.error);
+		SecurityUtils.validateStringInput("symmetricBlockPadding", symmetricBlockPadding, this.error);
+		SecurityUtils.validateStringInput("key", key, this.error);
+		SecurityUtils.validateStringInput("IV", IV, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		;
+		/******* INPUT VERIFICATION - END *******/
+
+		return setUpFile(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, IV, key, pathInputFile,
+				pathOutputFile, 0, false, false);
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
@@ -522,38 +628,44 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 		}
 		return bc;
 	}
-	
-	private byte[] setUp(String symmetricBlockAlgorithm, String symmetricBlockMode, String symmetricBlockPadding, String nonce, String key, byte[] input, int macSize, boolean toEncrypt, boolean isAEAD)
-	{
+
+	private byte[] setUp(String symmetricBlockAlgorithm, String symmetricBlockMode, String symmetricBlockPadding,
+			String nonce, String key, byte[] input, int macSize, boolean toEncrypt, boolean isAEAD, boolean isFile,
+			String pathInput, String pathOutput) {
 		SymmetricBlockAlgorithm algorithm = SymmetricBlockAlgorithm.getSymmetricBlockAlgorithm(symmetricBlockAlgorithm,
 				this.error);
 		SymmetricBlockMode mode = SymmetricBlockMode.getSymmetricBlockMode(symmetricBlockMode, this.error);
 		SymmetricBlockPadding padding = null;
-		if(!isAEAD)
-		{
-			 padding = SymmetricBlockPadding.getSymmetricBlockPadding(symmetricBlockPadding,
-					this.error);
+		if (!isAEAD) {
+			padding = SymmetricBlockPadding.getSymmetricBlockPadding(symmetricBlockPadding, this.error);
 		}
 
 		byte[] nonceBytes = SecurityUtils.hexaToByte(nonce, this.error);
 		byte[] keyBytes = SecurityUtils.hexaToByte(key, this.error);
-		
-		if(this.hasError()) { return null; }
 
-		return isAEAD? encryptAEAD(algorithm,  mode, keyBytes, nonceBytes, input, macSize,  toEncrypt):	encrypt(algorithm, mode, padding, keyBytes, nonceBytes, input, toEncrypt);
-		
+		if (this.hasError()) {
+			return null;
+		}
+
+		return isAEAD
+				? encryptAEAD(algorithm, mode, keyBytes, nonceBytes, input, macSize, toEncrypt, isFile, pathInput,
+						pathOutput)
+				: encrypt(algorithm, mode, padding, keyBytes, nonceBytes, input, toEncrypt, isFile, pathInput,
+						pathOutput);
+
 	}
-	
-	
-	private byte[] encryptAEAD(SymmetricBlockAlgorithm algorithm, SymmetricBlockMode mode, byte[] key, byte[] nonce, byte[] txt, int macSize, boolean toEncrypt)
-	{
+
+	private byte[] encryptAEAD(SymmetricBlockAlgorithm algorithm, SymmetricBlockMode mode, byte[] key, byte[] nonce,
+			byte[] txt, int macSize, boolean toEncrypt, boolean isFile, String pathInput, String pathOutput) {
 		BlockCipher engine = getCipherEngine(algorithm);
 		AEADBlockCipher bbc = getAEADCipherMode(engine, mode);
-		if(this.hasError()) { return null; }
-	
+		if (this.hasError()) {
+			return null;
+		}
+
 		KeyParameter keyParam = new KeyParameter(key);
 		AEADParameters AEADparams = new AEADParameters(keyParam, macSize, nonce);
-		
+
 		try {
 			bbc.init(toEncrypt, AEADparams);
 		} catch (Exception e) {
@@ -561,47 +673,121 @@ public class SymmetricBlockCipher extends SymmetricBlockCipherObject {
 			return null;
 		}
 
-		byte[] outputBytes = new byte[bbc.getOutputSize(txt.length)];
-		try {
-		
-			int length = bbc.processBytes(txt, 0, txt.length, outputBytes, 0);
-			bbc.doFinal(outputBytes, length);
-		} catch (Exception e) {
-			this.error.setError("SB008", e.getMessage());
-			return null;
+		byte[] outputBytes = null;
+		if (isFile) {
+			try {
+				byte[] inBuffer = new byte[1024];
+				byte[] outBuffer = new byte[bbc.getOutputSize(1024)];
+				
+				outBuffer = new byte[bbc.getUnderlyingCipher().getBlockSize() + bbc.getOutputSize(inBuffer.length)];
+				int inCount = 0;
+				int outCount = 0;
+				try (FileInputStream inputStream = new FileInputStream(pathInput)) {
+					try (FileOutputStream outputStream = new FileOutputStream(pathOutput)) {
+						while ((inCount = inputStream.read(inBuffer, 0, inBuffer.length)) > 0) {
+							outCount = bbc.processBytes(inBuffer, 0, inCount, outBuffer, 0);
+							outputStream.write(outBuffer, 0, outCount);
+						}
+						outCount = bbc.doFinal(outBuffer, 0);
+
+						outputStream.write(outBuffer, 0, outCount);
+					}
+				}
+			} catch (Exception e) {
+				this.error.setError("SB012", e.getMessage());
+				return null;
+			}
+			outputBytes = new byte[1];
+		} else {
+
+			outputBytes = new byte[bbc.getOutputSize(txt.length)];
+			try {
+
+				int length = bbc.processBytes(txt, 0, txt.length, outputBytes, 0);
+				bbc.doFinal(outputBytes, length);
+			} catch (Exception e) {
+				this.error.setError("SB008", e.getMessage());
+				return null;
+			}
 		}
 		return outputBytes;
 	}
-	
 
-	
-	private byte[] encrypt(SymmetricBlockAlgorithm algorithm, SymmetricBlockMode mode, SymmetricBlockPadding padding, byte[] key, byte[] iv, byte[] input, boolean toEncrypt)
-	{
-		if(padding == null) {return null;}
-		
+	private byte[] encrypt(SymmetricBlockAlgorithm algorithm, SymmetricBlockMode mode, SymmetricBlockPadding padding,
+			byte[] key, byte[] iv, byte[] input, boolean toEncrypt, boolean isFile, String pathInput,
+			String pathOutput) {
+		if (padding == null) {
+			return null;
+		}
+
 		BufferedBlockCipher bbc = getCipher(algorithm, mode, padding);
 		KeyParameter keyParam = new KeyParameter(key);
-		if(this.hasError()) { return null; }
+		if (this.hasError()) {
+			return null;
+		}
 
 		try {
 			if (SymmetricBlockMode.ECB != mode && SymmetricBlockMode.OPENPGPCFB != mode) {
 				ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, iv);
 				bbc.init(toEncrypt, keyParamWithIV);
-			}else {
+			} else {
 				bbc.init(toEncrypt, keyParam);
 			}
-		}catch(Exception e) {
+		} catch (Exception e) {
 			this.error.setError("SB009", e.getMessage());
 			return null;
 		}
-		byte[] outputBytes = new byte[bbc.getOutputSize(input.length)];
-		try {
-			int length = bbc.processBytes(input, 0, input.length, outputBytes, 0);
-			bbc.doFinal(outputBytes, length);
-		} catch (Exception e) {
-			this.error.setError("SB010", e.getMessage());
-			return null;
+
+		byte[] outputBytes = null;
+		if (isFile) {
+			try {
+				byte[] inBuffer = new byte[1024];
+				byte[] outBuffer = new byte[bbc.getOutputSize(1024)];
+				outBuffer = new byte[bbc.getBlockSize() + bbc.getOutputSize(inBuffer.length)];
+				int inCount = 0;
+				int outCount = 0;
+				try (FileInputStream inputStream = new FileInputStream(pathInput)) {
+					try (FileOutputStream outputStream = new FileOutputStream(pathOutput)) {
+						while ((inCount = inputStream.read(inBuffer, 0, inBuffer.length)) > 0) {
+							outCount = bbc.processBytes(inBuffer, 0, inCount, outBuffer, 0);
+							outputStream.write(outBuffer, 0, outCount);
+						}
+						outCount = bbc.doFinal(outBuffer, 0);
+
+						outputStream.write(outBuffer, 0, outCount);
+					}
+				}
+			} catch (Exception e) {
+				this.error.setError("SB012", e.getMessage());
+				return null;
+			}
+			outputBytes = new byte[1];
+		} else {
+			outputBytes = new byte[bbc.getOutputSize(input.length)];
+			try {
+				int length = bbc.processBytes(input, 0, input.length, outputBytes, 0);
+				bbc.doFinal(outputBytes, length);
+			} catch (Exception e) {
+				this.error.setError("SB010", e.getMessage());
+				return null;
+			}
 		}
 		return outputBytes;
+	}
+
+	private boolean setUpFile(String symmetricBlockAlgorithm, String symmetricBlockMode, String symmetricBlockPadding,
+			String nonce, String key, String pathInput, String pathOutput, int macSize, boolean toEncrypt,
+			boolean isAEAD) {
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("pathInputFile", pathInput, this.error);
+		SecurityUtils.validateStringInput("pathOutputFile", pathOutput, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		;
+		/******* INPUT VERIFICATION - END *******/
+		byte[] output = setUp(symmetricBlockAlgorithm, symmetricBlockMode, symmetricBlockPadding, nonce, key, null,
+				macSize, toEncrypt, isAEAD, true, pathInput, pathOutput);
+		return output == null ? false : true;
 	}
 }
