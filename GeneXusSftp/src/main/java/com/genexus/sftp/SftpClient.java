@@ -26,24 +26,20 @@ public class SftpClient extends SftpClientObject {
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
 	public boolean connect(SftpOptions options) {
-		if(options.hasError())
-		{
+		if (options.hasError()) {
 			this.error = options.getError();
 			return false;
 		}
 		boolean useKey = false;
-		if (SecurityUtils.compareStrings("", options.getKeyPath()) || SecurityUtils.compareStrings("", options.getUser()) || SecurityUtils.compareStrings("", options.getKeyPassword())) {
-			useKey = false;
+		if (!SecurityUtils.compareStrings("", options.getKeyPath())) {
+			useKey = true;
+		} else {
 			if (SecurityUtils.compareStrings("", options.getUser())
 					|| SecurityUtils.compareStrings("", options.getPassword())) {
-				
-				this.error.setError("SF001", "Authentication misconfiguration");
+
+				this.error.setError("SF001", "Authentication misconfiguration. Missing user or password");
 				return false;
-			}else {
-				useKey = false;
 			}
-		}else {
-			useKey=true;
 		}
 		if (SecurityUtils.compareStrings("", options.getHost())) {
 			this.error.setError("SF003", "Empty host");
@@ -72,19 +68,18 @@ public class SftpClient extends SftpClientObject {
 			this.error.setError("SF005", "The channel is invalid, reconect");
 			return false;
 		}
-		
-		if(remoteDir.length() > 1) {
-			if(remoteDir.startsWith("\\") || remoteDir.startsWith("/"))
-			{
+
+		if (remoteDir.length() > 1) {
+			if (remoteDir.startsWith("\\") || remoteDir.startsWith("/")) {
 				remoteDir = remoteDir.substring(1, remoteDir.length());
 			}
-		}	
+		}
 		try {
 			this.channel.put(localPath, remoteDir);
 		} catch (SftpException e) {
 			if (SecurityUtils.compareStrings(rDir, "/") || SecurityUtils.compareStrings(rDir, "\\")) {
 				try {
-					 this.channel.put(localPath, getFileName(localPath));
+					this.channel.put(localPath, getFileName(localPath));
 				} catch (SftpException s) {
 					this.error.setError("SF006", s.getMessage());
 					return false;
@@ -123,16 +118,13 @@ public class SftpClient extends SftpClientObject {
 		if (this.channel != null) {
 			this.channel.disconnect();
 		}
-		if(this.session != null)
-		{
+		if (this.session != null) {
 			this.session.disconnect();
 		}
 	}
-	
-	public String getWorkingDirectory()
-	{
-		if (this.channel != null)
-		{
+
+	public String getWorkingDirectory() {
+		if (this.channel != null) {
 			try {
 				return this.channel.pwd();
 			} catch (SftpException e) {
@@ -147,22 +139,21 @@ public class SftpClient extends SftpClientObject {
 
 	private ChannelSftp setupJsch(SftpOptions options, boolean useKey) throws JSchException {
 		JSch jsch = new JSch();
-		
-		
-		if (useKey) { 
+
+		if (useKey) {
 			jsch.addIdentity(options.getKeyPath(), options.getKeyPassword());
-			
-			this.session = jsch.getSession(options.getUser(),options.getHost());
-			if(options.getAllowHostKeyChecking()) {
-				if(SecurityUtils.compareStrings("", options.getKnownHostsPath()))
-				{
-					this.error.setError("SF009", "Options misconfiguration, known_hosts path is empty but host key checking is true");
+
+			this.session = jsch.getSession(options.getUser(), options.getHost());
+			if (options.getAllowHostKeyChecking()) {
+				if (SecurityUtils.compareStrings("", options.getKnownHostsPath())) {
+					this.error.setError("SF009",
+							"Options misconfiguration, known_hosts path is empty but host key checking is true");
 				}
 				jsch.setKnownHosts(options.getKnownHostsPath());
-			}else {
+			} else {
 				this.session.setConfig("StrictHostKeyChecking", "no");
 			}
-			
+
 		} else {
 			this.session = jsch.getSession(options.getUser(), options.getHost(), options.getPort());
 			this.session.setPassword(options.getPassword());
@@ -171,9 +162,8 @@ public class SftpClient extends SftpClientObject {
 		this.session.connect();
 		return (ChannelSftp) this.session.openChannel("sftp");
 	}
-	
-	private String getFileName(String path)
-	{
+
+	private String getFileName(String path) {
 		Path p = Paths.get(path);
 		return p.getFileName().toString();
 	}
