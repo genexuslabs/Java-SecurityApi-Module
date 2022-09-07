@@ -23,7 +23,7 @@ public class RevocationList extends SecurityAPIObject {
 				return true; 
 			}
 		}
-		this.error.setError("OP001", "The " + id + " id is not in the revocation list");
+		this.error.setError("REL01", String.format("The id %s is not in the revocation list", id));
 		return false;
 	}
 

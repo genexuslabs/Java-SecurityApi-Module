@@ -30,7 +30,7 @@ public class Claims {
 				return claims.get(i).getValue();
 			}
 		}
-		error.setError("CL001", "Could not find a claim with" + key + " key value");
+		error.setError("CLA01", String.format("Could not find a claim with %s key value", key));
 		return "";
 	}
 

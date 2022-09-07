@@ -19,7 +19,7 @@ public final class RegisteredClaims extends Claims {
 
 	@Override
 	public boolean setClaim(String key, Object value, Error error) {
-		error.setError("RC001", "Not alllowed data type");
+		error.setError("RCS01", "Not alllowed data type");
 		return false;
 	}
 
@@ -27,7 +27,7 @@ public final class RegisteredClaims extends Claims {
 		if (RegisteredClaim.exists(key)) {
 			return super.setClaim(key, value, error);
 		} else {
-			error.setError("RC001", "Wrong registered key value");
+			error.setError("RCS02", "Wrong registered key value");
 			return false;
 		}
 	}
@@ -37,7 +37,7 @@ public final class RegisteredClaims extends Claims {
 			customTimeValidationClaims.put(key, customValidationSeconds);
 			return setClaim(key, value, error);
 		} else {
-			error.setError("RC001", "Wrong registered key value");
+			error.setError("RCS02", "Wrong registered key value");
 			return false;
 		}
 	}
@@ -70,10 +70,10 @@ public final class RegisteredClaims extends Claims {
 					return claims.get(i).getValue();
 				}
 			}
-			error.setError("RC001", "Could not find a claim with" + key + " key value");
+			error.setError("RCS03", String.format("Could not find a claim with %s key value", key));
 			return "";
 		} else {
-			error.setError("RC002", "Wrong registered key value");
+			error.setError("RCS02", "Wrong registered key value");
 			return "";
 		}
 	}
