@@ -46,7 +46,12 @@ public class JWTCreator extends JWTObject {
 
 	public String doCreate(String algorithm, PrivateClaims privateClaims, JWTOptions options) {
 		this.error.cleanError();
-		return create_Aux(algorithm, privateClaims, options);
+		return create_Aux(algorithm, privateClaims, options, null, true);
+	}
+	
+	public String doCreateFromJSON(String algorithm, String json, JWTOptions options) {
+		this.error.cleanError();
+		return create_Aux(algorithm, null, options, json, false);
 	}
 
 	public boolean doVerify(String token, String expectedAlgorithm, PrivateClaims privateClaims, JWTOptions options) {
@@ -104,9 +109,12 @@ public class JWTCreator extends JWTObject {
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
-	private String create_Aux(String algorithm, PrivateClaims privateClaims, JWTOptions options) {
-		if (options == null) {
-			this.error.setError("JW004", "Options parameter is null");
+	@SuppressWarnings("unchecked")
+	private String create_Aux(String algorithm, PrivateClaims privateClaims, JWTOptions options, String payload,
+			boolean hasClaims) {
+		if (options == null)
+		{
+			this.error.setError("JW000", "Options parameter is null");
 			return "";
 		}
 		JWTAlgorithm alg = JWTAlgorithm.getJWTAlgorithm(algorithm, this.error);
@@ -118,11 +126,24 @@ public class JWTCreator extends JWTObject {
 			HeaderParameters parameters = options.getHeaderParameters();
 			tokenBuilder.withHeader(parameters.getMap());
 		}
-		if (privateClaims == null) {
-			this.error.setError("JW005", "PrivateClaims parameter is null");
-			return "";
+		if (hasClaims) {
+			if(privateClaims == null)
+			{
+				this.error.setError("JW000", "PrivateClaims parameter is null");
+				return "";
+			}
+			tokenBuilder = doBuildPayload(tokenBuilder, privateClaims, options);
+		} else {
+			ObjectMapper objectMapper = new ObjectMapper();
+			HashMap<String, Object> map = null;
+			try {
+				map = objectMapper.readValue(payload, HashMap.class);
+			} catch (Exception e) {
+				this.error.setError("", e.getMessage());
+				return "";
+			}
+			tokenBuilder.withPayload(map);
 		}
-		tokenBuilder = doBuildPayload(tokenBuilder, privateClaims, options);
 		if (this.hasError()) {
 			return "";
 		}
@@ -151,7 +172,7 @@ public class JWTCreator extends JWTObject {
 		try {
 			signedJwt = tokenBuilder.sign(algorithmType);
 		} catch (Exception e) {
-			this.error.setError("JW006", e.getMessage());
+			this.error.setError("JW003", e.getMessage());
 			return "";
 		}
 
