@@ -6,6 +6,8 @@ import com.genexus.JWT.claims.HeaderParameters;
 import com.genexus.JWT.claims.PublicClaims;
 import com.genexus.JWT.claims.RegisteredClaims;
 import com.genexus.JWT.utils.RevocationList;
+import com.genexus.securityapicommons.commons.Key;
+import com.genexus.securityapicommons.commons.PublicKey;
 import com.genexus.securityapicommons.commons.SecurityAPIObject;
 import com.genexus.securityapicommons.keys.CertificateX509;
 import com.genexus.securityapicommons.keys.PrivateKeyManager;
@@ -19,6 +21,7 @@ public class JWTOptions extends SecurityAPIObject {
 	private RevocationList revocationList;
 	private CertificateX509 certificate;
 	private PrivateKeyManager privateKey;
+	private PublicKey publicKey;
 	private HeaderParameters parameters;
 
 	public JWTOptions() {
@@ -32,6 +35,10 @@ public class JWTOptions extends SecurityAPIObject {
 
 	public void setPrivateKey(PrivateKeyManager key) {
 		this.privateKey = key;
+	}
+	
+	public void setPublicKey(PublicKey key) {
+		this.publicKey = key;
 	}
 	
 	public void setCertificate(CertificateX509 cert) {
@@ -81,9 +88,13 @@ public class JWTOptions extends SecurityAPIObject {
 		this.parameters.setParameter(name, value);
 	}
 
-
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
+	public PublicKey getPublicKey()
+	{
+		return (this.certificate == null) ? this.publicKey: this.certificate;
+	}
+	
 	public boolean hasPublicClaims() {
 		return !publicClaims.isEmpty();
 	}
@@ -117,9 +128,9 @@ public class JWTOptions extends SecurityAPIObject {
 		return this.revocationList;
 	}
 
-	public CertificateX509 getCertificate() {
+	/*public CertificateX509 getCertificate() {
 		return this.certificate;
-	}
+	}*/
 	
 	public PrivateKeyManager getPrivateKey() {
 		return this.privateKey;

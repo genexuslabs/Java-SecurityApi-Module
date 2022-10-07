@@ -33,6 +33,13 @@ public class Error {
 		this.code = "";
 		this.description = "";
 	}
+	
+	public Error(String code, String description)
+	{
+		this.code = code;
+		this.description = description;
+		this.exists = true;
+	}
 
 	/**
 	 * Set error values

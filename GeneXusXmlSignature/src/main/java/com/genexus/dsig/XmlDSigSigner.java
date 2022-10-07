@@ -20,6 +20,7 @@ import org.w3c.dom.Node;
 import com.genexus.commons.DSigOptions;
 import com.genexus.config.Config;
 import com.genexus.securityapicommons.commons.Certificate;
+import com.genexus.securityapicommons.commons.Key;
 import com.genexus.securityapicommons.commons.SecurityAPIObject;
 import com.genexus.securityapicommons.keys.CertificateX509;
 import com.genexus.securityapicommons.keys.PrivateKeyManager;
@@ -54,54 +55,251 @@ public class XmlDSigSigner extends SecurityAPIObject {
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
 
-	public boolean doSignFile(String xmlFilePath, com.genexus.securityapicommons.commons.PrivateKey key,
+	public boolean doSignFile(String xmlFilePath, com.genexus.securityapicommons.commons.PrivateKey privateKey,
 			Certificate certificate, String outputPath, DSigOptions options) {
-		return Boolean.valueOf(axuiliarSign(xmlFilePath, key, certificate, outputPath, options, true, ""));
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("xmlFilePath", xmlFilePath, this.error);
+		SecurityUtils.validateObjectInput("privateKey", privateKey, this.error);
+		SecurityUtils.validateObjectInput("certificate", certificate, this.error);
+		SecurityUtils.validateStringInput("outputPath", outputPath, this.error);
+		SecurityUtils.validateObjectInput("options", options, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+		
+		return Boolean.valueOf(axuiliarSign(xmlFilePath, privateKey, certificate, outputPath, options, true, "", null));
+	}
+	
+	public boolean doSignFileWithPublicKey(String xmlFilePath, com.genexus.securityapicommons.commons.PrivateKey privateKey, com.genexus.securityapicommons.commons.PublicKey publicKey, String outputPath, DSigOptions options, String hash) {
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("xmlFilePath", xmlFilePath, this.error);
+		SecurityUtils.validateObjectInput("privateKey", privateKey, this.error);
+		SecurityUtils.validateObjectInput("publicKey", publicKey, this.error);
+		SecurityUtils.validateStringInput("outputPath", outputPath, this.error);
+		SecurityUtils.validateObjectInput("options", options, this.error);
+		SecurityUtils.validateStringInput("hash", hash, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+		
+		return Boolean.valueOf(axuiliarSign(xmlFilePath, privateKey, publicKey, outputPath, options, true, "", hash));
 	}
 
-	public String doSign(String xmlInput, com.genexus.securityapicommons.commons.PrivateKey key,
+	public String doSign(String xmlInput, com.genexus.securityapicommons.commons.PrivateKey privateKey,
 			Certificate certificate, DSigOptions options) {
-		return axuiliarSign(xmlInput, key, certificate, "", options, false, "");
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("xmlInput", xmlInput, this.error);
+		SecurityUtils.validateObjectInput("privateKey", privateKey, this.error);
+		SecurityUtils.validateObjectInput("certificate", certificate, this.error);
+		SecurityUtils.validateObjectInput("options", options, this.error);
+		if (this.hasError()) {
+			return "";
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+		
+		return axuiliarSign(xmlInput, privateKey, certificate, "", options, false, "", null);
+	}
+	
+	public String doSignWithPublicKey(String xmlInput, com.genexus.securityapicommons.commons.PrivateKey privateKey , com.genexus.securityapicommons.commons.PublicKey publicKey,DSigOptions options, String hash) {
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("xmlInput", xmlInput, this.error);
+		SecurityUtils.validateObjectInput("privateKey", privateKey, this.error);
+		SecurityUtils.validateObjectInput("publicKey", publicKey, this.error);
+		SecurityUtils.validateObjectInput("options", options, this.error);
+		SecurityUtils.validateStringInput("hash", hash, this.error);
+		if (this.hasError()) {
+			return "";
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+		
+		return axuiliarSign(xmlInput, privateKey, publicKey, "", options, false, "", hash);
 	}
 
 	public boolean doSignFileElement(String xmlFilePath, String xPath,
-			com.genexus.securityapicommons.commons.PrivateKey key, Certificate certificate, String outputPath,
+			com.genexus.securityapicommons.commons.PrivateKey privateKey, Certificate certificate, String outputPath,
 			DSigOptions options) {
-		return Boolean.valueOf(axuiliarSign(xmlFilePath, key, certificate, outputPath, options, true, xPath));
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("xmlFilePath", xmlFilePath, this.error);
+		SecurityUtils.validateObjectInput("privateKey", privateKey, this.error);
+		SecurityUtils.validateObjectInput("certificate", certificate, this.error);
+		SecurityUtils.validateStringInput("outputPath", outputPath, this.error);
+		SecurityUtils.validateObjectInput("options", options, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+		
+		return Boolean.valueOf(axuiliarSign(xmlFilePath, privateKey, certificate, outputPath, options, true, xPath, null));
+	}
+	
+	public boolean doSignFileElementWithPublicKey(String xmlFilePath, String xPath,
+			com.genexus.securityapicommons.commons.PrivateKey privateKey, com.genexus.securityapicommons.commons.PublicKey publicKey, String outputPath,
+			DSigOptions options, String hash) {
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("xmlFilePath", xmlFilePath, this.error);
+		SecurityUtils.validateStringInput("xPath", xPath, this.error);
+		SecurityUtils.validateObjectInput("privateKey", privateKey, this.error);
+		SecurityUtils.validateObjectInput("publicKey", publicKey, this.error);
+		SecurityUtils.validateStringInput("outputPath", outputPath, this.error);
+		SecurityUtils.validateObjectInput("options", options, this.error);
+		SecurityUtils.validateStringInput("hash", hash, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+		
+		return Boolean.valueOf(axuiliarSign(xmlFilePath, privateKey, publicKey, outputPath, options, true, xPath, hash));
 	}
 
-	public String doSignElement(String xmlInput, String xPath, com.genexus.securityapicommons.commons.PrivateKey key,
+	public String doSignElement(String xmlInput, String xPath, com.genexus.securityapicommons.commons.PrivateKey privateKey,
 			Certificate certificate, DSigOptions options) {
-		return axuiliarSign(xmlInput, key, certificate, "", options, false, xPath);
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("xmlInput", xmlInput, this.error);
+		SecurityUtils.validateStringInput("xPath", xPath, this.error);
+		SecurityUtils.validateObjectInput("privateKey", privateKey, this.error);
+		SecurityUtils.validateObjectInput("certificate", certificate, this.error);
+		SecurityUtils.validateObjectInput("options", options, this.error);
+		if (this.hasError()) {
+			return "";
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+		
+		return axuiliarSign(xmlInput, privateKey, certificate, "", options, false, xPath, null);
+	}
+	
+	public String doSignElementWithPublicKey(String xmlInput, String xPath, com.genexus.securityapicommons.commons.PrivateKey privateKey, com.genexus.securityapicommons.commons.PublicKey publicKey
+			,DSigOptions options, String hash) {
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("xmlInput", xmlInput, this.error);
+		SecurityUtils.validateStringInput("xPath", xPath, this.error);
+		SecurityUtils.validateObjectInput("privateKey", privateKey, this.error);
+		SecurityUtils.validateObjectInput("publicKey", publicKey, this.error);
+		SecurityUtils.validateObjectInput("options", options, this.error);
+		SecurityUtils.validateStringInput("hash", hash, this.error);
+		if (this.hasError()) {
+			return "";
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+		
+		return axuiliarSign(xmlInput, privateKey, publicKey, "", options, false, xPath, hash);
 	}
 
 	public boolean doVerify(String xmlSigned, DSigOptions options) {
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("xmlSigned", xmlSigned, this.error);
+		SecurityUtils.validateObjectInput("options", options, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+		
 		return auxiliarVerify(xmlSigned, options, false, false, null);
 	}
 
 	public boolean doVerifyFile(String xmlFilePath, DSigOptions options) {
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("xmlFilePath", xmlFilePath, this.error);
+		SecurityUtils.validateObjectInput("options", options, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		/******* INPUT VERIFICATION - END *******/
+		
 		return auxiliarVerify(xmlFilePath, options, true, false, null);
 	}
 
 	public boolean doVerifyWithCert(String xmlSigned, Certificate certificate, DSigOptions options) {
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("xmlSigned", xmlSigned, this.error);
+		SecurityUtils.validateObjectInput("certificate", certificate, this.error);
+		SecurityUtils.validateObjectInput("options", options, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		/******* INPUT VERIFICATION - END *******/
+
 		return auxiliarVerify(xmlSigned, options, false, true, certificate);
+	
 	}
 
 	public boolean doVerifyFileWithCert(String xmlFilePath, Certificate certificate, DSigOptions options) {
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("xmlFilePath", xmlFilePath, this.error);
+		SecurityUtils.validateObjectInput("certificate", certificate, this.error);
+		SecurityUtils.validateObjectInput("options", options, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		/******* INPUT VERIFICATION - END *******/
+		
 		return auxiliarVerify(xmlFilePath, options, true, true, certificate);
+	}
+	
+	public boolean doVerifyWithPublicKey(String xmlSigned, com.genexus.securityapicommons.commons.PublicKey publicKey, DSigOptions options) {
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("xmlSigned", xmlSigned, this.error);
+		SecurityUtils.validateObjectInput("publicKey", publicKey, this.error);
+		SecurityUtils.validateObjectInput("options", options, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		/******* INPUT VERIFICATION - END *******/
+		
+		return auxiliarVerify(xmlSigned, options, false, true, publicKey);
+	}
+
+	public boolean doVerifyFileWithPublicKey(String xmlFilePath, com.genexus.securityapicommons.commons.PublicKey publicKey, DSigOptions options) {
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("xmlFilePath", xmlFilePath, this.error);
+		SecurityUtils.validateObjectInput("publicKey", publicKey, this.error);
+		SecurityUtils.validateObjectInput("options", options, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		/******* INPUT VERIFICATION - END *******/
+		
+		return auxiliarVerify(xmlFilePath, options, true, true, publicKey);
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
 	private String axuiliarSign(String xmlInput, com.genexus.securityapicommons.commons.PrivateKey key,
-			Certificate certificate, String outputPath, DSigOptions options, boolean isFile, String xPath) {
+			Key publicKey, String outputPath, DSigOptions options, boolean isFile, String xPath, String hash) {
 		if (TransformsWrapper.getTransformsWrapper(options.getDSigSignatureType(),
 				this.error) != TransformsWrapper.ENVELOPED) {
 			error.setError("XD001", "Not implemented DSigType");
 		}
-		CertificateX509 cert = (CertificateX509) certificate;
-		if (!cert.Inicialized()) {
-			this.error.setError("XD002", "Certificate not loaded");
+		
+		com.genexus.securityapicommons.commons.PublicKey cert = null;
+		cert = (hash != null) ? (com.genexus.securityapicommons.commons.PublicKey) publicKey:(CertificateX509) publicKey;
+		if (cert.hasError()) {
+			this.error = cert.getError();
+			return "";
 		}
 
 		Document xmlDoc = loadDocument(isFile, xmlInput, options);
@@ -109,16 +307,21 @@ public class XmlDSigSigner extends SecurityAPIObject {
 			return "";
 		}
 		String result = Sign(xmlDoc, (PrivateKeyManager) key, cert, options.getDSigSignatureType(),
-				options.getCanonicalization(), options.getKeyInfoType(), xPath, options.getIdentifierAttribute());
+				options.getCanonicalization(), options.getKeyInfoType(), xPath, options.getIdentifierAttribute(), hash);
 		if (isFile) {
-			String prefix = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-			result = Boolean.toString(SignatureUtils.writeToFile(result, outputPath, prefix, this.error));
+			if ((result == null) || SecurityUtils.compareStrings(result, "")) {
+				result = "false";
+			} else {
+				String prefix = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+				result = Boolean.toString(SignatureUtils.writeToFile(result, outputPath, prefix, this.error));
+			}
 		}
 		return result;
 	}
 
-	private String Sign(Document xmlInput, PrivateKeyManager key, CertificateX509 certificate, String dSigType,
-			String canonicalizationType, String keyInfoType, String xpath, String id) {
+	private String Sign(Document xmlInput, PrivateKeyManager key, com.genexus.securityapicommons.commons.PublicKey certificate, String dSigType,
+			String canonicalizationType, String keyInfoType, String xpath, String id, String hash) {
+
 		SignatureElementType signatureElementType;
 		if (!SecurityUtils.compareStrings(xpath, "")) {
 			if (xpath.charAt(0) == '#') {
@@ -133,10 +336,7 @@ public class XmlDSigSigner extends SecurityAPIObject {
 		} else {
 			signatureElementType = SignatureElementType.document;
 		}
-		boolean inicialized = inicializeInstanceVariables(key, certificate);
-		if (!inicialized) {
-			return "";
-		}
+		inicializeInstanceVariables(key, certificate, hash);
 		Element rootElement = SignatureUtils.getRootElement(xmlInput);
 
 		CanonicalizerWrapper canonicalizerWrapper = CanonicalizerWrapper.getCanonicalizerWrapper(canonicalizationType,
@@ -219,8 +419,13 @@ public class XmlDSigSigner extends SecurityAPIObject {
 
 		case X509Certificate:
 
+			if(hash != null)
+			{
+				this.error.setError("XD002", "The file included is a Public Key, cannot include a certificate on the signature");
+				return "";
+			}
 			try {
-				X509Certificate x509Certificate = certificate.Cert();
+				X509Certificate x509Certificate = ((CertificateX509)certificate).Cert();
 				X509Data x509data = new X509Data(sig.getDocument());
 				x509data.addIssuerSerial(x509Certificate.getIssuerDN().getName(), x509Certificate.getSerialNumber());
 				x509data.addSubjectName(x509Certificate);
@@ -254,17 +459,21 @@ public class XmlDSigSigner extends SecurityAPIObject {
 		return new String(bos.toByteArray());
 	}
 
-	private boolean inicializeInstanceVariables(PrivateKeyManager key, CertificateX509 certificate) {
+	private void inicializeInstanceVariables(PrivateKeyManager key, com.genexus.securityapicommons.commons.PublicKey certificate, String hash) {
 
-		this.privateKey = key.getPrivateKeyXML();
-		this.publicKey = certificate.getPublicKeyXML();
-		this.digest = certificate.getPublicKeyHash();
-		this.asymAlgorithm = certificate.getPublicKeyAlgorithm();
-		return true;
+		this.privateKey = key.getPrivateKey();
+		this.publicKey = certificate.getPublicKey();
+		this.asymAlgorithm = certificate.getAlgorithm();
+		if (hash == null) {
+			this.digest = ((CertificateX509)certificate).getPublicKeyHash();
+		}else
+		{
+			this.digest = hash;
+		}
 	}
 
 	private boolean auxiliarVerify(String input, DSigOptions options, boolean isFile, boolean withCert,
-			Certificate certificate) {
+			Key key) {
 		if (TransformsWrapper.getTransformsWrapper(options.getDSigSignatureType(),
 				this.error) != TransformsWrapper.ENVELOPED) {
 			error.setError("XD001", "Not implemented DSigType");
@@ -284,10 +493,10 @@ public class XmlDSigSigner extends SecurityAPIObject {
 				return false;
 			}
 		}
-		return verify(doc, baseURI, options.getIdentifierAttribute(), withCert, (CertificateX509) certificate);
+		return verify(doc, baseURI, options.getIdentifierAttribute(), withCert, key);
 	}
 
-	private boolean verify(Document doc, String baseURI, String id, boolean withCert, CertificateX509 certificate) {
+	private boolean verify(Document doc, String baseURI, String id, boolean withCert, Key key) {
 		Element sigElement = (Element) doc.getElementsByTagNameNS(Constants.SignatureSpecNS, Constants._TAG_SIGNATURE)
 				.item(0);
 		if (id != null && !SecurityUtils.compareStrings(id, "")) {
@@ -312,7 +521,7 @@ public class XmlDSigSigner extends SecurityAPIObject {
 
 			XMLSignature signature = new XMLSignature(sigElement, baseURI);
 			if (withCert) {
-				PublicKey pk = certificate.getPublicKeyXML();
+				PublicKey pk = ((com.genexus.securityapicommons.commons.PublicKey)key).getPublicKey();
 				result = signature.checkSignatureValue(pk);
 			} else {
 				result = signature.checkSignatureValue(signature.getKeyInfo().getPublicKey());

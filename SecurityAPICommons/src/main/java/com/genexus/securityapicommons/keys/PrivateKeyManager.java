@@ -12,9 +12,6 @@ import java.security.PrivateKey;
 import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.security.interfaces.ECPrivateKey;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 
 import javax.crypto.EncryptedPrivateKeyInfo;
@@ -25,7 +22,6 @@ import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
@@ -46,7 +42,6 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 
 	private PrivateKeyInfo privateKeyInfo;
 	private boolean hasPrivateKey;
-	private String privateKeyAlgorithm;
 	private String encryptionPassword;
 
 	/**
@@ -58,44 +53,93 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 		this.encryptionPassword = null;
 		// Security.addProvider(new BouncyCastleProvider());
 	}
+	
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - BEGIN ********/
 	@Override
 	public boolean load(String privateKeyPath) {
-		return loadPKCS12(privateKeyPath, "", "");
+		
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("path", privateKeyPath, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+		
+		boolean result =  loadPKCS12(privateKeyPath, "", "");
+		setAlgorithm();
+		return result;
 	}
 
 	@Override
 	public boolean loadEncrypted(String privateKeyPath, String encryptionPassword) {
+		
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("path", privateKeyPath, this.error);
+		SecurityUtils.validateStringInput("password", encryptionPassword, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+		
 		this.encryptionPassword = encryptionPassword;
-		return loadPKCS12(privateKeyPath, "", "");
+		boolean result = loadPKCS12(privateKeyPath, "", "");
+		setAlgorithm();
+		return result;
 
 	}
 
 	@Override
 	public boolean loadPKCS12(String privateKeyPath, String alias, String password) {
+		
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("path", privateKeyPath, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+		
+		boolean result = false;
 		try {
-			loadKeyFromFile(privateKeyPath, alias, password);
+			result = loadKeyFromFile(privateKeyPath, alias, password);
 		} catch (Exception e) {
-			this.error.setError("PK018", e.getMessage());
+			this.error.setError("PK001", e.getMessage());
 			return false;
 		}
 		if (this.hasError()) {
 			return false;
 		}
-		return true;
+		setAlgorithm();
+		return result;
 	}
 
 	@Override
 	public boolean fromBase64(String base64) {
+		
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateStringInput("base64", base64, this.error);
+		if (this.hasError()) {
+			return false;
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+		
 		boolean res;
 		try {
 			res = readBase64(base64);
 		} catch (Exception e) {
-			this.error.setError("PK0015", e.getMessage());
+			this.error.setError("PK002", e.getMessage());
 			return false;
 		}
 		this.hasPrivateKey = res;
+		setAlgorithm();
 		return res;
 	}
 
@@ -106,7 +150,7 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 			try {
 				encoded = Base64.toBase64String(this.privateKeyInfo.getEncoded());
 			} catch (Exception e) {
-				this.error.setError("PK0017", e.getMessage());
+				this.error.setError("PK003", e.getMessage());
 				return "";
 			}
 			return encoded;
@@ -115,11 +159,7 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 		return "";
 	}
 
-	/********
-	 * EXTERNAL OBJECT PUBLIC METHODS - END
-	 * 
-	 * @throws IOException
-	 ********/
+	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
 
 	private boolean readBase64(String base64) throws IOException {
 		byte[] keybytes = Base64.decode(base64);
@@ -128,138 +168,39 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 		this.privateKeyInfo = PrivateKeyInfo.getInstance(seq);
 		istream.close();
 		if (this.privateKeyInfo == null) {
-			this.error.setError("PK015", "Could not read private key from base64 string");
+			this.error.setError("PK004", "Could not read private key from base64 string");
 			return false;
 		}
-		this.privateKeyAlgorithm = this.privateKeyInfo.getPrivateKeyAlgorithm().getAlgorithm().getId(); // 1.2.840.113549.1.1.1
 		return true;
 	}
 
 	/**
 	 * @return PrivateKey type for the key type
 	 */
-	public PrivateKey getPrivateKeyXML() {
-
-		KeyFactory kf = null;
-		PKCS8EncodedKeySpec keySpec = null;
-		try {
-			kf = SecurityUtils.getKeyFactory(this.getPrivateKeyAlgorithm());
-			keySpec = new PKCS8EncodedKeySpec(this.privateKeyInfo.getEncoded());
-
-		} catch (NoSuchAlgorithmException | IOException e) {
-			this.error.setError("PK001", "Error reading algorithm");
-		}
+	public PrivateKey getPrivateKey() {
 		PrivateKey pk = null;
-		if ((kf != null) && (keySpec != null)) {
-			try {
-				pk = kf.generatePrivate(keySpec);
-			} catch (InvalidKeySpecException e) {
-				this.error.setError("PK002", "Error reading key");
-			}
-		}
-		return pk;
-
-	}
-
-	/**
-	 * @return PrivateKey type for the key type
-	 */
-	public RSAPrivateKey getRSAPrivateKeyJWT() {
-
-		KeyFactory kf = null;
-		PKCS8EncodedKeySpec keySpec = null;
 		try {
-			kf = SecurityUtils.getKeyFactory(this.getPrivateKeyAlgorithm());
-			keySpec = new PKCS8EncodedKeySpec(this.privateKeyInfo.getEncoded());
-
-		} catch (NoSuchAlgorithmException | IOException e) {
-			this.error.setError("PK001", "Error reading algorithm");
-		}
-		RSAPrivateKey pk = null;
-		if ((kf != null) && (keySpec != null)) {
-			try {
-				pk = (RSAPrivateKey) kf.generatePrivate(keySpec);
-			} catch (InvalidKeySpecException e) {
-				this.error.setError("PK002", "Error reading key");
-			}
-		}
-		return pk;
-
-	}
-
-	/**
-	 * Return AsymmetricKeyParameter with private key for the indicated algorithm
-	 * 
-	 * @param asymmetricEncryptionAlgorithm AsymmetricEncryptionAlgorithm enum,
-	 *                                      algorithm name
-	 * @return AsymmetricKeyParameter type for encryption, algorithm dependant
-	 */
-	public AsymmetricKeyParameter getPrivateKeyParameterForEncryption() {
-
-		if (SecurityUtils.compareStrings(this.getPrivateKeyAlgorithm(), "RSA")) {
-			return getRSAKeyParameter();
-		} else {
-
-			this.error.setError("AE009", "Unrecognized encryption algorithm");
+			KeyFactory kf = SecurityUtils.getKeyFactory(this.getAlgorithm());
+			PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(this.privateKeyInfo.getEncoded());
+			pk = kf.generatePrivate(keySpec);
+		} catch (Exception e) {
+			this.error.setError("PK005", e.getMessage());
 			return null;
 		}
+		return pk;
+
 	}
 
-	/**
-	 * @return AsymmetricKeyParameter with private key loaded for RSA or ECDSA for
-	 *         signing
-	 */
-	public AsymmetricKeyParameter getPrivateKeyParameterForSigning() {
-		switch (this.getPrivateKeyAlgorithm()) {
-		case "RSA":
-			return getRSAKeyParameter();
-		case "ECDSA":
-			AsymmetricKeyParameter parmsECDSA;
+	@Override
+	public AsymmetricKeyParameter getAsymmetricKeyParameter() {	
+		AsymmetricKeyParameter akp = null;
 			try {
-				parmsECDSA = PrivateKeyFactory.createKey(this.privateKeyInfo);
-			} catch (IOException e) {
-				this.error.setError("AE007", "Not ECDSA key");
-				e.printStackTrace();
+				akp = PrivateKeyFactory.createKey(this.privateKeyInfo);
+			} catch (Exception e) {
+				this.error.setError("PK006", e.getMessage());
 				return null;
 			}
-			return parmsECDSA;
-		default:
-			this.error.setError("AE008", "Unrecognized algorithm");
-			return null;
-		}
-	}
-
-	/**
-	 * @return AsymmetricKeyParameter for RSA with loaded key
-	 */
-	private AsymmetricKeyParameter getRSAKeyParameter() {
-		RSAKeyParameters parms;
-		try {
-			parms = (RSAKeyParameters) PrivateKeyFactory.createKey(this.privateKeyInfo);
-		} catch (IOException e) {
-			this.error.setError("AE013", "Not RSA key");
-			e.printStackTrace();
-			return null;
-		}
-		return parms;
-	}
-
-	/**
-	 * @return String certificate's algorithm for signing, 1.2.840.113549.1.1.1 if
-	 *         RSA from key pem file
-	 *         https://www.alvestrand.no/objectid/1.2.840.113549.1.1.1.html
-	 */
-	public String getPrivateKeyAlgorithm() {
-		if (SecurityUtils.compareStrings(this.privateKeyAlgorithm, "1.2.840.113549.1.1.1")
-				|| SecurityUtils.compareStrings(this.privateKeyAlgorithm, "RSA")) {
-			return "RSA";
-		}
-		if (SecurityUtils.compareStrings(this.privateKeyAlgorithm, "1.2.840.10045.2.1")
-				|| SecurityUtils.compareStrings(this.privateKeyAlgorithm, "EC")) {
-			return "ECDSA";
-		}
-		return this.privateKeyAlgorithm.toUpperCase();
-
+			return akp;
 	}
 
 	/**
@@ -312,7 +253,7 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 				|| SecurityUtils.extensionIs(path, ".jks") || SecurityUtils.extensionIs(path, ".pkcs12")) {
 			return this.hasPrivateKey = loadPrivateKeyFromPKCS12File(path, alias, password);
 		}
-		this.error.setError("PK014", "Error loading private key");
+		this.error.setError("PK007", "Error loading private key");
 		this.hasPrivateKey = false;
 		return false;
 	}
@@ -335,7 +276,7 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 			NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException, KeyStoreException {
 
 		if (alias == null || password == null) {
-			this.error.setError("PK004", "Alias and Password are required for PKCS12 keys");
+			this.error.setError("PK008", "Alias and Password are required for PKCS12 keys");
 			return false;
 		}
 		InputStream in = SecurityUtils.inputFileToStream(path);
@@ -343,7 +284,6 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 		ks.load(in, password.toCharArray());
 		if (ks.getKey(alias, password.toCharArray()) != null) {
 			PrivateKey privateKey = (PrivateKey) ks.getKey(alias, password.toCharArray());
-			this.privateKeyAlgorithm = privateKey.getAlgorithm();
 			this.privateKeyInfo = PrivateKeyInfo.getInstance(privateKey.getEncoded());
 			return true;
 		}
@@ -363,73 +303,56 @@ public class PrivateKeyManager extends com.genexus.securityapicommons.commons.Pr
 	 */
 	private boolean loadPrivateKeyFromPEMFile(String path) throws IOException, CertificateException, PKCSException {
 		boolean flag = false;
-		FileReader privateKeyReader;
-
-		privateKeyReader = new FileReader(new File(path));
-		PEMParser parser = new PEMParser(privateKeyReader);
-		Object obj;
-		obj = parser.readObject();
-		if (obj instanceof EncryptedPrivateKeyInfo || obj instanceof PKCS8EncryptedPrivateKeyInfo) {
-			Security.addProvider(new BouncyCastleProvider());
-	        PKCS8EncryptedPrivateKeyInfo encPrivKeyInfo = (PKCS8EncryptedPrivateKeyInfo)obj;
-	        InputDecryptorProvider pkcs8Prov = new JcePKCSPBEInputDecryptorProviderBuilder().setProvider("BC").build(this.encryptionPassword.toCharArray());
-	        this.privateKeyInfo = encPrivKeyInfo.decryptPrivateKeyInfo(pkcs8Prov);
-			this.privateKeyAlgorithm = this.privateKeyInfo.getPrivateKeyAlgorithm().getAlgorithm().getId(); // 1.2.840.113549.1.1.1
-			flag = true;
-		}
-		if (obj instanceof PrivateKeyInfo) {
-			this.privateKeyInfo = (PrivateKeyInfo) obj;
-			this.privateKeyAlgorithm = this.privateKeyInfo.getPrivateKeyAlgorithm().getAlgorithm().getId(); // 1.2.840.113549.1.1.1
-			flag = true;
-		}
-		if (obj instanceof PEMKeyPair) {
-			PEMKeyPair pemKeyPair = (PEMKeyPair) obj;
-			this.privateKeyInfo = pemKeyPair.getPrivateKeyInfo();
-			this.privateKeyAlgorithm = this.privateKeyInfo.getPrivateKeyAlgorithm().getAlgorithm().getId(); // 1.2.840.113549.1.1.1
-			flag = true;
-		}
-		if (obj instanceof SubjectPublicKeyInfo) {
-			this.error.setError("PK008", "The file contains a public key");
-			flag = false;
-		}
-		if (obj instanceof X509CertificateHolder) {
-			this.error.setError("PK009", "The file contains a public key");
-			flag = false;
-		}
-		privateKeyReader.close();
-		parser.close();
-		if (!flag) {
-			if (!this.hasError()) {
-				this.error.setError("PK011", "Error loading private key from pem file");
+		try (FileReader privateKeyReader = new FileReader(new File(path))) {
+			try (PEMParser parser = new PEMParser(privateKeyReader)) {
+				Object obj;
+				obj = parser.readObject();
+				if (obj instanceof EncryptedPrivateKeyInfo || obj instanceof PKCS8EncryptedPrivateKeyInfo) {
+					Security.addProvider(new BouncyCastleProvider());
+					PKCS8EncryptedPrivateKeyInfo encPrivKeyInfo = (PKCS8EncryptedPrivateKeyInfo) obj;
+					InputDecryptorProvider pkcs8Prov = new JcePKCSPBEInputDecryptorProviderBuilder().setProvider("BC")
+							.build(this.encryptionPassword.toCharArray());
+					this.privateKeyInfo = encPrivKeyInfo.decryptPrivateKeyInfo(pkcs8Prov);
+					flag = true;
+				}
+				if (obj instanceof PrivateKeyInfo) {
+					this.privateKeyInfo = (PrivateKeyInfo) obj;
+					flag = true;
+				}
+				if (obj instanceof PEMKeyPair) {
+					PEMKeyPair pemKeyPair = (PEMKeyPair) obj;
+					this.privateKeyInfo = pemKeyPair.getPrivateKeyInfo();
+					flag = true;
+				}
+				if (obj instanceof SubjectPublicKeyInfo) {
+					this.error.setError("PK009", "The file contains a public key");
+					flag = false;
+				}
+				if (obj instanceof X509CertificateHolder) {
+					this.error.setError("PK010", "The file contains a public key");
+					flag = false;
+				}
 			}
 		}
 		return flag;
 	}
-
-	/**
-	 * @return PublicKey type for the key type
-	 */
-	public ECPrivateKey getECPrivateKeyJWT() {
-
-		KeyFactory kf = null;
-		PKCS8EncodedKeySpec keySpec = null;
-		try {
-			kf = SecurityUtils.getKeyFactory(this.getPrivateKeyAlgorithm());
-			keySpec = new PKCS8EncodedKeySpec(this.privateKeyInfo.getEncoded());
-
-		} catch (NoSuchAlgorithmException | IOException e) {
-			this.error.setError("PK019", "Error reading algorithm");
+	
+	@Override
+	protected void setAlgorithm() {
+		if(this.privateKeyInfo == null) {
+			return;
 		}
-		ECPrivateKey pk = null;
-		if ((kf != null) && (keySpec != null)) {
-			try {
-				pk = (ECPrivateKey) kf.generatePrivate(keySpec);
-			} catch (InvalidKeySpecException e) {
-				this.error.setError("PK020", "Error reading key");
-			}
+		String alg = this.privateKeyInfo.getPrivateKeyAlgorithm().getAlgorithm().getId();
+		switch(alg)
+		{
+		case "1.2.840.113549.1.1.1":
+			this.algorithm = "RSA";
+			break;
+		case "1.2.840.10045.2.1":
+			this.algorithm = "ECDSA";
+			break;
 		}
-		return pk;
-
+		
 	}
 
 }

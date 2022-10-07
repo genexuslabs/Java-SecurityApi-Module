@@ -1,6 +1,6 @@
 package com.genexus.securityapicommons.commons;
 
-public abstract class Certificate extends Key {
+public abstract class Certificate extends PublicKey {
 
 	public Certificate() {
 		super();
