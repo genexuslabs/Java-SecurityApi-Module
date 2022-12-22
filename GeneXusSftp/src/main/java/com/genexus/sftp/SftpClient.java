@@ -94,6 +94,38 @@ public class SftpClient extends SftpClientObject {
 		return true;
 	}
 
+	public boolean rm(String remotePath) {
+		String rDir = remotePath;
+		if (this.channel == null) {
+			this.error.setError("SF005", "The channel is invalid, reconect");
+			return false;
+		}
+
+		if (remotePath.length() > 1) {
+			if (remotePath.startsWith("\\") || remotePath.startsWith("/")) {
+				remotePath = remotePath.substring(1, remotePath.length());
+			}
+		}
+		try {
+			this.channel.rm(remotePath);
+		} catch (SftpException e) {
+			if (SecurityUtils.compareStrings(rDir, "/") || SecurityUtils.compareStrings(rDir, "\\")) {
+				try {
+					this.channel.rm(getFileName(remotePath));
+				} catch (SftpException s) {
+					this.error.setError("SF006", s.getMessage());
+					return false;
+				}
+			} else {
+				this.error.setError("SF006", e.getMessage());
+				return false;
+			}
+
+		}
+
+		return true;
+	}
+
 	public boolean get(String remoteFilePath, String localDir) {
 		if (this.whiteList != null) {
 			if (!this.whiteList.isValid(remoteFilePath)) {
