@@ -97,7 +97,7 @@ public class SftpClient extends SftpClientObject {
 	public boolean rm(String remotePath) {
 		String rDir = remotePath;
 		if (this.channel == null) {
-			this.error.setError("SF005", "The channel is invalid, reconect");
+			this.error.setError("SF018", "The channel is invalid, reconect");
 			return false;
 		}
 
@@ -113,11 +113,11 @@ public class SftpClient extends SftpClientObject {
 				try {
 					this.channel.rm(getFileName(remotePath));
 				} catch (SftpException s) {
-					this.error.setError("SF006", s.getMessage());
+					this.error.setError("SF019", s.getMessage());
 					return false;
 				}
 			} else {
-				this.error.setError("SF006", e.getMessage());
+				this.error.setError("SF020", e.getMessage());
 				return false;
 			}
 
