@@ -188,6 +188,38 @@ public class FtpsClient extends FtpsClientObject {
 		return true;
 
 	}
+	
+	public boolean rm(String remoteFilePath) {
+		if (this.client == null || !this.client.isConnected()) {
+			this.error.setError("FS019", "The connection is invalid, reconect");
+			return false;
+		}
+		boolean dirchange = true;
+		try {
+			if (!isSameDir(getDirectory(remoteFilePath), this.client.printWorkingDirectory())) {
+				dirchange = this.client.changeWorkingDirectory(getDirectory(remoteFilePath));
+				this.pwd = getDirectory(remoteFilePath);
+			}
+
+		} catch (IOException e2) {
+			this.error.setError("FS020", "Error changing directory " + e2.getMessage());
+			return false;
+		}
+		if (!dirchange) {
+			this.error.setError("FS021",
+					"Reply code: " + this.client.getReplyCode() + " Reply String: " + this.client.getReplyString());
+			return false;
+		}
+		boolean deleted = false;
+		try {
+			deleted = this.client.deleteFile(remoteFilePath);
+		} catch (Exception e) {
+			this.error.setError("FS022", "Error retrieving file " + e.getMessage());
+			deleted = false;
+		}
+		return deleted;
+
+	}
 
 	public void disconnect() {
 		if (this.client != null && this.client.isConnected()) {
