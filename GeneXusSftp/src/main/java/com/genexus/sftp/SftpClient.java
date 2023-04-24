@@ -125,7 +125,7 @@ public class SftpClient extends SftpClientObject {
 
 		return true;
 	}
-	
+  
 	public boolean get(String remoteFilePath, String localDir) {
 		if (this.whiteList != null) {
 			if (!this.whiteList.isValid(remoteFilePath)) {

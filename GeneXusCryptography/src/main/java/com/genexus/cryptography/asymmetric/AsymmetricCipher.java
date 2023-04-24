@@ -2,6 +2,7 @@ package com.genexus.cryptography.asymmetric;
 
 import java.io.UnsupportedEncodingException;
 
+import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.BufferedAsymmetricBlockCipher;
 import org.bouncycastle.crypto.Digest;
@@ -18,10 +19,13 @@ import com.genexus.cryptography.asymmetric.utils.AsymmetricEncryptionPadding;
 import com.genexus.cryptography.commons.AsymmetricCipherObject;
 import com.genexus.cryptography.hash.Hashing;
 import com.genexus.cryptography.hash.utils.HashAlgorithm;
+import com.genexus.securityapicommons.commons.Certificate;
 import com.genexus.securityapicommons.commons.Key;
+import com.genexus.securityapicommons.commons.PublicKey;
 import com.genexus.securityapicommons.config.EncodingUtil;
 import com.genexus.securityapicommons.keys.CertificateX509;
 import com.genexus.securityapicommons.keys.PrivateKeyManager;
+import com.genexus.securityapicommons.utils.SecurityUtils;
 
 /**
  * @author sgrampone
@@ -41,37 +45,106 @@ public class AsymmetricCipher extends AsymmetricCipherObject {
 	@Override
 	public String doEncrypt_WithPrivateKey(String hashAlgorithm, String asymmetricEncryptionPadding, PrivateKeyManager key, String plainText) {
 
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateObjectInput("hashAlgorithm", hashAlgorithm, this.error);
+		SecurityUtils.validateStringInput("asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+		SecurityUtils.validateStringInput("plainText", plainText, this.error);
+		SecurityUtils.validateObjectInput("key", key, this.error);
 		if (this.hasError()) {
 			return "";
 		}
-		return doEncryptInternal(hashAlgorithm, asymmetricEncryptionPadding, key, true, plainText);
+		
+		/******* INPUT VERIFICATION - END *******/
+		
+		return doEncryptInternal(hashAlgorithm, asymmetricEncryptionPadding, key, true, plainText, false);
 	}
 	
 	@Override
-	public String doEncrypt_WithPublicKey(String hashAlgorithm, String asymmetricEncryptionPadding, CertificateX509 certificate, String plainText) {
-
+	public String doEncrypt_WithPublicKey(String hashAlgorithm, String asymmetricEncryptionPadding, PublicKey key, String plainText) {
+		
+		this.error.cleanError();
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateObjectInput("hashAlgorithm", hashAlgorithm, this.error);
+		SecurityUtils.validateStringInput("asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+		SecurityUtils.validateStringInput("plainText", plainText, this.error);
+		SecurityUtils.validateObjectInput("key", key, this.error);
 		if (this.hasError()) {
 			return "";
 		}
-		return doEncryptInternal(hashAlgorithm, asymmetricEncryptionPadding, certificate, false, plainText);
+		
+		/******* INPUT VERIFICATION - END *******/
+
+		return doEncryptInternal(hashAlgorithm, asymmetricEncryptionPadding, key, false, plainText, true);
 	}
+	
+	@Override
+	public String doEncrypt_WithCertificate(String hashAlgorithm, String asymmetricEncryptionPadding, Certificate certificate, String plainText) {
+		
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateObjectInput("hashAlgorithm", hashAlgorithm, this.error);
+		SecurityUtils.validateStringInput("asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+		SecurityUtils.validateStringInput("plainText", plainText, this.error);
+		SecurityUtils.validateObjectInput("certificate", certificate, this.error);
+		if (this.hasError()) {
+			return "";
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+
+		return doEncryptInternal(hashAlgorithm, asymmetricEncryptionPadding, certificate, false, plainText, false);
+	}
+	
 
 	@Override
 	public String doDecrypt_WithPrivateKey(String hashAlgorithm, String asymmetricEncryptionPadding, PrivateKeyManager key, String encryptedInput) {
-
+		
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateObjectInput("hashAlgorithm", hashAlgorithm, this.error);
+		SecurityUtils.validateStringInput("asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+		SecurityUtils.validateStringInput("encryptedInput", encryptedInput, this.error);
+		SecurityUtils.validateObjectInput("key", key, this.error);
 		if (this.hasError()) {
 			return "";
 		}
-		return doDecryptInternal(hashAlgorithm, asymmetricEncryptionPadding, key, true, encryptedInput);
+		
+		/******* INPUT VERIFICATION - END *******/
+
+		return doDecryptInternal(hashAlgorithm, asymmetricEncryptionPadding, key, true, encryptedInput, false);
 	}
 	
 	@Override
-	public String doDecrypt_WithPublicKey(String hashAlgorithm, String asymmetricEncryptionPadding, CertificateX509 certificate, String encryptedInput) {
-
+	public String doDecrypt_WithPublicKey(String hashAlgorithm, String asymmetricEncryptionPadding, PublicKey key, String encryptedInput) {
+	
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateObjectInput("hashAlgorithm", hashAlgorithm, this.error);
+		SecurityUtils.validateStringInput("asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+		SecurityUtils.validateStringInput("encryptedInput", encryptedInput, this.error);
+		SecurityUtils.validateObjectInput("key", key, this.error);
 		if (this.hasError()) {
 			return "";
 		}
-		return doDecryptInternal(hashAlgorithm, asymmetricEncryptionPadding, certificate, false, encryptedInput);
+		
+		/******* INPUT VERIFICATION - END *******/
+
+		return doDecryptInternal(hashAlgorithm, asymmetricEncryptionPadding, key, false, encryptedInput, true);
+	}
+	
+	@Override
+	public String doDecrypt_WithCertificate(String hashAlgorithm, String asymmetricEncryptionPadding, Certificate certificate, String encryptedInput) {
+	
+		/******* INPUT VERIFICATION - BEGIN *******/
+		SecurityUtils.validateObjectInput("hashAlgorithm", hashAlgorithm, this.error);
+		SecurityUtils.validateStringInput("asymmetricEncryptionPadding", asymmetricEncryptionPadding, this.error);
+		SecurityUtils.validateStringInput("encryptedInput", encryptedInput, this.error);
+		SecurityUtils.validateObjectInput("certificate", certificate, this.error);
+		if (this.hasError()) {
+			return "";
+		}
+		
+		/******* INPUT VERIFICATION - END *******/
+
+		return doDecryptInternal(hashAlgorithm, asymmetricEncryptionPadding, certificate, false, encryptedInput, false);
 	}
 
 	/******** EXTERNAL OBJECT PUBLIC METHODS - END ********/
@@ -96,9 +169,8 @@ public class AsymmetricCipher extends AsymmetricCipherObject {
 	 * @return String Base64 encrypted plainText text
 	 */
 	private String doEncryptInternal(String hashAlgorithm, String asymmetricEncryptionPadding, Key key, boolean isPrivate,
-			String plainText) {
+			String plainText, boolean isPublicKey) {
 		error.cleanError();
-
 		HashAlgorithm hash = HashAlgorithm.getHashAlgorithm(hashAlgorithm, this.error);
 		AsymmetricEncryptionPadding padding = AsymmetricEncryptionPadding
 				.getAsymmetricEncryptionPadding(asymmetricEncryptionPadding, this.error);
@@ -114,21 +186,21 @@ public class AsymmetricCipher extends AsymmetricCipherObject {
 				this.error = keyMan.getError();
 				return "";
 			}
-			asymmetricEncryptionAlgorithm = keyMan.getPrivateKeyAlgorithm();
+			asymmetricEncryptionAlgorithm = keyMan.getAlgorithm();
 
-			asymKey = keyMan.getPrivateKeyParameterForEncryption();
+			asymKey = keyMan.getAsymmetricKeyParameter();
 			if (keyMan.hasError()) {
 				this.error = keyMan.getError();
 				return "";
 			}
 		} else {
-			CertificateX509 cert = (CertificateX509) key;
-			if (!cert.Inicialized() || cert.hasError()) {
+			PublicKey cert = isPublicKey ? (PublicKey)key: (CertificateX509) key;
+			if (cert.hasError()) {
 				this.error = cert.getError();
 				return "";
 			}
-			asymmetricEncryptionAlgorithm = cert.getPublicKeyAlgorithm();
-			asymKey = cert.getPublicKeyParameterForEncryption();
+			asymmetricEncryptionAlgorithm = cert.getAlgorithm();
+			asymKey = cert.getAsymmetricKeyParameter();
 			if (cert.hasError()) {
 				this.error = cert.getError();
 				return "";
@@ -167,7 +239,7 @@ public class AsymmetricCipher extends AsymmetricCipherObject {
 	 * @return String UTF-8 decypted encryptedInput text
 	 */
 	private String doDecryptInternal(String hashAlgorithm, String asymmetricEncryptionPadding, Key key, boolean isPrivate,
-			String encryptedInput) {
+			String encryptedInput, boolean isPublicKey) {
 		this.error.cleanError();
 		HashAlgorithm hash = HashAlgorithm.getHashAlgorithm(hashAlgorithm, this.error);
 		AsymmetricEncryptionPadding padding = AsymmetricEncryptionPadding
@@ -185,21 +257,21 @@ public class AsymmetricCipher extends AsymmetricCipherObject {
 				this.error = keyMan.getError();
 				return "";
 			}
-			asymmetricEncryptionAlgorithm = keyMan.getPrivateKeyAlgorithm();
+			asymmetricEncryptionAlgorithm = keyMan.getAlgorithm();
 
-			asymKey = keyMan.getPrivateKeyParameterForEncryption();
+			asymKey = keyMan.getAsymmetricKeyParameter();
 			if (keyMan.hasError()) {
 				this.error = keyMan.getError();
 				return "";
 			}
 		} else {
-			CertificateX509 cert = (CertificateX509) key;
-			if (!cert.Inicialized() || cert.hasError()) {
+			PublicKey cert = isPublicKey ? (PublicKey) key: (CertificateX509) key;
+			if (cert.hasError()) {
 				this.error = cert.getError();
 				return "";
 			}
-			asymmetricEncryptionAlgorithm = cert.getPublicKeyAlgorithm();
-			asymKey = cert.getPublicKeyParameterForEncryption();
+			asymmetricEncryptionAlgorithm = cert.getAlgorithm();
+			asymKey = cert.getAsymmetricKeyParameter();
 			if (cert.hasError()) {
 				this.error = cert.getError();
 				return "";
