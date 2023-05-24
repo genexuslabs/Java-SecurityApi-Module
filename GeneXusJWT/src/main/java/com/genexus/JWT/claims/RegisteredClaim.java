@@ -9,6 +9,8 @@ import com.auth0.jwt.JWTCreator.Builder;
 import com.auth0.jwt.interfaces.Verification;
 import com.genexus.securityapicommons.commons.Error;
 
+import static java.lang.Long.*;
+
 public enum RegisteredClaim {
 	iss, exp, sub, aud, nbf, iat, jti,;
 
@@ -142,8 +144,13 @@ public enum RegisteredClaim {
 		}
 	}
 
+	private static boolean isANumber(String value)
+	{
+		return value.matches("-?\\d+") ? true: false;
+	}
 	public static Builder getBuilderWithClaim(RegisteredClaim registeredClaimKey, String registeredClaimValue,
 			Builder tokenBuilder, Error error) {
+
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 		switch (registeredClaimKey) {
@@ -159,22 +166,33 @@ public enum RegisteredClaim {
 
 		case exp:
 			Date date = null;
-			
-			try {
-				
-				date = dateFormat.parse(registeredClaimValue);
-				
-			} catch (Exception e) {
-				error.setError("RCL05", "Date format error; expected yyyy/MM/dd HH:mm:ss");
-				return null;
+			if(!isANumber(registeredClaimValue)) {
+				try {
+
+					date = dateFormat.parse(registeredClaimValue);
+
+				} catch (Exception e) {
+
+					error.setError("RCL05", "Date format error; expected yyyy/MM/dd HH:mm:ss");
+					return null;
+				}
+			}else {
+				try {
+					date = new Date(Long.parseLong(registeredClaimValue) * 1000);
+				}catch(Exception e)
+				{
+					error.setError("RCL05", e.getMessage());
+					return null;
+				}
 			}
-			try {
-				
-				tokenBuilder.withExpiresAt(date);
-			} catch (Exception e) {
-				error.setError("RCL06", e.getMessage());
-				return null;
-			}
+				try {
+
+					tokenBuilder.withExpiresAt(date);
+				} catch (Exception e) {
+					error.setError("RCL06", e.getMessage());
+					return null;
+				}
+
 			break;
 
 		case sub:
@@ -195,11 +213,21 @@ public enum RegisteredClaim {
 			break;
 		case nbf:
 			Date dateNbf = null;
-			try {
-				dateNbf = dateFormat.parse(registeredClaimValue);
-			} catch (Exception e) {
-				error.setError("RCL05", "Date format error; expected yyyy/MM/dd HH:mm:ss");
-				return null;
+			if(!isANumber(registeredClaimValue)) {
+				try {
+					dateNbf = dateFormat.parse(registeredClaimValue);
+				} catch (Exception e) {
+					error.setError("RCL05", "Date format error; expected yyyy/MM/dd HH:mm:ss");
+					return null;
+				}
+			}else{
+				try {
+					dateNbf = new Date(Long.parseLong(registeredClaimValue) * 1000);
+				}catch(Exception e)
+				{
+					error.setError("RCL05", e.getMessage());
+					return null;
+				}
 			}
 			try {
 				tokenBuilder.withNotBefore(dateNbf);
@@ -210,11 +238,21 @@ public enum RegisteredClaim {
 			break;
 		case iat:
 			Date dateIat = null;
-			try {
-				dateIat = dateFormat.parse(registeredClaimValue);
-			} catch (Exception e) {
-				error.setError("RCL05", "Date format error; expected yyyy/MM/dd HH:mm:ss");
-				return null;
+			if(!isANumber(registeredClaimValue)) {
+				try {
+					dateIat = dateFormat.parse(registeredClaimValue);
+				} catch (Exception e) {
+					error.setError("RCL05", "Date format error; expected yyyy/MM/dd HH:mm:ss");
+					return null;
+				}
+			}else{
+				try {
+					dateIat = new Date(Long.parseLong(registeredClaimValue) * 1000);
+				}catch(Exception e)
+				{
+					error.setError("RCL05", e.getMessage());
+					return null;
+				}
 			}
 			try {
 				tokenBuilder.withIssuedAt(dateIat);
