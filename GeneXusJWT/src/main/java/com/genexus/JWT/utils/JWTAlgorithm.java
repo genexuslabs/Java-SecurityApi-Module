@@ -77,6 +77,11 @@ public enum JWTAlgorithm {
 			error.setError("JWA03", "It is not a symmetric algorithm name");
 			return null;
 		} else {
+			if(secret == null)
+			{
+				error.setError("JWA14", "Set the secret using JWTOptions.SetSecret function");
+				return null;
+			}
 			switch (algorithm) {
 			case HS256:
 				return Algorithm.HMAC256(secret);

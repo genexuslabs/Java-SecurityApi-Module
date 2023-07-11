@@ -217,7 +217,13 @@ public class JWTCreator extends JWTObject {
 		Algorithm algorithmType = null;
 		if (JWTAlgorithm.isPrivate(alg)) {
 
+
 			PrivateKeyManager key = options.getPrivateKey();
+			if(key == null)
+			{
+				this.error.setError("JW018", "Add the private key using JWTOptions.SetPrivateKey function");
+				return "";
+			}
 			if (key.hasError()) {
 				this.error = key.getError();
 				return "";
