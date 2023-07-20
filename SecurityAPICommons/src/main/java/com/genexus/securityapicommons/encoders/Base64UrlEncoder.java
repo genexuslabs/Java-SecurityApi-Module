@@ -104,7 +104,7 @@ public class Base64UrlEncoder extends SecurityAPIObject {
             result = new String(bytes, "UTF-8").replaceAll("[\ufffd]", "");
         }catch(Exception e)
         {
-            this.error.setError("BS002", e.getMessage());
+            this.error.setError("BS007", e.getMessage());
             return "";
         }
         return result;
@@ -120,7 +120,7 @@ public class Base64UrlEncoder extends SecurityAPIObject {
             result = new String(bytes, "UTF-8").replaceAll("[\ufffd]", "");
         }catch(Exception e)
         {
-            this.error.setError("BS002", e.getMessage());
+            this.error.setError("BS008", e.getMessage());
             return "";
         }
         return result;
