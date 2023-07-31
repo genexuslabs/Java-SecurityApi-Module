@@ -30,8 +30,8 @@
 		<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcpkix-jdk15on -->
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcpkix-jdk15on</artifactId>
-			<version>1.69</version>
+			<artifactId>bcpkix-jdk15to18</artifactId>
+			<version>${org.bouncycastle.version}</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/commons-codec/commons-codec -->
 		<dependency>
@@ -39,12 +39,10 @@
 			<artifactId>commons-codec</artifactId>
 			<version>1.11</version>
 		</dependency>
-
-		<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcprov-jdk15on</artifactId>
-			<version>1.69</version>
+			<artifactId>bcprov-jdk18on</artifactId>
+			<version>${org.bouncycastle.version}</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-nop -->
 		<dependency>
