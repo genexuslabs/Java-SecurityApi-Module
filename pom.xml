@@ -6,7 +6,7 @@
 
 	<groupId>com.genexus</groupId>
 	<artifactId>SecurityAPIParent</artifactId>
-	<version>18.5.0</version>
+	<version>18.7.0</version>
 	<packaging>pom</packaging>
 
 	<name>GeneXusSecurityAPI (Parent)</name>
@@ -97,14 +97,14 @@
 							<version>${project.version}</version>
 							<destFileName>GeneXusFtps</destFileName>
 						</artifactItem>
+						<artifactItem>
+							<groupId>com.genexus</groupId>
+							<artifactId>SecurityAPICommonsTest</artifactId>
+							<version>${project.version}</version>
+							<destFileName>SecurityAPICommonsTest</destFileName>
+							<scope>test</scope>
+						</artifactItem>
 					</artifactItems>
-					<artifactItem>
-						<groupId>com.genexus</groupId>
-						<artifactId>SecurityAPICommonsTest</artifactId>
-						<version>${project.version}</version>
-						<destFileName>SecurityAPICommonsTest</destFileName>
-						<scope>test</scope>
-					</artifactItem>
 				</configuration>
 				<executions>
 					<execution>
