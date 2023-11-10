@@ -140,9 +140,6 @@ public class SymmetricStreamCipher extends SymmectricStreamCipherObject {
 		case ISAAC:
 			engine = new ISAACEngine();
 			break;
-		case VMPC:
-			engine = new VMPCEngine();
-			break;
 		default:
 			this.error.setError("SS002", "Unrecognized stream cipher algorithm");
 			break;

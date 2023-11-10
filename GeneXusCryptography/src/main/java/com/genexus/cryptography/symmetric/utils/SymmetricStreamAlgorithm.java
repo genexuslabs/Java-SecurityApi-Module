@@ -7,7 +7,7 @@ import com.genexus.securityapicommons.commons.Error;
  *
  */
 public enum SymmetricStreamAlgorithm {
-	RC4, HC128, HC256, CHACHA20, SALSA20, XSALSA20, ISAAC, VMPC, NONE;
+	RC4, HC128, HC256, CHACHA20, SALSA20, XSALSA20, ISAAC, NONE;
 
 	/**
 	 * Mapping between String name and SymmetricStreamAlgorithm enum representation
@@ -41,8 +41,6 @@ public enum SymmetricStreamAlgorithm {
 			return SymmetricStreamAlgorithm.XSALSA20;
 		case "ISAAC":
 			return SymmetricStreamAlgorithm.ISAAC;
-		case "VMPC":
-			return SymmetricStreamAlgorithm.VMPC;
 		default:
 			error.setError("SSA01", "Unrecognized SymmetricStreamAlgorithm");
 			return null;
@@ -74,8 +72,6 @@ public enum SymmetricStreamAlgorithm {
 			return "XSALSA20";
 		case ISAAC:
 			return "ISAAC";
-		case VMPC:
-			return "VMPC";
 		default:
 			error.setError("SSA02", "Unrecognized SymmetricStreamAlgorithm");
 			return "Unrecognized algorithm";
@@ -120,11 +116,6 @@ public enum SymmetricStreamAlgorithm {
 			keySize[1] = 32;
 			keySize[2] = 8192;
 			break;
-		case VMPC:
-			keySize[0] = 0;
-			keySize[1] = 8;
-			keySize[2] = 6144;
-			break;
 		default:
 			error.setError("SSA03", "Unrecognized SymmetricStreamAlgorithm");
 			break;
@@ -149,7 +140,6 @@ public enum SymmetricStreamAlgorithm {
 		case SALSA20:
 		case CHACHA20:
 		case XSALSA20:
-		case VMPC:
 			return true;
 		default:
 			error.setError("SSA04", "Unrecognized SymmetricStreamAlgorithm");
