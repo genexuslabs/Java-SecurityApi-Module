@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>com.genexus</groupId>
 		<artifactId>SecurityAPIParent</artifactId>
-		<version>18.8.0</version>
+		<version>18.9.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
