@@ -1,5 +1,6 @@
 package com.genexus.cryptography.asymmetric.utils;
 
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.Signer;
 import org.bouncycastle.crypto.signers.DSADigestSigner;
@@ -7,6 +8,12 @@ import org.bouncycastle.crypto.signers.ECDSASigner;
 import org.bouncycastle.crypto.signers.RSADigestSigner;
 
 import com.genexus.securityapicommons.commons.Error;
+import com.genexus.securityapicommons.keys.CertificateX509;
+import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder;
+import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
+import org.bouncycastle.operator.bc.BcContentSignerBuilder;
+import org.bouncycastle.operator.bc.BcECContentSignerBuilder;
+import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
 
 /**
  * @author sgrampone
@@ -76,6 +83,26 @@ public enum AsymmetricSigningAlgorithm {
 			break;
 		default:
 			error.setError("AE007", "Unrecognized AsymmetricSigningAlgorithm");
+		}
+		return sig;
+	}
+
+	public static BcContentSignerBuilder getBcContentSignerBuilder(AsymmetricSigningAlgorithm asymmetricSigningAlgorithm, CertificateX509 cert, Error error)
+	{
+		AlgorithmIdentifier signatureAlgorithm = new DefaultSignatureAlgorithmIdentifierFinder().find(
+				cert.Cert().getSigAlgName());
+		AlgorithmIdentifier digestAlgorithm = new DefaultDigestAlgorithmIdentifierFinder().find(signatureAlgorithm);
+
+		BcContentSignerBuilder sig = null;
+		switch (asymmetricSigningAlgorithm) {
+			case RSA:
+				sig = new BcRSAContentSignerBuilder(signatureAlgorithm, digestAlgorithm);
+				break;
+			case ECDSA:
+				sig = new BcECContentSignerBuilder(signatureAlgorithm, digestAlgorithm);
+				break;
+			default:
+				error.setError("AE007", "Unrecognized AsymmetricSigningAlgorithm");
 		}
 		return sig;
 	}
