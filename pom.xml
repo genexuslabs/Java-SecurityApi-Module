@@ -14,7 +14,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<org.bouncycastle.version>1.75</org.bouncycastle.version>
+		<org.bouncycastle.version>1.78.1</org.bouncycastle.version>
 	</properties>
 
 	<dependencies>
