@@ -122,9 +122,6 @@ public class SymmetricStreamCipher extends SymmectricStreamCipherObject {
 		case RC4:
 			engine = new RC4Engine();
 			break;
-		case HC128:
-			engine = new HC128Engine();
-			break;
 		case HC256:
 			engine = new HC256Engine();
 			break;
