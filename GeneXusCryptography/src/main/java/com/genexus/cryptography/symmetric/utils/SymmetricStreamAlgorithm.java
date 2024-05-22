@@ -7,7 +7,7 @@ import com.genexus.securityapicommons.commons.Error;
  *
  */
 public enum SymmetricStreamAlgorithm {
-	RC4, HC128, HC256, CHACHA20, SALSA20, XSALSA20, ISAAC, NONE;
+	RC4, HC256, CHACHA20, SALSA20, XSALSA20, ISAAC, NONE;
 
 	/**
 	 * Mapping between String name and SymmetricStreamAlgorithm enum representation
@@ -29,8 +29,6 @@ public enum SymmetricStreamAlgorithm {
 		switch (symmetricStreamAlgorithm.toUpperCase().trim()) {
 		case "RC4":
 			return SymmetricStreamAlgorithm.RC4;
-		case "HC128":
-			return SymmetricStreamAlgorithm.HC128;
 		case "HC256":
 			return SymmetricStreamAlgorithm.HC256;
 		case "CHACHA20":
@@ -60,8 +58,6 @@ public enum SymmetricStreamAlgorithm {
 		switch (symmetrcStreamAlgorithm) {
 		case RC4:
 			return "RC4";
-		case HC128:
-			return "HC128";
 		case HC256:
 			return "HC256";
 		case CHACHA20:
@@ -96,10 +92,6 @@ public enum SymmetricStreamAlgorithm {
 			keySize[1] = 40;
 			keySize[2] = 2048;
 			break;
-		case HC128:
-			keySize[0] = 1;
-			keySize[1] = 128;
-			break;
 		case HC256:
 		case XSALSA20:
 			keySize[0] = 1;
@@ -133,7 +125,6 @@ public enum SymmetricStreamAlgorithm {
 	public static boolean usesIV(SymmetricStreamAlgorithm algorithm, Error error) {
 		switch (algorithm) {
 		case RC4:
-		case HC128:
 		case ISAAC:
 			return false;
 		case HC256:
