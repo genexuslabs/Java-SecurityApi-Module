@@ -120,7 +120,7 @@ public class PublicKey extends Key {
 		}catch(Exception e)
 		{
 			this.error.setError("PU013", e.getMessage());
-			flag = false;
+			return false;
 		}
 		flag = this.fromBase64(b64);
 		return flag;
