@@ -223,6 +223,10 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 		try {
 			ks = KeyStore.getInstance("PKCS12");
 			ks.load(in, password.toCharArray());
+			if(SecurityUtils.compareStrings("", alias))
+			{
+				alias = ks.aliases().nextElement();
+			}
 			this.cert = (X509Certificate) ks.getCertificate(alias);
 		} catch (Exception e) {
 			this.error.setError("CE007", "Path not found.");
@@ -299,11 +303,6 @@ public class CertificateX509 extends com.genexus.securityapicommons.commons.Cert
 		this.inicialized = true;
 	}
 
-	/**
-	 * Extract public key information and certificate's signing algorithm
-	 * 
-	 * @param cert java Certificate
-	 */
 	private void extractPublicInfo() {
 		Certificate cert1 = (Certificate) this.cert;
 		PublicKey publicKey = cert1.getPublicKey();
