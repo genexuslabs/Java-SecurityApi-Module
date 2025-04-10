@@ -1,3 +1,4 @@
+:warning: This repo is not longer under development since GeneXus v18 upgrade 13. The current version of these modules can be found in https://github.com/genexuslabs/JavaClasses
 
 # GeneXus Security API for Java
 
